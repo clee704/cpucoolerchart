@@ -1,0 +1,71 @@
+__all__ = ['development', 'test', 'production']
+
+
+class DefaultConfig(object):
+  DEBUG = False
+  SEND_FILE_MAX_AGE_DEFAULT = 31536000
+  GZIP = True
+  ASSETS_URL = '/static'
+  LIVE_RELOAD = False
+  CACHE_KEY_PREFIX = 'cpucoolerchart:'
+  CACHE_TYPE = 'simple'
+  CACHE_DEFAULT_TIMEOUT = 3600
+  CACHE_COMPRESSION = True
+  LOGGER_NAME = 'cpucoolerchart'
+  LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+      'default': {
+        'format': '%(asctime)s [%(name)s] [%(levelname)s] %(message)s',
+        'datefmt': '%Y-%m-%d %H:%M:%S',
+      },
+      'raw': {
+        'format': '%(message)s'
+      },
+    },
+    'handlers': {
+      'console': {
+        'level': 'DEBUG',
+        'class': 'logging.StreamHandler',
+        'formatter': 'default',
+      },
+      'console_raw': {
+        'level': 'DEBUG',
+        'class': 'logging.StreamHandler',
+        'formatter': 'raw',
+      },
+      'mail_admins': {
+        'level': 'ERROR',
+        'formatter': 'default',
+        'class': 'logging.handlers.SMTPHandler',
+        'toaddrs': [],
+        'fromaddr': 'ccc-logger@localhost',
+        'subject': 'Logging',
+        'mailhost': 'localhost',
+      },
+      'null': {
+        'class': 'logging.NullHandler',
+      },
+    },
+    'loggers': {
+      'cpucoolerchart': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+      },
+      'sqlalchemy.engine': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+      },
+      'gunicorn.access': {
+        'handlers': ['console_raw'],
+        'level': 'INFO',
+      },
+      'scss': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+      },
+    }
+  }
+  PYSCSS_STATIC_ROOT = 'static'
+  PYSCSS_STATIC_URL = 'static'

@@ -1,0 +1,169 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="container">
+  <h1>CPU 쿨러 비교</h1>
+  <div class="selectors clearfix">
+    <div class="selector">
+      <label>소음</label>
+      <div class="btn-group" ng-cloak>
+        <button class="btn btn-default"
+                ng-repeat="opt in noiseOptions"
+                ng-click="g.noise = opt.value"
+                ng-class="{
+                  active: g.noise == opt.value,
+                  disabled: g.power >= 200 &amp;&amp; opt.value <= 40
+                }">
+          {@opt.name@}
+        </button>
+      </div>
+    </div>
+    <div class="selector">
+      <label>CPU 소비전력</label>
+      <div class="btn-group" ng-cloak>
+        <button class="btn btn-default"
+                ng-repeat="opt in powerOptions"
+                ng-click="g.power = opt.value"
+                ng-class="{
+                  active: g.power == opt.value,
+                  disabled: g.noise <= 40 &amp;&amp; opt.value >= 200
+                }">
+          {@opt.name@}
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-4 col-md-3">
+      <div class="filter">
+        <div class="checkbox filter-label">
+          <label><input type="checkbox"> 제조사</label>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="firefox-padding-hack-748518" ng-cloak>
+              <div class="checkbox" ng-repeat="maker in makers">
+                <label><input type="checkbox"> {@ maker.name @}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="filter">
+        <div class="checkbox filter-label">
+          <label><input type="checkbox"> 제품명</label>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="firefox-padding-hack-748518" ng-cloak>
+              <div class="checkbox" ng-repeat="heatsink in heatsinks">
+                <label><input type="checkbox"> {@ heatsink.name @}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="filter">
+        <label class="filter-label">크기 및 무게</label>
+        <form class="form-horizontal">
+          <div class="form-group">
+            <label for="width" class="col-xs-4 control-label">가로</label>
+            <div class="col-xs-8">
+              <div class="input-group">
+                <input type="number" pattern="\d*" id="width" class="form-control">
+                <span class="input-group-addon">이하</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="depth" class="col-xs-4 control-label">세로</label>
+            <div class="col-xs-8">
+              <div class="input-group">
+                <input type="number" pattern="\d*" id="depth" class="form-control">
+                <span class="input-group-addon">이하</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="height" class="col-xs-4 control-label">높이</label>
+            <div class="col-xs-8">
+              <div class="input-group">
+                <input type="number" pattern="\d*" id="height" class="form-control">
+                <span class="input-group-addon">이하</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="weight" class="col-xs-4 control-label">무게</label>
+            <div class="col-xs-8">
+              <div class="input-group">
+                <input type="number" pattern="\d*" id="weight" class="form-control">
+                <span class="input-group-addon">이하</span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="filter">
+        <label class="filter-label">종류</label>
+      </div>
+    </div>
+    <div class="col-sm-8 col-md-9">
+      <table class="chart">
+        <thead>
+          <tr>
+            <th class="chart-model">
+              <div>제조사</div>
+              <div>제품명</div>
+            </th>
+            <th class="hidden-sm hidden-xs">
+              <div>가로x세로x높이</div>
+              <div>종류 / 무게</div>
+            </th>
+            <th class="hidden-sm hidden-xs">
+              <div>팬 크기x개수</div>
+              <div>팬 속도</div>
+            </th>
+            <th ng-if="g.noise == 100">소음</th>
+            <th class="chart-temp">
+              <div>CPU 온도</div>
+              <div>전원부 온도</div>
+            </th>
+            <th>가격</th>
+          </tr>
+        </thead>
+        <tbody ng-cloak>
+          <tr ng-repeat="m in currentMeasurements">
+            <td class="chart-model">
+              <div>{@m.maker.name@}</div>
+              <div title="{@m.heatsink.name@}">{@m.heatsink.name@}</div>
+            </td>
+            <td class="hidden-sm hidden-xs">
+              <div>{@m.heatsink_size@}</div>
+              <div>
+                {@m.heatsink.heatsink_type@} / {@m.heatsink_weight@}
+              </div>
+            </td>
+            <td class="hidden-sm hidden-xs">
+              <div>{@m.fan_size@}</div>
+              <div>{@m.rpm_avg@}</div>
+            </td>
+            <td ng-if="g.noise == 100">
+              {@m.noise_avg@}
+            </td>
+            <td class="chart-temp">
+              <div class="chart-temp-cpu" bar-graph="m.cpu_temp_delta"></div>
+              <div class="chart-temp-power" bar-graph="m.power_temp_delta"></div>
+            </td>
+            <td>
+              -
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="alert alert-danger" ng-show="error" center width="300" ng-cloak>
+  <p>{@error@}</p>
+</div>
+{% endblock %}
