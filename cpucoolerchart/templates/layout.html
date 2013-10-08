@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <title>CPU 쿨러 비교</title>
-    {% assets "css_all" %}<link rel="stylesheet" href="{{ ASSET_URL }}" />{% endassets %}
+    {% assets "css_all" %}<link rel="stylesheet" href="{{ASSET_URL}}" />{% endassets %}
     <!--[if lt IE 9]>
       <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.2.0/respond.js"></script>
     <![endif]-->
     {% if config.ASSETS_DEBUG %}
-      {% assets "js_vendor" %}<script src="{{ ASSET_URL }}"></script>{% endassets %}
+      {% assets "js_vendor" %}<script src="{{ASSET_URL}}"></script>{% endassets %}
     {% else %}
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
       <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.0-rc.2/angular.min.js"></script>
@@ -19,7 +19,7 @@
       <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-shim.min.js"></script>
       <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-sham.min.js"></script>
     <![endif]-->
-    {% assets "js_all" %}<script src="{{ ASSET_URL }}"></script>{% endassets %}
+    {% assets "js_all" %}<script src="{{ASSET_URL}}"></script>{% endassets %}
   </head>
   <body ng-controller="DataCtrl">
     {% block body %}{% endblock %}
