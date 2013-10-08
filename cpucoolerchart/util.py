@@ -2,8 +2,9 @@ import logging
 
 from flask import current_app
 import heroku
+import requests
 
-from .extensions import db
+from .extensions import cache
 
 
 __logger__ = logging.getLogger(__name__)
@@ -21,10 +22,6 @@ def heroku_scale(process_name, qty):
     cloud._http_resource(method='POST',
       resource=('apps', current_app.config['HEROKU_APP_NAME'], 'ps', 'scale'),
       data=dict(type=process_name, qty=qty))
-    if old_qty is None:
-      db.session.add(Config(key=key, value=qty))
-    else:
-      old_qty.value = qty
-    db.session.commit()
+    cache.set(key, qty, 86400 * 7)
   except requests.HTTPError as e:
     __logger__.error('Could not scale heroku: %s', e.message)
