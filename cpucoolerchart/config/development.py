@@ -15,3 +15,5 @@ class Config(DefaultConfig):
   LOGGING = deepcopy(DefaultConfig.LOGGING)
   LOGGING['loggers']['cpucoolerchart']['level'] = 'DEBUG'
   LOGGING['loggers']['sqlalchemy.engine']['level'] = 'INFO'
+
+Config.from_envvars()

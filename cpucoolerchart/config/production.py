@@ -1,8 +1,7 @@
 from copy import deepcopy
 import os
-import re
 
-from ..config import DefaultConfig
+from ..config import DefaultConfig, autocast
 
 
 class Config(DefaultConfig):
@@ -22,27 +21,5 @@ class Config(DefaultConfig):
     smtp_handler['secure'] = ()
     cls.LOGGING['loggers']['cpucoolerchart'].append('mail_admins')
 
-  @classmethod
-  def from_envvars(cls):
-    for key in os.environ:
-      if validkey(key):
-        setattr(cls, key, autocast(os.environ[key]))
-
-def validkey(key):
-  return re.match(r'^[A-Z_]+$', key)
-
-def autocast(value):
-  if re.match(r'^\d+$', value):
-    return int(value)
-  elif re.match(r'^\d+\.\d+$', value):
-    return float(value)
-  elif value == 'True':
-    return True
-  elif value == 'False':
-    return False
-  elif re.match(r'^\[.*\]$', value):
-    return re.split(r'\s*,\s*', value[1:-1])
-  else:
-    return value
-
 Config.from_envvars()
+Config.setup_smtp()

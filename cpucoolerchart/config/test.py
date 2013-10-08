@@ -11,3 +11,5 @@ class Config(DefaultConfig):
   # Disable all loggers.
   for logger in LOGGING['loggers'].values():
     logger['handlers'] = ['null']
+
+Config.from_envvars()

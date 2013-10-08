@@ -1,3 +1,7 @@
+import os
+import re
+
+
 __all__ = ['development', 'test', 'production']
 
 
@@ -64,3 +68,30 @@ class DefaultConfig(object):
     }
   }
   LESS_BIN = '../../node_modules/.bin/lessc'
+
+  @classmethod
+  def from_envvars(cls):
+    for key in os.environ:
+      if validkey(key):
+        setattr(cls, key, autocast(os.environ[key]))
+
+def validkey(key):
+  return re.match(r'^[A-Z_]+$', key)
+
+def autocast(value):
+  if re.match(r'^\d+$', value):
+    return int(value)
+  elif re.match(r'^\d+\.\d+$', value):
+    return float(value)
+  elif value == 'True':
+    return True
+  elif value == 'False':
+    return False
+  elif re.match(r'^\[.*\]$', value):
+    # Example: "[a, b, c]" => ['a', 'b', 'c']
+    return re.split(r'\s*,\s*', value[1:-1])
+  else:
+    # If all others fail, just use the plain string.
+    return value
+
+DefaultConfig.from_envvars()
