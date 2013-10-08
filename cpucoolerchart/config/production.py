@@ -19,7 +19,7 @@ class Config(DefaultConfig):
     smtp_handler['mailhost'] = ('smtp.gmail.com', 587)
     smtp_handler['credentials'] = (os.environ['GMAIL_USERNAME'], os.environ['GMAIL_PASSWORD'])
     smtp_handler['secure'] = ()
-    cls.LOGGING['loggers']['cpucoolerchart'].append('mail_admins')
+    cls.LOGGING['loggers']['cpucoolerchart']['handlers'].append('mail_admins')
 
 Config.from_envvars()
 Config.setup_smtp()
