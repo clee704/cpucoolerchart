@@ -86,7 +86,7 @@ def configure_extensions(app):
     )
   assets_env.register('js_all',
     'main.js',
-    filters='yui_js', output='compiled/%(version)s.script.js'
+    filters='ngmin,yui_js', output='compiled/%(version)s.script.js'
   )
   assets_env.register('css_all',
     Bundle('main.css.less', filters='less', output='compiled/%(version)s.main.css'),
