@@ -40,26 +40,27 @@ angular.module('cpucoolerchart', [])
     };
 
     var denormalizeMeasurements = function () {
+      var empty = '-';
       for (var i = 0; i < $scope.measurements.length; i++) {
         var m = $scope.measurements[i];
         m.fan_config = $scope.fanConfigsById[m.fan_config_id];
         m.heatsink = $scope.heatsinksById[m.fan_config.heatsink_id];
         m.maker = $scope.makersById[m.heatsink.maker_id];
         m.heatsink_size = [
-          Math.round(m.heatsink.width) || '.',
-          Math.round(m.heatsink.depth) || '.',
-          Math.round(m.heatsink.height) || '.'
+          Math.round(m.heatsink.width) || empty,
+          Math.round(m.heatsink.depth) || empty,
+          Math.round(m.heatsink.height) || empty
         ].join('x');
-        if (m.heatsink_size === '.x.x.') m.heatsink_size = '.';
-        m.heatsink_weight = m.heatsink.weight === null ? '.' :
+        if (m.heatsink_size === [empty, empty, empty].join('x')) m.heatsink_size = empty;
+        m.heatsink_weight = m.heatsink.weight === null ? empty :
             Math.round(m.heatsink.weight) + ' g';
         m.fan_size = m.fan_config.fan_size + '/' + m.fan_config.fan_thickness + 'T' +
             ' x' + m.fan_config.fan_count;
-        m.rpm_avg = m.rpm_min === null ? '.' : Math.round((m.rpm_min + m.rpm_max) / 2) + ' rpm';
+        m.rpm_avg = m.rpm_min === null ? empty : Math.round((m.rpm_min + m.rpm_max) / 2) + ' rpm';
         if (m.power_temp_delta === null) {
-          m.power_temp_delta = '.';
+          m.power_temp_delta = empty;
         }
-        m.noise_avg = m.noise_actual_min === null ? '.' :
+        m.noise_avg = m.noise_actual_min === null ? empty :
             (Math.round((m.noise_actual_min + m.noise_actual_max) / 2 * 10) / 10);
       }
     };
