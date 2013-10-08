@@ -1,22 +1,30 @@
 @import "bower_components/bootstrap/less/bootstrap.less";
 
 @font-size-base: 13px;
+@font-family-sans-serif: "Nanum Gothic", NanumGothic, "나눔고딕", "서울남산체", "Malgun Gothic", "맑은 고딕", "맑은고딕", "Apple SD Gothic Neo", "Helvetica Neue", Helvetica, Arial, sans-serif;
 @icon-font-path: "/static/bower_components/bootstrap/fonts/";
 
 body {
   margin-bottom: 20px;
 }
 
-body, h1 {
-  font-family: "Nanum Gothic", NanumGothic, "나눔고딕", "서울남산체", "Malgun Gothic", "맑은 고딕", "맑은고딕", "Apple SD Gothic Neo", "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
+h1, .h1 { font-size: floor(@font-size-base * 1.80); }
 
-h1 {
-  font-size: 1.8em;
+input {
+  -webkit-appearance: none;
 }
 
 input[type="checkbox"] {
   margin-top: 2px;  // 4px -> 2px
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  display: none;
+}
+
+input::-ms-clear {
+  display: none;
 }
 
 [ng-cloak] {
@@ -25,6 +33,10 @@ input[type="checkbox"] {
 
 .glyphicon {
   top: 2px;  // 1px -> 2px
+}
+
+.description {
+  color: @gray;
 }
 
 .selectors {
@@ -70,8 +82,19 @@ input[type="checkbox"] {
   margin-bottom: 10px;
 }
 
+.filter-select-heatsink-type {
+  width: 100%;
+  .tower-button {
+    width: 46%;
+  }
+  .flower-button {
+    width: 54%;
+  }
+}
+
 .chart {
   @padding: 6px;
+  margin-bottom: @line-height-computed;
   table {
     width: 100%;
   }
@@ -144,6 +167,10 @@ input[type="checkbox"] {
   }
 }
 
-.unknown {
-  color: #ccc;
+.footer {
+  color: @text-muted;
+  margin-bottom: @line-height-computed;
+  padding-top: @line-height-computed;
+  border-top: 1px solid @hr-border;
+  font-size: @font-size-small;
 }
