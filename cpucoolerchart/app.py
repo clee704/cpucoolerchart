@@ -7,8 +7,7 @@ from flask import Flask, request, redirect
 from flask.ext.assets import Bundle
 
 from .config import DefaultConfig
-from .extensions import db, cache, assets_env, gzip, redis_connection
-from .rediscache import RedisCache, CompressedRedisCache
+from .extensions import db, cache, assets_env, gzip, redis_connection, RedisCache, CompressedRedisCache
 from .views import views
 
 
