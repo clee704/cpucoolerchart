@@ -124,93 +124,21 @@ INCONSISTENCY_FIX = {
 }
 
 
-def update(force=False):
+def update_data(force=False):
   now = datetime.now()
   if not force:
     last_updated = cache.get('last_updated')
     if last_updated is not None and last_updated > now - timedelta(days=1):
       __logger__.info('Recently updated; nothing to do')
       return
-  data_list = fetch_tabular_data()
-  update_db(data_list)
+  data_list = fetch_measurement_data()
+  update_measurement_data(data_list)
+  update_price_data()
   cache.set('last_updated', now, timeout=86400)
   __logger__.info('Successfully updated data from remote sources')
 
 
-def update_db(data_list):
-  groups = itertools.groupby(data_list, dictitemgetter('maker'))
-  for maker_name, data_sublist in groups:
-    update_maker(data_sublist, maker_name)
-  db.session.commit()
-
-
-def update_maker(data_list, maker_name):
-  keys = dict(name=maker_name)
-  data = keys
-  maker = Maker.query.find(**keys)
-  if maker is None:
-    maker = Maker(**data)
-    db.session.add(maker)
-  else:
-    maker.update(**data)
-  groups = itertools.groupby(data_list, dictitemgetter(
-      'model', 'width', 'depth', 'height', 'heatsink_type', 'weight'))
-  for heatsink_data, data_sublist in groups:
-    update_heatsink(data_sublist, maker, *heatsink_data)
-
-
-def update_heatsink(data_list, maker, model_name, width, depth, height, heatsink_type, weight):
-  keys = dict(name=model_name, maker_id=maker.id)
-  data = dict(name=model_name, maker=maker, width=width, depth=depth, height=height,
-      heatsink_type=heatsink_type, weight=weight)
-  heatsink = Heatsink.query.find(**keys)
-  if heatsink is None:
-    heatsink = Heatsink(**data)
-    db.session.add(heatsink)
-  else:
-    heatsink.update(**data)
-  groups = itertools.groupby(data_list, dictitemgetter(
-      'fan_size', 'fan_thickness', 'fan_count'))
-  for fan_config_data, data_sublist in groups:
-    update_fan_config(data_sublist, heatsink, *fan_config_data)
-
-
-def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
-  keys = dict(fan_size=fan_size, fan_thickness=fan_thickness, fan_count=fan_count,
-      heatsink_id=heatsink.id)
-  data = dict(fan_size=fan_size, fan_thickness=fan_thickness, fan_count=fan_count,
-      heatsink=heatsink)
-  fan_config = FanConfig.query.find(**keys)
-  if fan_config is None:
-    fan_config = FanConfig(**data)
-    db.session.add(fan_config)
-  else:
-    fan_config.update(**data)
-  for data in data_list:
-    update_measurement(fan_config, data)
-
-
-def update_measurement(fan_config, data):
-  keys = subdict(data, 'noise', 'power')
-  keys['fan_config_id'] = fan_config.id
-  data = subdict(data,
-      'noise', 'power', 'noise_actual_min', 'noise_actual_max',
-      'rpm_min', 'rpm_max', 'cpu_temp_delta', 'power_temp_delta')
-  data['fan_config'] = fan_config
-  measurement = Measurement.query.find(**keys)
-  if measurement is None:
-    measurement = Measurement(**data)
-    db.session.add(measurement)
-  else:
-    measurement.update(**data)
-
-
-def fetch_and_print_data():
-  data_list = fetch_tabular_data()
-  print_data_list(data_list, SINGLE_TABLE_COLUMNS)
-
-
-def fetch_tabular_data():
+def fetch_measurement_data():
   reset_warnings()
   data_list = []
   for noise in NOISE_LEVELS:
@@ -242,6 +170,20 @@ def get_html_table(noise, power):
   return table_xpath[0]
 
 
+def get_cached_html(url):
+  key = base64.b64encode(url, '-_')
+  html = cache.get(key)
+  if html:
+    return html
+  resp = requests.get(url)
+  html = resp.text
+  # When fetch_measurement_data() is called once a day, setting the timeout to
+  # exactly 86400 seconds (1 day) may result in only part of the pages
+  # being refreshed. Reducing the timeout a little can prevent this problem.
+  cache.set(key, html, timeout=86000)
+  return html
+
+
 def extract_data(table, noise, power):
   data_list = []
   for tr in table.xpath('.//tr[@class="tdm"]'):
@@ -268,27 +210,6 @@ def extract_data(table, noise, power):
   if not data_list:
     raise ParseError('table rows not found')
   return data_list
-
-
-def ensure_consistency(data_list):
-  first_values = {}
-  for x in DEPENDENCIES:
-    first_values[x] = {}
-  new_data_list = []
-  for data in data_list:
-    remove = False
-    for x, y in DEPENDENCIES.iteritems():
-      keys = tuple(data.get(k) for k in x)
-      values = tuple(data.get(k) for k in y)
-      if keys not in first_values[x]:
-        first_values[x][keys] = values
-      elif first_values[x][keys] != values:
-        warn(u'dependency {0} -> {1} violated: {2}: {3} != {4}'.format(
-            x, y, keys, first_values[x][keys], values))
-        remove = True
-    if not remove:
-      new_data_list.append(data)
-  return new_data_list
 
 
 def parse_maker(s):
@@ -405,28 +326,98 @@ def fix_inconsistency(data):
     data.update(INCONSISTENCY_FIX[key])
 
 
-def print_data_list(data_list, columns):
-  table = PrettyTable(columns)
-  table.align = 'l'
-  for c in NUMERIC_COLUMNS:
-    table.align[c] = 'r'
+def ensure_consistency(data_list):
+  first_values = {}
+  for x in DEPENDENCIES:
+    first_values[x] = {}
+  new_data_list = []
   for data in data_list:
-    table.add_row([data.get(key, '') for key in columns])
-  print table
+    remove = False
+    for x, y in DEPENDENCIES.iteritems():
+      keys = tuple(data.get(k) for k in x)
+      values = tuple(data.get(k) for k in y)
+      if keys not in first_values[x]:
+        first_values[x][keys] = values
+      elif first_values[x][keys] != values:
+        warn(u'dependency {0} -> {1} violated: {2}: {3} != {4}'.format(
+            x, y, keys, first_values[x][keys], values))
+        remove = True
+    if not remove:
+      new_data_list.append(data)
+  return new_data_list
 
 
-def get_cached_html(url):
-  key = base64.b64encode(url, '-_')
-  html = cache.get(key)
-  if html:
-    return html
-  resp = requests.get(url)
-  html = resp.text
-  # When fetch_tabular_data() is called once a day, setting the timeout to
-  # exactly 86400 seconds (1 day) may result in only part of the pages
-  # being refreshed. Reducing the timeout a little can prevent this problem.
-  cache.set(key, html, timeout=86000)
-  return html
+def update_measurement_data(data_list):
+  groups = itertools.groupby(data_list, dictitemgetter('maker'))
+  for maker_name, data_sublist in groups:
+    update_maker(data_sublist, maker_name)
+  db.session.commit()
+
+
+def update_maker(data_list, maker_name):
+  keys = dict(name=maker_name)
+  data = keys
+  maker = Maker.query.find(**keys)
+  if maker is None:
+    maker = Maker(**data)
+    db.session.add(maker)
+  else:
+    maker.update(**data)
+  groups = itertools.groupby(data_list, dictitemgetter(
+      'model', 'width', 'depth', 'height', 'heatsink_type', 'weight'))
+  for heatsink_data, data_sublist in groups:
+    update_heatsink(data_sublist, maker, *heatsink_data)
+
+
+def update_heatsink(data_list, maker, model_name, width, depth, height, heatsink_type, weight):
+  keys = dict(name=model_name, maker_id=maker.id)
+  data = dict(name=model_name, maker=maker, width=width, depth=depth, height=height,
+      heatsink_type=heatsink_type, weight=weight)
+  heatsink = Heatsink.query.find(**keys)
+  if heatsink is None:
+    heatsink = Heatsink(**data)
+    db.session.add(heatsink)
+  else:
+    heatsink.update(**data)
+  groups = itertools.groupby(data_list, dictitemgetter(
+      'fan_size', 'fan_thickness', 'fan_count'))
+  for fan_config_data, data_sublist in groups:
+    update_fan_config(data_sublist, heatsink, *fan_config_data)
+
+
+def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
+  keys = dict(fan_size=fan_size, fan_thickness=fan_thickness, fan_count=fan_count,
+      heatsink_id=heatsink.id)
+  data = dict(fan_size=fan_size, fan_thickness=fan_thickness, fan_count=fan_count,
+      heatsink=heatsink)
+  fan_config = FanConfig.query.find(**keys)
+  if fan_config is None:
+    fan_config = FanConfig(**data)
+    db.session.add(fan_config)
+  else:
+    fan_config.update(**data)
+  for data in data_list:
+    update_measurement(fan_config, data)
+
+
+def update_measurement(fan_config, data):
+  keys = subdict(data, 'noise', 'power')
+  keys['fan_config_id'] = fan_config.id
+  data = subdict(data,
+      'noise', 'power', 'noise_actual_min', 'noise_actual_max',
+      'rpm_min', 'rpm_max', 'cpu_temp_delta', 'power_temp_delta')
+  data['fan_config'] = fan_config
+  measurement = Measurement.query.find(**keys)
+  if measurement is None:
+    measurement = Measurement(**data)
+    db.session.add(measurement)
+  else:
+    measurement.update(**data)
+
+
+def update_price_data():
+  # TODO
+  pass
 
 
 def compress_spaces(s):

@@ -4,7 +4,7 @@ prettytable==0.7.2
 Flask==0.10.1
 Flask-SQLAlchemy==1.0
 Flask-Cache==0.12
-Flask-Script==0.6.2
+-e git://github.com/clee704/flask-script.git@b3e2536799c48cf5485d9c11ffabd22a88b2d299#egg=Flask-Script
 Flask-Assets==0.8
 Flask-gzip==0.1
 yuicompressor==2.4.8
