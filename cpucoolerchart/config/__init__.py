@@ -61,11 +61,6 @@ class DefaultConfig(object):
         'handlers': ['console_raw'],
         'level': 'INFO',
       },
-      'scss': {
-        'handlers': ['console'],
-        'level': 'WARNING',
-      },
     }
   }
-  PYSCSS_STATIC_ROOT = 'static'
-  PYSCSS_STATIC_URL = 'static'
+  LESS_BIN = '../../node_modules/.bin/lessc'

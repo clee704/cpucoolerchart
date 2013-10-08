@@ -90,7 +90,7 @@ def configure_extensions(app):
     filters='yui_js', output='compiled/%(version)s.script.js'
   )
   assets_env.register('css_all',
-    Bundle('main.css.scss', filters='scss', output='compiled/%(version)s.main.css'),
+    Bundle('main.css.less', filters='less', output='compiled/%(version)s.main.css'),
     filters='yui_css', output='compiled/%(version)s.styles.css'
   )
 

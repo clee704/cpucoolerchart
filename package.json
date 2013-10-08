@@ -1,0 +1,12 @@
+{
+  "name": "cpucoolerchart",
+  "version": "0.0.0",
+  "dependencies": {
+    "less": "1.4.1",
+    "ngmin": "0.4.0"
+  },
+  "engines": {
+    "node": "0.10.4",
+    "npm": "1.2.18"
+  }
+}

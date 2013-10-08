@@ -1,0 +1,149 @@
+@import "bower_components/bootstrap/less/bootstrap.less";
+
+@font-size-base: 13px;
+@icon-font-path: "/static/bower_components/bootstrap/fonts/";
+
+body {
+  margin-bottom: 20px;
+}
+
+body, h1 {
+  font-family: "Nanum Gothic", NanumGothic, "나눔고딕", "서울남산체", "Malgun Gothic", "맑은 고딕", "맑은고딕", "Apple SD Gothic Neo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+h1 {
+  font-size: 1.8em;
+}
+
+input[type="checkbox"] {
+  margin-top: 2px;  // 4px -> 2px
+}
+
+[ng-cloak] {
+  display: none !important;
+}
+
+.glyphicon {
+  top: 2px;  // 1px -> 2px
+}
+
+.selectors {
+  margin-bottom: (@line-height-computed / 2);
+}
+
+.selector {
+  float: left;
+  margin-right: 10px;
+  margin-bottom: (@line-height-computed / 2);
+  label {
+    font-weight: normal;
+    display: block;
+  }
+}
+
+.filter {
+  margin-bottom: @line-height-computed;
+  label {
+    font-weight: normal;
+    display: block;
+  }
+  .panel-body {
+    height: 130px;
+    padding: 0;
+    overflow: hidden;
+    overflow-y: auto;
+    .firefox-padding-hack-748518 {
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=748518
+      padding: 0 10px;
+    }
+  }
+  .control-label {
+    text-align: left;
+  }
+  .form-group {
+    margin-bottom: 5px;
+  }
+}
+
+.filter-label {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.chart {
+  @padding: 6px;
+  table {
+    width: 100%;
+  }
+  th, td {
+    font-weight: normal;
+    padding: 5px @padding;
+    overflow: hidden;
+    white-space: nowrap;
+    &:first-child {
+      padding-left: 0;
+    }
+    &:last-child {
+      padding-right: 0;
+    }
+  }
+  thead {
+    tr {
+      border-bottom: 1px solid @table-border-color;
+    }
+    th {
+      padding-top: 0;
+      padding-bottom: (@padding * 2);
+    }
+  }
+  tbody {
+    tr:first-child {
+      td {
+        padding-top: (@padding * 2);
+      }
+    }
+  }
+  margin-top: @line-height-computed;
+  @media (min-width: @screen-md) {
+    margin-top: 0;
+  }
+}
+
+.chart-model div {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 120px;
+  @media (min-width: @screen-sm) {
+    width: 150px;
+  }
+  @media (min-width: @screen-md) {
+    width: auto;
+  }
+}
+
+.chart-temp {
+  width: 100%;
+}
+
+.chart-temp-cpu .bar {
+  color: white;
+  background-color: #007ba7;
+}
+
+.chart-temp-power .bar {
+  background-color: #fcc200;
+}
+
+[bar-graph] {
+  width: 100%;
+  .bar {
+    padding: 1px 3px;
+    text-align: right;
+    .box-sizing(border-box);
+  }
+}
+
+.unknown {
+  color: #ccc;
+}
