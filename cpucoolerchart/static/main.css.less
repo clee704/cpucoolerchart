@@ -136,7 +136,10 @@ input::-ms-clear {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  width: 120px;
+  width: 100px;
+  @media (min-width: @screen-xs) {
+    width: 130px;
+  }
   @media (min-width: @screen-sm) {
     width: 150px;
   }
