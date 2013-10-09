@@ -147,9 +147,13 @@ label {
       }
     }
   }
-  margin-top: @line-height-computed;
-  @media (min-width: @screen-md) {
-    margin-top: 0;
+  @media (min-width: @screen-sm) {
+    position: relative;
+    top: -@input-height-base;
+    .chart-controls {
+      position: relative;
+      top: -@line-height-computed;
+    }
   }
 }
 
