@@ -174,8 +174,13 @@
                   selected: !g.showSelectedOnly &amp;&amp; m.heatsink.selected
                 }">
               <td class="chart-model">
-                <div bo-bind="m.maker.name"></div>
-                <div bo-attr="{title: 'm.heatsink.name'}" bo-bind="m.heatsink.name"></div>
+                <a link-if="m.danawa_url" open-link-in-new-window>
+                  <div>
+                    <div class="line" bo-bind="m.maker.name"></div>
+                    <div class="line" bo-bind="m.heatsink.name"
+                         bo-attr="{title: 'm.heatsink.name'}"></div>
+                  </div>
+                </a>
               </td>
               <td class="hidden-sm hidden-xs">
                 <div bo-bind="m.heatsink_size"></div>
@@ -196,10 +201,7 @@
                 <div class="chart-temp-power" bar-graph="m.power_temp_delta"></div>
               </td>
               <td class="chart-price">
-                <span bo-if="!m.danawa_url" bo-bind="m.price_formatted"></span>
-                <a bo-attr="{href: 'm.danawa_url'}" bo-if="m.danawa_url"
-                   open-link-in-new-window
-                   bo-bind="m.price_formatted"></a>
+                <div bo-bind="m.price_formatted"></div>
               </td>
             </tr>
           </tbody>

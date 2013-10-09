@@ -95,10 +95,7 @@ angular.module('cpucoolerchart.directives', ['cpucoolerchart.util'])
   .directive('boBind', function () {
     return {
       link: function (scope, element, attr) {
-        var unwatch = scope.$watch(attr.boBind, function (value) {
-          element.text(value);
-          unwatch();
-        });
+        element.text(scope.$eval(attr.boBind));
       }
     };
   })
@@ -110,16 +107,12 @@ angular.module('cpucoolerchart.directives', ['cpucoolerchart.util'])
             unwatch = {};
         for (var name in exprs) {
           if (!exprs.hasOwnProperty(name)) continue;
-          unwatch[name] = scope.$watch(exprs[name], (function (name) {
-            return function (value) {
-              if (name === 'class') {
-                element.addClass(value);
-              } else {
-                element.attr(name, value);
-              }
-              unwatch[name]();
-            };
-          })(name));
+          var value = exprs[name];
+          if (name === 'class') {
+            element.addClass(value);
+          } else {
+            element.attr(name, value);
+          }
         }
       }
     };
@@ -128,10 +121,20 @@ angular.module('cpucoolerchart.directives', ['cpucoolerchart.util'])
   .directive('boIf', function () {
     return {
       link: function (scope, element, attr) {
-        var unwatch = scope.$watch(attr.boIf, function (value) {
-          if (!value) element.remove();
-          unwatch();
-        });
+        if (!scope.$eval(attr.boIf)) element.remove();
+      }
+    };
+  })
+
+  .directive('linkIf', function () {
+    return {
+      link: function (scope, element, attr) {
+        var url = scope.$eval(attr.linkIf);
+        if (!url) {
+          element.children().unwrap();
+        } else {
+          element.attr('href', url);
+        }
       }
     };
   });
