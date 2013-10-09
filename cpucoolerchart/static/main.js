@@ -275,4 +275,58 @@ angular.module('cpucoolerchart', [])
         })
       }
     };
+  })
+
+  .directive('boBind', function () {
+    return {
+      link: function (scope, element, attr) {
+        var unwatch = scope.$watch(attr.boBind, function (value) {
+          element.text(value);
+          unwatch();
+        });
+      }
+    };
+  })
+
+  .directive('boAttr', function () {
+    return {
+      link: function (scope, element, attr) {
+        var exprs = scope.$eval(attr.boAttr),
+            unwatch = {};
+        for (var name in exprs) {
+          unwatch[name] = scope.$watch(exprs[name], (function (name) {
+            return function (value) {
+              if (name === 'class') {
+                element.addClass(value);
+              } else {
+                element.attr(name, value);
+              }
+              unwatch[name]();
+            };
+          })(name));
+        }
+      }
+    };
+  })
+
+  .directive('boBindHtml', function ($sce) {
+    return {
+      link: function (scope, element, attr) {
+        var unwatch = scope.$watch($sce.parseAsHtml(attr.boBindHtml), function (value) {
+          element.html(value || '');
+          unwatch();
+        });
+      }
+    };
+  })
+
+  .directive('boIf', function () {
+    return {
+      link: function (scope, element, attr) {
+        var unwatch = scope.$watch(attr.boIf, function (value) {
+          if (!value) element.remove();
+          unwatch();
+        });
+      }
+    };
   });

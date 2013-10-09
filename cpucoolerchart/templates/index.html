@@ -10,29 +10,29 @@
   <div class="selectors clearfix">
     <div class="selector">
       <label>소음</label>
-      <div class="btn-group" ng-cloak>
+      <div class="btn-group">
         <button class="btn btn-default"
                 ng-repeat="opt in noiseOptions"
                 ng-click="g.noise = opt.value"
                 ng-class="{
                   active: g.noise == opt.value,
                   disabled: g.power >= 200 &amp;&amp; opt.value <= 40
-                }">
-          {@opt.name@}
+                }"
+                bo-bind="opt.name">
         </button>
       </div>
     </div>
     <div class="selector">
       <label>CPU 소비전력</label>
-      <div class="btn-group" ng-cloak>
+      <div class="btn-group">
         <button class="btn btn-default"
                 ng-repeat="opt in powerOptions"
                 ng-click="g.power = opt.value"
                 ng-class="{
                   active: g.power == opt.value,
                   disabled: g.noise <= 40 &amp;&amp; opt.value >= 200
-                }">
-          {@opt.name@}
+                }"
+                bo-bind="opt.name">
         </button>
       </div>
     </div>
@@ -45,9 +45,12 @@
         </div>
         <div class="panel panel-default">
           <div class="panel-body">
-            <div class="firefox-padding-hack-748518" ng-cloak>
+            <div class="firefox-padding-hack-748518">
               <div class="checkbox" ng-repeat="maker in makers">
-                <label><input type="checkbox"> {@ maker.name @}</label>
+                <label>
+                  <input type="checkbox">
+                  <span bo-bind="maker.name"></span>
+                </label>
               </div>
             </div>
           </div>
@@ -59,9 +62,12 @@
         </div>
         <div class="panel panel-default">
           <div class="panel-body">
-            <div class="firefox-padding-hack-748518" ng-cloak>
+            <div class="firefox-padding-hack-748518">
               <div class="checkbox" ng-repeat="heatsink in heatsinks">
-                <label><input type="checkbox"> {@ heatsink.name @}</label>
+                <label>
+                  <input type="checkbox">
+                  <span bo-bind="heatsink.name"></span>
+                </label>
               </div>
             </div>
           </div>
@@ -122,14 +128,14 @@
       <div class="chart">
         <div class="pull-right chart-controls">
           <label>정렬</label>
-          <div class="btn-group" ng-cloak>
+          <div class="btn-group">
             <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-              {@g.sortOption.name@}
+              <span ng-bind="g.sortOption.name"></span>
               <span class="caret"></span>
             </button>
             <ul class="dropdown-menu">
               <li ng-repeat="opt in sortOptions">
-                <a href="#" click="g.sortOption = opt">{@opt.name@}</a>
+                <a href="#" click="g.sortOption = opt" bo-bind="opt.name"></a>
               </li>
             </ul>
           </div>
@@ -158,32 +164,33 @@
               <th class="chart-price">가격</th>
             </tr>
           </thead>
-          <tbody ng-cloak open-links-in-new-window>
+          <tbody open-links-in-new-window>
             <tr ng-repeat="m in currentMeasurements.items track by m.id">
               <td class="chart-model">
-                <div>{@m.maker.name@}</div>
-                <div title="{@m.heatsink.name@}">{@m.heatsink.name@}</div>
+                <div bo-bind="m.maker.name"></div>
+                <div bo-attr="{title: 'm.heatsink.name'}" bo-bind="m.heatsink.name"></div>
               </td>
               <td class="hidden-sm hidden-xs">
-                <div>{@m.heatsink_size@}</div>
+                <div bo-bind="m.heatsink_size"></div>
                 <div>
-                  {@m.heatsink.heatsink_type@} / {@m.heatsink_weight@}
+                  <span bo-bind="m.heatsink.heatsink_type"></span>
+                  /
+                  <span bo-bind="m.heatsink_weight"></span>
                 </div>
               </td>
               <td class="hidden-sm hidden-xs">
-                <div>{@m.fan_size@}</div>
-                <div>{@m.rpm_avg@}</div>
+                <div bo-bind="m.fan_size"></div>
+                <div bo-bind="m.rpm_avg"></div>
               </td>
-              <td ng-if="g.noise == 100">
-                {@m.noise_avg@}
+              <td ng-if="g.noise == 100" bo-bind="m.noise_avg">
               </td>
               <td class="chart-temp">
                 <div class="chart-temp-cpu" bar-graph="m.cpu_temp_delta"></div>
                 <div class="chart-temp-power" bar-graph="m.power_temp_delta"></div>
               </td>
               <td class="chart-price">
-                <span ng-if="!m.danawa_url">{@m.price@}</span>
-                <a href="{@m.danawa_url@}" ng-if="m.danawa_url">{@m.price@}</a>
+                <span bo-if="!m.danawa_url" bo-bind="m.price"></span>
+                <a bo-attr="{href: 'm.danawa_url'}" bo-if="m.danawa_url" bo-bind="m.price"></a>
               </td>
             </tr>
           </tbody>
@@ -196,7 +203,7 @@
     트위터 <a href="https://twitter.com/ChoongminLee">@ChoongminLee</a>
   </div>
 </div>
-<div class="alert alert-danger" ng-if="error" center width="300" ng-cloak>
-  <p>{@error@}</p>
+<div class="alert alert-danger" ng-if="error" center width="300">
+  <p ng-bind="error"></p>
 </div>
 {% endblock %}
