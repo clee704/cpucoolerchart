@@ -355,7 +355,10 @@ def update_measurement(fan_config, data):
 
 
 def update_price_data():
-  api_key = current_app.config['DANAWA_SEARCH_API_KEY']
+  if 'DANAWA_API_KEY_PRODUCT_INFO' not in current_app.config:
+    __logger__.warning('DANAWA_API_KEY_PRODUCT_INFO not found')
+    return
+  api_key = current_app.config['DANAWA_API_KEY_PRODUCT_INFO']
   heatsinks = db.session.query(Maker.name, Heatsink).join(
       Heatsink, Maker.id == Heatsink.maker_id)
   for maker_name, heatsink in heatsinks:
@@ -377,10 +380,10 @@ def update_price_data():
 
 
 def print_danawa_results():
-  if 'DANAWA_SEARCH_API_KEY' not in current_app.config:
-    __logger__.warning('DANAWA_SEARCH_API_KEY not found')
+  if 'DANAWA_API_KEY_SEARCH' not in current_app.config:
+    __logger__.warning('DANAWA_API_KEY_SEARCH not found')
     return
-  api_key = current_app.config['DANAWA_SEARCH_API_KEY']
+  api_key = current_app.config['DANAWA_API_KEY_SEARCH']
   heatsinks = db.session.query(Maker.name, Heatsink).join(
       Heatsink, Maker.id == Heatsink.maker_id).order_by(Maker.name, Heatsink.name)
   for maker_name, heatsink in heatsinks:
