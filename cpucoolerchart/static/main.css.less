@@ -52,6 +52,8 @@ label {
   float: left;
   margin-right: 10px;
   margin-bottom: (@line-height-computed / 2);
+  position: relative;
+  z-index: 1020;
   label {
     display: block;
   }
@@ -119,15 +121,9 @@ label {
   }
   th, td {
     font-weight: normal;
-    padding: 5px @padding;
+    padding: @padding;
     overflow: hidden;
     white-space: nowrap;
-    &:first-child {
-      padding-left: 0;
-    }
-    &:last-child {
-      padding-right: 0;
-    }
   }
   .empty {
     text-align: center;
@@ -137,27 +133,33 @@ label {
       border-bottom: 1px solid @table-border-color;
     }
     th {
+      padding-top: 0;
       padding-bottom: (@padding * 2);
     }
   }
   tbody {
-    tr:first-child, tr.first {
-      td {
-        padding-top: (@padding * 2);
+    tr {
+      cursor: pointer;
+      &.selected {
+        background-color: @gray-lighter;
+      }
+      &:first-child, &.first {
+        td {
+          padding-top: (@padding * 2);
+        }
       }
     }
   }
   @media (min-width: @screen-sm) {
     position: relative;
-    top: -@input-height-base;
-    .chart-controls {
-      position: relative;
-      top: -@line-height-computed;
-    }
+    top: -(@input-height-base + @line-height-computed);
+    z-index: 1010;
   }
 }
 
 .chart-controls {
+  float: right;
+  margin-bottom: @line-height-computed;
   label {
     margin-right: 5px;
   }
@@ -165,6 +167,13 @@ label {
     left: auto;
     right: 0;
   }
+}
+
+.chart-control {
+  display: inline-block;
+  margin-left: 5px;
+  position: relative;
+  z-index: 1030;
 }
 
 .chart-model div {

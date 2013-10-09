@@ -108,18 +108,37 @@
     </div>
     <div class="col-sm-8 col-md-9">
       <div class="chart">
-        <div class="pull-right chart-controls">
-          <label>정렬</label>
-          <div class="btn-group">
-            <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-              <span ng-bind="g.sortOption.name"></span>
-              <span class="caret"></span>
+        <div class="chart-controls">
+          <div class="chart-control">
+            <button class="btn btn-success ng-hide"
+                    ng-show="!g.showSelectedOnly &amp;&amp; g.numSelectedHeatsinks"
+                    ng-click="g.showSelectedOnly = true">
+              비교
             </button>
-            <ul class="dropdown-menu">
-              <li ng-repeat="opt in sortOptions">
-                <a href="#" click="g.sortOption = opt" bo-bind="opt.name"></a>
-              </li>
-            </ul>
+            <button class="btn btn-default ng-hide"
+                    ng-show="!g.showSelectedOnly &amp;&amp; g.numSelectedHeatsinks"
+                    ng-click="unselectAll()">
+              취소
+            </button>
+            <button class="btn btn-primary ng-hide"
+                    ng-show="g.showSelectedOnly"
+                    ng-click="g.showSelectedOnly = false">
+              모두 보기
+            </button>
+          </div>
+          <div class="chart-control">
+            <label>정렬</label>
+            <div class="btn-group">
+              <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                <span ng-bind="g.sortOption.name"></span>
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu">
+                <li ng-repeat="opt in sortOptions">
+                  <a href="#" click="g.sortOption = opt" bo-bind="opt.name"></a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
         <div class="clearfix"></div>
@@ -146,10 +165,14 @@
               <th class="chart-price">가격</th>
             </tr>
           </thead>
-          <tbody open-links-in-new-window ng-if="measurements.length > 0">
+          <tbody ng-if="measurements.length > 0">
             <tr ng-repeat="m in measurements.items track by m.id"
                 ng-show="m.visible"
-                ng-class="{first: g.filterByMaker &amp;&amp; m.first}">
+                ng-click="toggleSelection(m.heatsink)"
+                ng-class="{
+                  first: m.first,
+                  selected: !g.showSelectedOnly &amp;&amp; m.heatsink.selected
+                }">
               <td class="chart-model">
                 <div bo-bind="m.maker.name"></div>
                 <div bo-attr="{title: 'm.heatsink.name'}" bo-bind="m.heatsink.name"></div>
@@ -175,6 +198,7 @@
               <td class="chart-price">
                 <span bo-if="!m.danawa_url" bo-bind="m.price_formatted"></span>
                 <a bo-attr="{href: 'm.danawa_url'}" bo-if="m.danawa_url"
+                   open-link-in-new-window
                    bo-bind="m.price_formatted"></a>
               </td>
             </tr>

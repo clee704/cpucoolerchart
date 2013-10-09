@@ -38,12 +38,14 @@ angular.module('cpucoolerchart', [])
       heightMax: null,
       weightMin: null,
       weightMax: null,
-      heatsinkType: null
+      heatsinkType: null,
+      numSelectedHeatsinks: 0
     };
 
     var privateScope = {
       sortOptionsByAlias: util.indexBy($scope.sortOptions, 'alias'),
-      heatsinkTypeOptionsByValue: util.indexBy($scope.heatsinkTypeOptions, 'value')
+      heatsinkTypeOptionsByValue: util.indexBy($scope.heatsinkTypeOptions, 'value'),
+      selectedHeatsinks: {}
     };
 
     var defaultValues = {
@@ -135,7 +137,8 @@ angular.module('cpucoolerchart', [])
             (g.heightMax === null || m.height !== null && g.heightMax >= m.height) &&
             (g.weightMin === null || m.weight !== null && g.weightMin <= m.weight) &&
             (g.weightMax === null || m.weight !== null && g.weightMax >= m.weight) &&
-            (g.heatsinkType === null || g.heatsinkType === m.heatsink.heatsink_type);
+            (g.heatsinkType === null || g.heatsinkType === m.heatsink.heatsink_type) &&
+            (!g.showSelectedOnly || m.heatsink.selected);
         m.first = !found && m.visible;
         if (m.first) found = true;
         if (m.visible) length += 1;
@@ -170,6 +173,28 @@ angular.module('cpucoolerchart', [])
       };
     })();
 
+    $scope.toggleSelection = function (heatsink, bypassProtection) {
+      if ($scope.g.showSelectedOnly && !bypassProtection) return;
+      heatsink.selected = !heatsink.selected;
+      if (heatsink.selected) {
+        $scope.g.numSelectedHeatsinks += 1;
+        privateScope.selectedHeatsinks[heatsink.id] = heatsink;
+      } else {
+        $scope.g.numSelectedHeatsinks -= 1;
+        delete privateScope.selectedHeatsinks[heatsink.id];
+      }
+    };
+
+    $scope.unselectAll = function () {
+      var selected = privateScope.selectedHeatsinks;
+      for (var id in selected) {
+        if (!selected.hasOwnProperty(id)) continue;
+        selected[id].selected = false;
+        delete selected[id];
+      }
+      $scope.g.numSelectedHeatsinks = 0;
+    };
+
     var readLocation = function () {
       var query = util.deserialize($location.path().substr(1));
       $scope.g.noise = util.parseNumber(query.noise, defaultValues.noise);
@@ -193,19 +218,42 @@ angular.module('cpucoolerchart', [])
         var values = query.price.split('~');
         $scope.g.priceMin = util.parseNumber(values[0]);
         $scope.g.priceMax = util.parseNumber(values[1]);
+      } else {
+        $scope.g.priceMin = $scope.g.priceMax = null;
       }
       if (query.height) {
         var values = query.height.split('~');
         $scope.g.heightMin = util.parseNumber(values[0]);
         $scope.g.heightMax = util.parseNumber(values[1]);
+      } else {
+        $scope.g.heightMin = $scope.g.heightMax = null;
       }
       if (query.weight) {
         var values = query.weight.split('~');
         $scope.g.weightMin = util.parseNumber(values[0]);
         $scope.g.weightMax = util.parseNumber(values[1]);
+      } else {
+        $scope.g.weightMin = $scope.g.weightMax = null;
       }
-      if (privateScope.heatsinkTypeOptionsByValue[query.type]) {
+      if (privateScope.heatsinkTypeOptionsByValue.hasOwnProperty(query.type)) {
         $scope.g.heatsinkType = query.type;
+      } else {
+        $scope.g.heatsinkType = null;
+      }
+      if (query.show && query.show === 'selection') {
+        $scope.g.showSelectedOnly = true;
+      } else {
+        $scope.g.showSelectedOnly = false;
+      }
+      $scope.unselectAll();
+      if (query.select) {
+        var heatsinkIds = query.select.split('+');
+        for (var i = 0; i < heatsinkIds.length; i++) {
+          var id = util.parseNumber(heatsinkIds[i]);
+          if (!privateScope.heatsinksById.hasOwnProperty(id)) continue;
+          var heatsink = privateScope.heatsinksById[id];
+          $scope.toggleSelection(heatsink, true);
+        }
       }
     };
 
@@ -221,7 +269,9 @@ angular.module('cpucoolerchart', [])
         price: util.parseNumber($scope.g.priceMin, '') + '~' + util.parseNumber($scope.g.priceMax, ''),
         height: util.parseNumber($scope.g.heightMin, '') + '~' + util.parseNumber($scope.g.heightMax, ''),
         weight: util.parseNumber($scope.g.weightMin, '') + '~' + util.parseNumber($scope.g.weightMax, ''),
-        type: $scope.g.heatsinkType
+        type: $scope.g.heatsinkType,
+        show: $scope.g.showSelectedOnly ? 'selection' : '',
+        select: util.keys(privateScope.selectedHeatsinks).join('+')
       };
       if (query.noise === defaultValues.noise) delete query.noise;
       if (query.power === defaultValues.power) delete query.power;
@@ -231,6 +281,8 @@ angular.module('cpucoolerchart', [])
       if (query.height === '~') delete query.height;
       if (query.weight === '~') delete query.weight;
       if (query.type === null) delete query.type;
+      if (query.show === '') delete query.show;
+      if (query.select === '') delete query.select;
       $location.path(util.serialize(query));
     };
 
@@ -255,6 +307,7 @@ angular.module('cpucoolerchart', [])
       $scope.$watch('g.weightMin', findVisibleMeasurements);
       $scope.$watch('g.weightMax', findVisibleMeasurements);
       $scope.$watch('g.heatsinkType', findVisibleMeasurements);
+      $scope.$watch('g.showSelectedOnly', findVisibleMeasurements);
       $scope.$watch('makers', function (makers) {
         updateLocation();
         $scope.g.filterByMaker = makers.some(function (maker) { return maker.selected; });
@@ -320,6 +373,15 @@ angular.module('cpucoolerchart', [])
       }
       return map;
     };
+
+    this.keys = function (obj) {
+      var keys = [];
+      for (var key in obj) {
+        if (!obj.hasOwnProperty(key)) continue;
+        keys.push(key);
+      }
+      return keys;
+    };
   })
 
   .directive('selectAll', function () {
@@ -363,16 +425,19 @@ angular.module('cpucoolerchart', [])
     };
   })
 
-  .directive('openLinksInNewWindow', function ($window) {
+  .directive('openLinkInNewWindow', function ($window) {
     return {
       link: function (scope, element/*, attr */) {
-        element.on('click', 'a[href]', function (e) {
-          if (e.ctrlKey || e.metaKey) return;
-          var url = angular.element(e.target).attr('href');
-          if (url && url.charAt(0) !== '#') {
-            $window.open(url);
-            e.preventDefault();
+        element.on('click', function (e) {
+          console.log(e);
+          if (!(e.ctrlKey || e.metaKey || e.altKey || e.shiftKey)) {
+            var url = angular.element(e.target).attr('href');
+            if (url && url.charAt(0) !== '#') {
+              $window.open(url);
+              e.preventDefault();
+            }
           }
+          e.stopPropagation();
         });
       }
     };
