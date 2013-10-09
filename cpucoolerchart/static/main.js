@@ -29,7 +29,9 @@ angular.module('cpucoolerchart', [])
     ];
     $scope.g = {};
 
-    var sortOptionsByAlias = util.indexBy($scope.sortOptions, 'alias');
+    var privateScope = {
+      sortOptionsByAlias: util.indexBy($scope.sortOptions, 'alias')
+    };
 
     var defaultValues = {
       noise: 35,
@@ -39,13 +41,8 @@ angular.module('cpucoolerchart', [])
 
     var getResources = function (url, name) {
       return $http.get(url).success(function (data) {
-        $scope[name] = data.items;
-        var map = {};
-        for (var i = 0; i < data.items.length; i++) {
-          var item = data.items[i];
-          map[item.id] = item;
-        }
-        $scope[name + 'ById'] = map;
+        privateScope[name] = data.items;
+        privateScope[name + 'ById'] = util.indexBy(data.items, 'id');
       }).error(function () {
         $scope.error = '데이터를 가져오는 동안 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
       });
@@ -53,11 +50,11 @@ angular.module('cpucoolerchart', [])
 
     var augmentMeasurements = function () {
       var empty = '-';
-      for (var i = 0; i < $scope.measurements.length; i++) {
-        var m = $scope.measurements[i];
-        m.fan_config = $scope.fanConfigsById[m.fan_config_id];
-        m.heatsink = $scope.heatsinksById[m.fan_config.heatsink_id];
-        m.maker = $scope.makersById[m.heatsink.maker_id];
+      for (var i = 0; i < privateScope.measurements.length; i++) {
+        var m = privateScope.measurements[i];
+        m.fan_config = privateScope.fanConfigsById[m.fan_config_id];
+        m.heatsink = privateScope.heatsinksById[m.fan_config.heatsink_id];
+        m.maker = privateScope.makersById[m.heatsink.maker_id];
         m.heatsink_size = [
           Math.round(m.heatsink.width) || empty,
           Math.round(m.heatsink.depth) || empty,
@@ -96,8 +93,8 @@ angular.module('cpucoolerchart', [])
       };
       return function () {
         var key = $scope.g.sortOption.value;
-        if ($scope.currentMeasurements.sortKey === key) return;
-        $scope.currentMeasurements.items.sort(function (a, b) {
+        if ($scope.measurements.sortKey === key) return;
+        $scope.measurements.items.sort(function (a, b) {
           var c;
           if ((c = compareNumbers(a, b, key)) != 0) return c;
           if ((c = compareNumbers(a, b, 'cpu_temp_delta')) != 0) return c;
@@ -105,35 +102,45 @@ angular.module('cpucoolerchart', [])
           if ((c = compareNumbers(a, b, 'price')) != 0) return c;
           return 0;
         });
-        $scope.currentMeasurements.sortKey = key;
+        $scope.measurements.sortKey = key;
       };
     })();
+
+    var findFirstVisibleMeasurement = function () {
+      var filter = $scope.g.filterByMaker,
+          current = $scope.measurements.items,
+          found = false;
+      for (var i = 0; i < current.length; i++) {
+        var m = current[i];
+        m.first = $scope.g.filterByMaker && !found && m.maker.selected;
+        if (m.first) found = true;
+      }
+    };
 
     var selectMeasurements = (function () {
       var cachedMeasurementSelections = {35: {}, 40: {}, 45: {}, 100: {}};
       return function () {
         var noise = $scope.g.noise,
             power = $scope.g.power;
-        updateLocation();
         var cached = cachedMeasurementSelections[noise][power];
         if (cached) {
-          $scope.currentMeasurements = cached;
-          sortMeasurements();
-          return;
-        }
-        var current = [];
-        for (var i = 0; i < $scope.measurements.length; i++) {
-          var m = $scope.measurements[i];
-          if (m.noise === noise && m.power === power) {
-            current.push(m);
+          $scope.measurements = cached;
+        } else {
+          var current = [];
+          for (var i = 0; i < privateScope.measurements.length; i++) {
+            var m = privateScope.measurements[i];
+            if (m.noise === noise && m.power === power) {
+              current.push(m);
+            }
           }
+          cachedMeasurementSelections[noise][power] = {
+            sortKey: 'cpu_temp_delta',
+            items: current
+          };
+          $scope.measurements = cachedMeasurementSelections[noise][power];
         }
-        $scope.currentMeasurements = {
-          sortKey: 'cpu_temp_delta',
-          items: current
-        };
-        cachedMeasurementSelections[noise][power] = $scope.currentMeasurements;
         sortMeasurements();
+        findFirstVisibleMeasurement();
       };
     })();
 
@@ -141,32 +148,58 @@ angular.module('cpucoolerchart', [])
       var query = util.deserialize($location.path().substr(1));
       $scope.g.noise = util.parseNumber(query.noise, defaultValues.noise);
       $scope.g.power = util.parseNumber(query.power, defaultValues.power);
-      $scope.g.sortOption = sortOptionsByAlias[query.sort] ||
-          sortOptionsByAlias[defaultValues.sort];
+      $scope.g.sortOption = privateScope.sortOptionsByAlias[query.sort] ||
+          privateScope.sortOptionsByAlias[defaultValues.sort];
+      if (query.maker) {
+        var makerNames = query.maker.split('/'),
+            filtered = false;
+        for (var i = 0; i < makerNames.length; i++) {
+          var name = makerNames[i];
+          var maker = privateScope.makersByName[name];
+          if (maker) {
+            maker.selected = true;
+            filtered = true;
+          }
+        }
+        $scope.g.filterByMaker = filtered;
+      }
     };
 
     var updateLocation = function () {
       var query = {
         noise: $scope.g.noise,
         power: $scope.g.power,
-        sort: $scope.g.sortOption.alias
+        sort: $scope.g.sortOption.alias,
+        maker: !$scope.g.filterByMaker ? '' :
+            privateScope.makers.filter(function (maker) { return maker.selected; })
+                               .map(function (maker) { return maker.name; })
+                               .join('/')
       };
       if (query.noise === defaultValues.noise) delete query.noise;
       if (query.power === defaultValues.power) delete query.power;
       if (query.sort === defaultValues.sort) delete query.sort;
+      if (query.maker === '') delete query.maker;
       $location.path(util.serialize(query));
     };
 
-    readLocation();
     $q.all([
       getResources('/makers', 'makers'),
       getResources('/heatsinks', 'heatsinks'),
       getResources('/fan-configs', 'fanConfigs'),
       getResources('/measurements', 'measurements')
     ]).then(function () {
+      $scope.makers = privateScope.makers;
+      privateScope.makersByName = util.indexBy(privateScope.makers, 'name');
+      readLocation();
       augmentMeasurements();
+      $scope.$watch('g', updateLocation, true);
+      $scope.$watch('makers', updateLocation, true);
       $scope.$watch('g', selectMeasurements, true);
       $scope.$watch('g.sortOption', sortMeasurements);
+      $scope.$watch('makers', function (makers) {
+        $scope.g.filterByMaker = makers.some(function (maker) { return maker.selected; });
+        findFirstVisibleMeasurement();
+      }, true);
     });
   })
 
@@ -222,6 +255,23 @@ angular.module('cpucoolerchart', [])
         map[arr[i][value]] = arr[i];
       }
       return map;
+    };
+  })
+
+  .directive('selectAll', function () {
+    return {
+      scope: {'items': '=selectAll'},
+      link: function (scope, element, attr) {
+        if (!element.is('input[type=checkbox]')) return;
+        element.on('click', function () {
+          scope.$apply(function () {
+            var selected = element.is(':checked');
+            for (var i = 0; i < scope.items.length; i++) {
+              scope.items[i].selected = selected;
+            }
+          });
+        });
+      }
     };
   })
 
@@ -294,6 +344,7 @@ angular.module('cpucoolerchart', [])
         var exprs = scope.$eval(attr.boAttr),
             unwatch = {};
         for (var name in exprs) {
+          if (!exprs.hasOwnProperty(name)) continue;
           unwatch[name] = scope.$watch(exprs[name], (function (name) {
             return function (value) {
               if (name === 'class') {
@@ -305,17 +356,6 @@ angular.module('cpucoolerchart', [])
             };
           })(name));
         }
-      }
-    };
-  })
-
-  .directive('boBindHtml', function ($sce) {
-    return {
-      link: function (scope, element, attr) {
-        var unwatch = scope.$watch($sce.parseAsHtml(attr.boBindHtml), function (value) {
-          element.html(value || '');
-          unwatch();
-        });
       }
     };
   })

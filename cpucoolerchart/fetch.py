@@ -153,7 +153,7 @@ def extract_data(table, noise, power):
 
 def parse_maker(s):
   maker = compress_spaces(s)
-  return MAKER_FIX.get(maker.lower(), maker)
+  return MAKER_FIX.get(maker.lower(), maker).replace('/', '-')
 
 
 def parse_model(s):

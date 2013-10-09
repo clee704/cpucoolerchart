@@ -41,32 +41,17 @@
     <div class="col-sm-4 col-md-3">
       <div class="filter">
         <div class="checkbox filter-label">
-          <label><input type="checkbox"> 제조사</label>
+          <label>
+            <input type="checkbox" select-all="makers" ng-model="$parent.g.filterByMaker"> 제조사
+          </label>
         </div>
         <div class="panel panel-default">
           <div class="panel-body">
             <div class="firefox-padding-hack-748518">
               <div class="checkbox" ng-repeat="maker in makers">
                 <label>
-                  <input type="checkbox">
+                  <input type="checkbox" ng-model="maker.selected">
                   <span bo-bind="maker.name"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="filter">
-        <div class="checkbox filter-label">
-          <label><input type="checkbox"> 제품명</label>
-        </div>
-        <div class="panel panel-default">
-          <div class="panel-body">
-            <div class="firefox-padding-hack-748518">
-              <div class="checkbox" ng-repeat="heatsink in heatsinks">
-                <label>
-                  <input type="checkbox">
-                  <span bo-bind="heatsink.name"></span>
                 </label>
               </div>
             </div>
@@ -165,7 +150,9 @@
             </tr>
           </thead>
           <tbody open-links-in-new-window>
-            <tr ng-repeat="m in currentMeasurements.items track by m.id">
+            <tr ng-repeat="m in measurements.items track by m.id"
+                ng-show="!g.filterByMaker || m.maker.selected"
+                ng-class="{first: g.filterByMaker &amp;&amp; m.first}">
               <td class="chart-model">
                 <div bo-bind="m.maker.name"></div>
                 <div bo-attr="{title: 'm.heatsink.name'}" bo-bind="m.heatsink.name"></div>
@@ -203,7 +190,7 @@
     트위터 <a href="https://twitter.com/ChoongminLee">@ChoongminLee</a>
   </div>
 </div>
-<div class="alert alert-danger" ng-if="error" center width="300">
+<div class="alert alert-danger" ng-show="error" center width="300">
   <p ng-bind="error"></p>
 </div>
 {% endblock %}
