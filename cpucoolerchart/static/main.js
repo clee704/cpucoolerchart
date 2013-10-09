@@ -27,12 +27,14 @@ angular.module('cpucoolerchart', [])
       {name: '무게', value: 'weight', alias: 'weight'},
       {name: '소음', value: 'noise_avg', alias: 'noise'}
     ];
+    $scope.g = {};
 
     var sortOptionsByAlias = util.indexBy($scope.sortOptions, 'alias');
-    $scope.g = {
+
+    var defaultValues = {
       noise: 35,
       power: 62,
-      sortOption: sortOptionsByAlias['cpu']
+      sort: 'cpu'
     };
 
     var getResources = function (url, name) {
@@ -137,9 +139,10 @@ angular.module('cpucoolerchart', [])
 
     var readLocation = function () {
       var query = util.deserialize($location.path().substr(1));
-      $scope.g.noise = util.parseNumber(query.noise, 35);
-      $scope.g.power = util.parseNumber(query.power, 62);
-      $scope.g.sortOption = sortOptionsByAlias[query.sort] || sortOptionsByAlias['cpu'];
+      $scope.g.noise = util.parseNumber(query.noise, defaultValues.noise);
+      $scope.g.power = util.parseNumber(query.power, defaultValues.power);
+      $scope.g.sortOption = sortOptionsByAlias[query.sort] ||
+          sortOptionsByAlias[defaultValues.sort];
     };
 
     var updateLocation = function () {
@@ -148,6 +151,9 @@ angular.module('cpucoolerchart', [])
         power: $scope.g.power,
         sort: $scope.g.sortOption.alias
       };
+      if (query.noise === defaultValues.noise) delete query.noise;
+      if (query.power === defaultValues.power) delete query.power;
+      if (query.sort === defaultValues.sort) delete query.sort;
       $location.path(util.serialize(query));
     };
 
