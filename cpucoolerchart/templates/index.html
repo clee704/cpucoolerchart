@@ -149,7 +149,7 @@
               <th class="chart-price">가격</th>
             </tr>
           </thead>
-          <tbody open-links-in-new-window>
+          <tbody open-links-in-new-window ng-if="measurements.length > 0">
             <tr ng-repeat="m in measurements.items track by m.id"
                 ng-show="!g.filterByMaker || m.maker.selected"
                 ng-class="{first: g.filterByMaker &amp;&amp; m.first}">
@@ -181,6 +181,13 @@
               </td>
             </tr>
           </tbody>
+          <tbody ng-if="!(measurements.length > 0)">
+            <tr>
+              <td class="empty" colspan="{@g.noise == 100 ? 6 : 5@}">
+                데이터가 없습니다.
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </div>
@@ -190,7 +197,7 @@
     트위터 <a href="https://twitter.com/ChoongminLee">@ChoongminLee</a>
   </div>
 </div>
-<div class="alert alert-danger" ng-show="error" center width="300">
+<div class="alert alert-danger ng-hide" ng-show="error" center width="300">
   <p ng-bind="error"></p>
 </div>
 {% endblock %}

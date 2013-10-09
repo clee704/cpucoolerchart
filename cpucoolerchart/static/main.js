@@ -106,15 +106,18 @@ angular.module('cpucoolerchart', [])
       };
     })();
 
-    var findFirstVisibleMeasurement = function () {
+    var findVisibleMeasurements = function () {
       var filter = $scope.g.filterByMaker,
           current = $scope.measurements.items,
-          found = false;
+          found = false,
+          length = 0;
       for (var i = 0; i < current.length; i++) {
         var m = current[i];
         m.first = $scope.g.filterByMaker && !found && m.maker.selected;
         if (m.first) found = true;
+        if (!$scope.g.filterByMaker || m.maker.selected) length += 1;
       }
+      $scope.measurements.length = length;
     };
 
     var selectMeasurements = (function () {
@@ -140,7 +143,7 @@ angular.module('cpucoolerchart', [])
           $scope.measurements = cachedMeasurementSelections[noise][power];
         }
         sortMeasurements();
-        findFirstVisibleMeasurement();
+        findVisibleMeasurements();
       };
     })();
 
@@ -198,7 +201,7 @@ angular.module('cpucoolerchart', [])
       $scope.$watch('g.sortOption', sortMeasurements);
       $scope.$watch('makers', function (makers) {
         $scope.g.filterByMaker = makers.some(function (maker) { return maker.selected; });
-        findFirstVisibleMeasurement();
+        findVisibleMeasurements();
       }, true);
     });
   })
