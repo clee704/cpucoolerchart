@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import logging
 import logging.config
 import os
@@ -32,6 +33,7 @@ def create_app(config=None, blueprints=None):
   configure_logging(app)
   configure_blueprints(app, blueprints)
   configure_extensions(app)
+  configure_templates(app)
   return app
 
 
@@ -141,3 +143,26 @@ def configure_extensions(app):
     redis_connection.init_app(host=app.config['CACHE_REDIS_HOST'],
         port=app.config['CACHE_REDIS_PORT'],
         password=app.config.get('CACHE_REDIS_PASSWORD'))
+
+
+def configure_templates(app):
+  @app.template_filter('duration')
+  def duration_filter(s):
+    try:
+      seconds = int(s)
+    except ValueError:
+      return s
+    if seconds <= 0:
+      return s
+    if seconds < 3600:
+      return u'{0}초'.format(seconds)
+    elif seconds < 86400 or seconds % 86400 != 0 and seconds < 86400 * 7:
+      return u'{0}시간'.format(int(round(seconds / 3600.0)))
+    elif seconds == 86400:
+      return u'하루'
+    elif seconds == 86400 * 2:
+      return u'이틀'
+    elif seconds == 86400 * 7:
+      return u'일주일'
+    else:
+      return u'{0}일'.format(int(round(seconds / 86400.0)))
