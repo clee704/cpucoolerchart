@@ -20,6 +20,7 @@ from .extensions import db, cache
 from .models import Maker, Heatsink, FanConfig, Measurement
 from .resources.coolenjoy import MAKER_FIX, MODEL_FIX, INCONSISTENCY_FIX
 from .resources.danawa import MAPPING
+from .util import strip_xml_encoding
 
 
 __logger__ = logging.getLogger(__name__)
@@ -259,7 +260,7 @@ def parse_temp_info(data, elements):
 
 
 def fix_inconsistency(data):
-  key = data['maker'] + ' ' + data['model']
+  key = (data['maker'] + ' ' + data['model']).lower()
   if key in INCONSISTENCY_FIX:
     data.update(INCONSISTENCY_FIX[key])
 
@@ -358,7 +359,7 @@ def update_price_data():
   heatsinks = db.session.query(Maker.name, Heatsink).join(
       Heatsink, Maker.id == Heatsink.maker_id)
   for maker_name, heatsink in heatsinks:
-    key = maker_name + ' ' + heatsink.name
+    key = (maker_name + ' ' + heatsink.name).lower()
     if key in MAPPING and MAPPING[key] != heatsink.danawa_id:
       heatsink.danawa_id = MAPPING[key]
     if heatsink.danawa_id is None:
@@ -383,35 +384,27 @@ def print_danawa_results():
   heatsinks = db.session.query(Maker.name, Heatsink).join(
       Heatsink, Maker.id == Heatsink.maker_id).order_by(Maker.name, Heatsink.name)
   for maker_name, heatsink in heatsinks:
-    if heatsink.danawa_id is None:
-      url = 'http://api.danawa.com/api/search/product/info'
-      query = {
-        'key': api_key,
-        'mediatype': 'json',
-        'keyword': (maker_name + ' ' + heatsink.name).encode('UTF-8'),
-        'cate_c1': 862,
-      }
-      json_text = get_cached_response_text(url + '?' + urllib.urlencode(query))
-      data = load_danawa_json(json_text)
-      if data is None:
-        continue
-      if int(data['totalCount']) == 0:
-        print u'{0} {1}: NO DATA'.format(maker_name, heatsink.name)
-        continue
-      if not isinstance(data['productList'], list):
-        data['productList'] = [data['productList']]
-      print u'{0} {1}'.format(maker_name, heatsink.name)
-      for product_data in data['productList']:
-        print u'  {maker} {prod_name} id={prod_id} min_price={min_price}'.format(**product_data)
-    else:
-      url = 'http://api.danawa.com/api/main/product/info'
-      query = {'key': api_key, 'mediatype': 'json', 'prodCode': heatsink.danawa_id}
-      json_text = get_cached_response_text(url + '?' + urllib.urlencode(query))
-      data = load_danawa_json(json_text)
-      if data is None:
-        continue
-      print u'{0} {1}: {maker[name]} {name} id={code} min_price={minPrice}'.format(
-          maker_name, heatsink.name, **data)
+    if heatsink.danawa_id is not None:
+      continue
+    url = 'http://api.danawa.com/api/search/product/info'
+    query = {
+      'key': api_key,
+      'mediatype': 'json',
+      'keyword': (maker_name + ' ' + heatsink.name).encode('UTF-8'),
+      'cate_c1': 862,
+    }
+    json_text = get_cached_response_text(url + '?' + urllib.urlencode(query))
+    data = load_danawa_json(json_text)
+    if data is None:
+      continue
+    if int(data['totalCount']) == 0:
+      print u'{0} {1}: NO DATA'.format(maker_name, heatsink.name)
+      continue
+    if not isinstance(data['productList'], list):
+      data['productList'] = [data['productList']]
+    print u'{0} {1}'.format(maker_name, heatsink.name)
+    for product_data in data['productList']:
+      print u'  {maker} {prod_name} id={prod_id} min_price={min_price}'.format(**product_data)
 
 
 def get_cached_response_text(url):
@@ -430,9 +423,9 @@ def load_danawa_json(text):
   try:
     return json.loads(text)
   except ValueError:
-    if json_text.startswith('<?xml'):
+    if text.startswith('<?xml'):
       try:
-        result = lxml.etree.fromstring(text)
+        result = lxml.etree.fromstring(strip_xml_encoding(text))
         __logger__.warning(u'Danawa responded with an error: %s: %s',
             result.find('code').text, result.find('message').text)
       except lxml.etree.XMLSyntaxError:
