@@ -260,6 +260,7 @@ angular.module('cpucoolerchart', [])
         $scope.g.filterByMaker = makers.some(function (maker) { return maker.selected; });
         findVisibleMeasurements();
       }, true);
+      $scope.$on('$locationChangeSuccess', readLocation);
     });
   })
 
