@@ -2,7 +2,7 @@
 from flask.ext.script import Manager, prompt_bool
 from cpucoolerchart import create_app
 from cpucoolerchart.extensions import db, cache
-from cpucoolerchart.fetch import update_data
+from cpucoolerchart.fetch import update_data, print_danawa_results
 from cpucoolerchart.models import Maker, Heatsink, FanConfig, Measurement
 from cpucoolerchart.util import heroku_scale
 
@@ -43,6 +43,15 @@ def update(force=False):
     if app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
       heroku_scale('worker', 0)
 
+@manager.command
+def danawa():
+  """
+  Prints danawa search results. Use this command to find danawa product
+  identifiers for heatsinks.
+
+  """
+  print_danawa_results()
+
 
 db_manager = Manager(help="Makes changes to the database.")
 manager.add_command('db', db_manager)
@@ -68,8 +77,8 @@ def drop():
 @db_manager.command
 def reset():
   """Drops and creates all database tables."""
-  dropdb()
-  createdb()
+  drop()
+  create()
 
 
 cache_manager = Manager(help="Manipulates the cache.")

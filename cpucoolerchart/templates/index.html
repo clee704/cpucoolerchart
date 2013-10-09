@@ -136,13 +136,13 @@
             </th>
             <th ng-if="g.noise == 100">소음</th>
             <th class="chart-temp">
-              <div>CPU 온도 (델타)</div>
-              <div>전원부 온도 (델타)</div>
+              <div>CPU 온도</div>
+              <div>전원부 온도</div>
             </th>
-            <th>가격</th>
+            <th class="chart-price">가격</th>
           </tr>
         </thead>
-        <tbody ng-cloak>
+        <tbody ng-cloak open-links-in-new-window>
           <tr ng-repeat="m in currentMeasurements">
             <td class="chart-model">
               <div>{@m.maker.name@}</div>
@@ -165,8 +165,9 @@
               <div class="chart-temp-cpu" bar-graph="m.cpu_temp_delta"></div>
               <div class="chart-temp-power" bar-graph="m.power_temp_delta"></div>
             </td>
-            <td>
-              -
+            <td class="chart-price">
+              <span ng-if="!m.danawa_url">{@m.price@}</span>
+              <a href="{@m.danawa_url@}" ng-if="m.danawa_url">{@m.price@}</a>
             </td>
           </tr>
         </tbody>

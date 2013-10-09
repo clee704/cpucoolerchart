@@ -1,20 +1,25 @@
-# -*- coding: UTF-8 -*-
 import base64
 from collections import namedtuple
 from datetime import datetime, timedelta
 import itertools
+import json
 import logging
 import math
 import os
 import re
 import sys
+import urllib
 
+from flask import current_app
+import lxml.etree
 import lxml.html
 from prettytable import PrettyTable
 import requests
 
 from .extensions import db, cache
 from .models import Maker, Heatsink, FanConfig, Measurement
+from .resources.coolenjoy import MAKER_FIX, MODEL_FIX, INCONSISTENCY_FIX
+from .resources.danawa import MAPPING
 
 
 __logger__ = logging.getLogger(__name__)
@@ -69,72 +74,19 @@ DEPENDENCIES = {
   )
 }
 
-# Various fixes for miscellaneous typos and inconsistencies in the original
-# data. Since virtually no makers or models have names differ by only case,
-# the original name is converted to lowercase for compact fix dictionaries.
-MAKER_FIX = {
-  '3rsystem': '3Rsystem',
-  '3rsystemm': '3Rsystem',
-  'deep cool': 'DEEPCOOL',
-  'thermalright': 'Thermalright',
-  'thermalrightm': 'Thermalright',
-  'tunq': 'Tuniq',
-  'akasa': 'Akasa',
-  'intel': 'Intel',
-  'silverstone': 'SILVERSTONE',
-}
-MODEL_FIX = {
-  'cnps9700nt': 'CNPS9700 NT',
-  'cnps9900led': 'CNPS9900 LED',
-  'iceage 120': 'iCEAGE 120',
-  'iceage 120 boss': 'iCEAGE 120 BOSS',
-  'iceage 120 prima': 'iCEAGE 120 PRIMA',
-  'iceage 90mm': 'iCEAGE 90mm',
-  'triton 79 amazing': 'TRITON 79 AMAZING',
-  'true spirit': 'True Spirit',
-  u'amd정품': u'AMD 정품',
-  'core_contact freezer 92': 'Core-Contact Freezer 92',
-  'bada2010': 'BADA 2010',
-  u'baram shine(바람 샤인)': u'BARAM Shine',
-  u'baram(바람)': u'BARAM',
-  'bigtyp 14pro(cl-p0456)': 'BigTyp 14Pro CL-P0456',
-}
-INCONSISTENCY_FIX = {
-  '3Rsystem Iceage 120': {
-    'width': 125.0,   # 128 -> 125
-    'depth': 100.0,   # 75 -> 100
-    'height': 154.0,  # 150 -> 154
-  },
-  'ASUS Silent Square': {
-    'width': 140.0,   # 40 -> 140
-  },
-  'ASUS TRITON 75': {
-    'height': 115.0,  # 90 -> 115
-  },
-  u'THERMOLAB BARAM Shine(바람 샤인)': {
-    'width': 132.0,   # 67 -> 132
-    'depth': 67.0,    # 132 -> 67
-  },
-  u'CoolerMaster Geminll (풍신장)∪': {
-    'depth': 124.0,   # 145 -> 124
-  },
-  'Thermalright Ultra 120': {
-    'height': 160.5,  # 160 -> 160.5
-  }
-}
-
 
 def update_data(force=False):
+  interval = current_app.config['UPDATE_INTERVAL']
   now = datetime.now()
   if not force:
     last_updated = cache.get('last_updated')
-    if last_updated is not None and last_updated > now - timedelta(days=1):
+    if last_updated is not None and last_updated > now - timedelta(seconds=interval):
       __logger__.info('Recently updated; nothing to do')
       return
   data_list = fetch_measurement_data()
   update_measurement_data(data_list)
   update_price_data()
-  cache.set('last_updated', now, timeout=86400)
+  cache.set('last_updated', now, timeout=interval)
   __logger__.info('Successfully updated data from remote sources')
 
 
@@ -162,26 +114,12 @@ def fetch_measurement_data():
 
 def get_html_table(noise, power):
   URL_FMT = 'http://www.coolenjoy.net/cooln_db/cpucooler_charts.php?dd={noise}&test={power}'
-  html = get_cached_html(URL_FMT.format(noise=NOISE_LEVELS[noise], power=CPU_POWER[power]))
+  html = get_cached_response_text(URL_FMT.format(noise=NOISE_LEVELS[noise], power=CPU_POWER[power]))
   doc = lxml.html.fromstring(html)
   table_xpath = doc.xpath('//table[@width="680"][@bordercolorlight="black"]')
   if not table_xpath:
     raise ParseError('table not found')
   return table_xpath[0]
-
-
-def get_cached_html(url):
-  key = base64.b64encode(url, '-_')
-  html = cache.get(key)
-  if html:
-    return html
-  resp = requests.get(url)
-  html = resp.text
-  # When fetch_measurement_data() is called once a day, setting the timeout to
-  # exactly 86400 seconds (1 day) may result in only part of the pages
-  # being refreshed. Reducing the timeout a little can prevent this problem.
-  cache.set(key, html, timeout=86000)
-  return html
 
 
 def extract_data(table, noise, power):
@@ -416,8 +354,91 @@ def update_measurement(fan_config, data):
 
 
 def update_price_data():
-  # TODO
-  pass
+  api_key = current_app.config['DANAWA_SEARCH_API_KEY']
+  heatsinks = db.session.query(Maker.name, Heatsink).join(
+      Heatsink, Maker.id == Heatsink.maker_id)
+  for maker_name, heatsink in heatsinks:
+    key = maker_name + ' ' + heatsink.name
+    if key in MAPPING and MAPPING[key] != heatsink.danawa_id:
+      heatsink.danawa_id = MAPPING[key]
+    if heatsink.danawa_id is None:
+      continue
+    url = 'http://api.danawa.com/api/main/product/info'
+    query = {'key': api_key, 'mediatype': 'json', 'prodCode': heatsink.danawa_id}
+    json_text = get_cached_response_text(url + '?' + urllib.urlencode(query))
+    data = load_danawa_json(json_text)
+    if data is None:
+      continue
+    min_price = int(data.get('minPrice', 0))
+    if min_price:
+      heatsink.price = min_price
+  db.session.commit()
+
+
+def print_danawa_results():
+  if 'DANAWA_SEARCH_API_KEY' not in current_app.config:
+    __logger__.warning('DANAWA_SEARCH_API_KEY not found')
+    return
+  api_key = current_app.config['DANAWA_SEARCH_API_KEY']
+  heatsinks = db.session.query(Maker.name, Heatsink).join(
+      Heatsink, Maker.id == Heatsink.maker_id).order_by(Maker.name, Heatsink.name)
+  for maker_name, heatsink in heatsinks:
+    if heatsink.danawa_id is None:
+      url = 'http://api.danawa.com/api/search/product/info'
+      query = {
+        'key': api_key,
+        'mediatype': 'json',
+        'keyword': (maker_name + ' ' + heatsink.name).encode('UTF-8'),
+        'cate_c1': 862,
+      }
+      json_text = get_cached_response_text(url + '?' + urllib.urlencode(query))
+      data = load_danawa_json(json_text)
+      if data is None:
+        continue
+      if int(data['totalCount']) == 0:
+        print u'{0} {1}: NO DATA'.format(maker_name, heatsink.name)
+        continue
+      if not isinstance(data['productList'], list):
+        data['productList'] = [data['productList']]
+      print u'{0} {1}'.format(maker_name, heatsink.name)
+      for product_data in data['productList']:
+        print u'  {maker} {prod_name} id={prod_id} min_price={min_price}'.format(**product_data)
+    else:
+      url = 'http://api.danawa.com/api/main/product/info'
+      query = {'key': api_key, 'mediatype': 'json', 'prodCode': heatsink.danawa_id}
+      json_text = get_cached_response_text(url + '?' + urllib.urlencode(query))
+      data = load_danawa_json(json_text)
+      if data is None:
+        continue
+      print u'{0} {1}: {maker[name]} {name} id={code} min_price={minPrice}'.format(
+          maker_name, heatsink.name, **data)
+
+
+def get_cached_response_text(url):
+  key = base64.b64encode(url, '-_')
+  html = cache.get(key)
+  if html:
+    return html
+  resp = requests.get(url)
+  html = resp.text
+  # Prevent partial refreshing by setting the timeout a bit shorter.
+  cache.set(key, html, timeout=current_app.config['UPDATE_INTERVAL'] - 600)
+  return html
+
+
+def load_danawa_json(text):
+  try:
+    return json.loads(text)
+  except ValueError:
+    if json_text.startswith('<?xml'):
+      try:
+        result = lxml.etree.fromstring(text)
+        __logger__.warning(u'Danawa responded with an error: %s: %s',
+            result.find('code').text, result.find('message').text)
+      except lxml.etree.XMLSyntaxError:
+        __logger__.warning(u'Danawa responded with an invalid XML')
+    else:
+      __logger__.warning(u'Danawa responded with an incomprehensible text')
 
 
 def compress_spaces(s):

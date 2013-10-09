@@ -62,6 +62,10 @@ angular.module('cpucoolerchart', [])
         }
         m.noise_avg = m.noise_actual_min === null ? empty :
             (Math.round((m.noise_actual_min + m.noise_actual_max) / 2 * 10) / 10);
+        m.price = m.heatsink.price ? (m.heatsink.price / 10000).toFixed(1) : '-';
+        if (m.heatsink.danawa_id) {
+          m.danawa_url = 'http://prod.danawa.com/info/?pcode=' + m.heatsink.danawa_id;
+        }
       }
     };
 
@@ -134,6 +138,21 @@ angular.module('cpucoolerchart', [])
         $timeout(function () {
           resize();
         }, 100);
+      }
+    };
+  })
+
+  .directive('openLinksInNewWindow', function ($window) {
+    return {
+      link: function (scope, element/*, attr */) {
+        element.on('click', 'a[href]', function (e) {
+          if (e.ctrlKey || e.metaKey) return;
+          var url = angular.element(e.target).attr('href');
+          if (url && url.charAt(0) !== '#') {
+            $window.open(url);
+            return false;
+          }
+        });
       }
     };
   });

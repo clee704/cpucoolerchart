@@ -7,6 +7,7 @@ __all__ = ['development', 'test', 'production']
 
 class DefaultConfig(object):
   DEBUG = False
+  UPDATE_INTERVAL = 86400 * 3
   SEND_FILE_MAX_AGE_DEFAULT = 31536000
   GZIP = True
   ASSETS_URL = '/static'
