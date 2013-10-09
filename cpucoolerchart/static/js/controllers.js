@@ -184,7 +184,7 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       }
     };
 
-    $scope.unselectAll = function () {
+    $scope.clearSelection = function () {
       var selected = privateScope.selectedHeatsinks;
       for (var id in selected) {
         if (!selected.hasOwnProperty(id)) continue;
@@ -245,7 +245,7 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       } else {
         $scope.g.showSelectedOnly = false;
       }
-      $scope.unselectAll();
+      $scope.clearSelection();
       if (query.select) {
         var heatsinkIds = query.select.split('|');
         for (var i = 0; i < heatsinkIds.length; i++) {
