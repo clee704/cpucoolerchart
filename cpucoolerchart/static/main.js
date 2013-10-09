@@ -195,11 +195,13 @@ angular.module('cpucoolerchart', [])
       privateScope.makersByName = util.indexBy(privateScope.makers, 'name');
       readLocation();
       augmentMeasurements();
-      $scope.$watch('g', updateLocation, true);
-      $scope.$watch('makers', updateLocation, true);
-      $scope.$watch('g', selectMeasurements, true);
+      $scope.$watch('g', function () {
+        updateLocation();
+        selectMeasurements();
+      }, true);
       $scope.$watch('g.sortOption', sortMeasurements);
       $scope.$watch('makers', function (makers) {
+        updateLocation();
         $scope.g.filterByMaker = makers.some(function (maker) { return maker.selected; });
         findVisibleMeasurements();
       }, true);
@@ -208,18 +210,18 @@ angular.module('cpucoolerchart', [])
 
   .directive('barGraph', function () {
     return {
-      scope: {'barGraph': '='},
-      template: '<div class="bar">{@barGraph@}</div>',
+      template: '<div class="bar"></div>',
       link: function (scope, element, attr) {
-        scope.$watch('barGraph', function (value) {
-          if (isNaN(value)) {
-            element.addClass('invisible');
-          } else {
-            // Scale 25-90 to 0-100
-            var width = Math.min(100, (value - 25) * (100 / 65)) + '%';
-            element.find('.bar').css({width: width}).removeClass('invisible');
-          }
-        });
+        var value = scope.$eval(attr.barGraph),
+            bar = element.find('.bar');
+        bar.text(value);
+        if (isNaN(value)) {
+          element.addClass('invisible');
+        } else {
+          // Scale 25-90 to 0-100
+          var width = Math.min(100, (value - 25) * (100 / 65)) + '%';
+          bar.css({width: width}).removeClass('invisible');
+        }
       }
     };
   })
