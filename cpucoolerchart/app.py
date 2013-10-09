@@ -29,9 +29,9 @@ def create_app(config=None, blueprints=None):
     blueprints = DEFAULT_BLUEPRINTS
   app = Flask(__name__)
   configure_app(app, config)
+  configure_logging(app)
   configure_blueprints(app, blueprints)
   configure_extensions(app)
-  configure_logging(app)
   return app
 
 
@@ -56,6 +56,15 @@ def configure_app(app, config=None):
   app.config.from_envvar('CCC_SETTINGS', silent=True)
   if config is not None:
     app.config.from_object(config)
+
+
+def configure_logging(app):
+  """Configures logging."""
+  # This makes it sure the logger is created before configuration.
+  app.logger
+  # Now configure
+  logging.config.dictConfig(app.config['LOGGING'])
+  __logger__.info('Logging configured')
 
 
 def configure_blueprints(app, blueprints):
@@ -132,12 +141,3 @@ def configure_extensions(app):
     redis_connection.init_app(host=app.config['CACHE_REDIS_HOST'],
         port=app.config['CACHE_REDIS_PORT'],
         password=app.config.get('CACHE_REDIS_PASSWORD'))
-
-
-def configure_logging(app):
-  """Configures logging."""
-  # This makes it sure the logger is created before configuration.
-  app.logger
-  # Now configure
-  logging.config.dictConfig(app.config['LOGGING'])
-  __logger__.info('Logging configured')
