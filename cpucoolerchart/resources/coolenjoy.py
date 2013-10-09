@@ -73,7 +73,7 @@ INCONSISTENCY_FIX = {
   u'coolermaster gemin ii ∪': {
     'depth': 124.0,   # 145 -> 124
   },
-  u'thermalright ultra 120': {
+  u'thermalright ultra-120': {
     'height': 160.5,  # 160 -> 160.5
   }
 }
