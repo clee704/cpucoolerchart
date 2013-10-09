@@ -27,6 +27,10 @@ input::-ms-clear {
   display: none;
 }
 
+label {
+  font-weight: normal;
+}
+
 [ng-cloak] {
   display: none !important;
 }
@@ -48,7 +52,6 @@ input::-ms-clear {
   margin-right: 10px;
   margin-bottom: (@line-height-computed / 2);
   label {
-    font-weight: normal;
     display: block;
   }
 }
@@ -56,7 +59,6 @@ input::-ms-clear {
 .filter {
   margin-bottom: @line-height-computed;
   label {
-    font-weight: normal;
     display: block;
   }
   .panel-body {
@@ -115,7 +117,6 @@ input::-ms-clear {
       border-bottom: 1px solid @table-border-color;
     }
     th {
-      padding-top: 0;
       padding-bottom: (@padding * 2);
     }
   }
@@ -129,6 +130,16 @@ input::-ms-clear {
   margin-top: @line-height-computed;
   @media (min-width: @screen-md) {
     margin-top: 0;
+  }
+}
+
+.chart-controls {
+  label {
+    margin-right: 5px;
+  }
+  .dropdown-menu {
+    left: auto;
+    right: 0;
   }
 }
 

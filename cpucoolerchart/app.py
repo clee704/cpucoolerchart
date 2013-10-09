@@ -93,6 +93,7 @@ def configure_extensions(app):
       'bower_components/jquery/jquery.js',
       'bower_components/angular/angular.js',
       'bower_components/fastclick/lib/fastclick.js',
+      'bower_components/bootstrap/dist/js/bootstrap.js',
       filters='yui_js', output='compiled/%(version)s.vendor.js'
     )
   assets_env.register('js_all',

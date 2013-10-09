@@ -7,11 +7,6 @@ angular.module('cpucoolerchart', [])
   })
 
   .controller('DataCtrl', function ($scope, $http, $q) {
-    $scope.g = {
-      noise: 35,
-      power: 62
-    };
-
     $scope.noiseOptions = [
       {name: '35dB', value: 35},
       {name: '40dB', value: 40},
@@ -24,6 +19,19 @@ angular.module('cpucoolerchart', [])
       {name: '150W', value: 150},
       {name: '200W', value: 200}
     ];
+    $scope.sortOptions = [
+      {name: 'CPU 온도', value: 'cpu_temp_delta'},
+      {name: '전원부 온도', value: 'power_temp_delta'},
+      {name: '가격', value: 'price'},
+      {name: '높이', value: 'height'},
+      {name: '무게', value: 'weight'},
+      {name: '소음', value: 'noise_avg'},
+    ];
+    $scope.g = {
+      noise: 35,
+      power: 62,
+      sortOption: $scope.sortOptions[0]
+    };
 
     var getResources = function (url, name) {
       return $http.get(url).success(function (data) {
@@ -39,7 +47,7 @@ angular.module('cpucoolerchart', [])
       });
     };
 
-    var denormalizeMeasurements = function () {
+    var augmentMeasurements = function () {
       var empty = '-';
       for (var i = 0; i < $scope.measurements.length; i++) {
         var m = $scope.measurements[i];
@@ -66,27 +74,67 @@ angular.module('cpucoolerchart', [])
         if (m.heatsink.danawa_id) {
           m.danawa_url = 'http://prod.danawa.com/info/?pcode=' + m.heatsink.danawa_id;
         }
+        m.weight = m.heatsink.weight;
+        m.height = m.heatsink.height;
       }
     };
 
-    $scope.cachedMeasurementSelections = {35: {}, 40: {}, 45: {}, 100: {}};
-    var selectMeasurements = function () {
-      var g = $scope.g;
-      var cached = $scope.cachedMeasurementSelections[g.noise][g.power];
-      if (cached) {
-        $scope.currentMeasurements = cached;
-        return;
-      }
-      var current = [];
-      for (var i = 0; i < $scope.measurements.length; i++) {
-        var m = $scope.measurements[i];
-        if (m.noise === $scope.g.noise && m.power === $scope.g.power) {
-          current.push(m);
+    var sortMeasurements = (function () {
+      var parseNumber = function (x) {
+        x = Number(x);
+        return isNaN(x) ? null : x;
+      };
+      var compareNumbers = function (a, b, key) {
+        var x = parseNumber(a[key]),
+            y = parseNumber(b[key]);
+        if (x === y) return 0;
+        else if (x === null) return 1;
+        else if (y === null) return -1;
+        else if (x < y) return -1;
+        else if (x > y) return 1;
+        else return 0;
+      };
+      return function () {
+        var key = $scope.g.sortOption.value;
+        if ($scope.currentMeasurements.sortKey === key) return;
+        $scope.currentMeasurements.items.sort(function (a, b) {
+          var c;
+          if ((c = compareNumbers(a, b, key)) != 0) return c;
+          if ((c = compareNumbers(a, b, 'cpu_temp_delta')) != 0) return c;
+          if ((c = compareNumbers(a, b, 'power_temp_delta')) != 0) return c;
+          if ((c = compareNumbers(a, b, 'price')) != 0) return c;
+          return 0;
+        });
+        $scope.currentMeasurements.sortKey = key;
+      };
+    })();
+
+    var selectMeasurements = (function () {
+      var cachedMeasurementSelections = {35: {}, 40: {}, 45: {}, 100: {}};
+      return function () {
+        var noise = $scope.g.noise,
+            power = $scope.g.power;
+        var cached = cachedMeasurementSelections[noise][power];
+        if (cached) {
+          $scope.currentMeasurements = cached;
+          sortMeasurements();
+          return;
         }
-      }
-      $scope.cachedMeasurementSelections[g.noise][g.power] = current;
-      $scope.currentMeasurements = current;
-    };
+        var current = [];
+        for (var i = 0; i < $scope.measurements.length; i++) {
+          var m = $scope.measurements[i];
+          if (m.noise === noise && m.power === power) {
+            current.push(m);
+          }
+        }
+        $scope.currentMeasurements = {
+          sortKey: 'cpu_temp_delta',
+          items: current
+        };
+        cachedMeasurementSelections[noise][power] = $scope.currentMeasurements;
+        sortMeasurements();
+      };
+    })();
 
     $q.all([
       getResources('/makers', 'makers'),
@@ -94,10 +142,9 @@ angular.module('cpucoolerchart', [])
       getResources('/fan-configs', 'fanConfigs'),
       getResources('/measurements', 'measurements')
     ]).then(function () {
-      denormalizeMeasurements();
-      $scope.$watch('g', function () {
-        selectMeasurements();
-      }, true);
+      augmentMeasurements();
+      $scope.$watch('g', selectMeasurements, true);
+      $scope.$watch('g.sortOption', sortMeasurements);
     });
   })
 
@@ -135,7 +182,7 @@ angular.module('cpucoolerchart', [])
             left: ((win.width() - element.outerWidth()) / 2) + 'px'
           });
         };
-        win.resize(resize);
+        win.on('resize', resize);
         $timeout(function () {
           resize();
         }, 100);
@@ -151,9 +198,22 @@ angular.module('cpucoolerchart', [])
           var url = angular.element(e.target).attr('href');
           if (url && url.charAt(0) !== '#') {
             $window.open(url);
-            return false;
+            e.preventDefault();
           }
         });
+      }
+    };
+  })
+
+  .directive('click', function () {
+    return {
+      link: function(scope, element, attr) {
+        element.on('click', function (e) {
+          scope.$apply(function () {
+            scope.$eval(attr.click);
+          });
+          e.preventDefault();
+        })
       }
     };
   });

@@ -44,5 +44,5 @@ def fan_configs():
 @views.route('/measurements')
 @cached_unless_debug
 def measurements():
-  items = Measurement.query.order_by('cpu_temp_delta').all_as_dict()
+  items = Measurement.query.order_by('cpu_temp_delta', 'power_temp_delta').all_as_dict()
   return jsonify(count=len(items), items=items)
