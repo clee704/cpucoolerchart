@@ -6,7 +6,7 @@ angular.module('cpucoolerchart', [])
     $interpolateProvider.startSymbol('{@').endSymbol('@}');
   })
 
-  .controller('DataCtrl', function ($scope, $http, $q) {
+  .controller('DataCtrl', function ($scope, $http, $q, $location, util) {
     $scope.noiseOptions = [
       {name: '35dB', value: 35},
       {name: '40dB', value: 40},
@@ -20,17 +20,19 @@ angular.module('cpucoolerchart', [])
       {name: '200W', value: 200}
     ];
     $scope.sortOptions = [
-      {name: 'CPU 온도', value: 'cpu_temp_delta'},
-      {name: '전원부 온도', value: 'power_temp_delta'},
-      {name: '가격', value: 'price'},
-      {name: '높이', value: 'height'},
-      {name: '무게', value: 'weight'},
-      {name: '소음', value: 'noise_avg'},
+      {name: 'CPU 온도', value: 'cpu_temp_delta', alias: 'cpu'},
+      {name: '전원부 온도', value: 'power_temp_delta', alias: 'power'},
+      {name: '가격', value: 'price', alias: 'price'},
+      {name: '높이', value: 'height', alias: 'height'},
+      {name: '무게', value: 'weight', alias: 'weight'},
+      {name: '소음', value: 'noise_avg', alias: 'noise'}
     ];
+
+    var sortOptionsByAlias = util.indexBy($scope.sortOptions, 'alias');
     $scope.g = {
       noise: 35,
       power: 62,
-      sortOption: $scope.sortOptions[0]
+      sortOption: sortOptionsByAlias['cpu']
     };
 
     var getResources = function (url, name) {
@@ -80,13 +82,9 @@ angular.module('cpucoolerchart', [])
     };
 
     var sortMeasurements = (function () {
-      var parseNumber = function (x) {
-        x = Number(x);
-        return isNaN(x) ? null : x;
-      };
       var compareNumbers = function (a, b, key) {
-        var x = parseNumber(a[key]),
-            y = parseNumber(b[key]);
+        var x = util.parseNumber(a[key]),
+            y = util.parseNumber(b[key]);
         if (x === y) return 0;
         else if (x === null) return 1;
         else if (y === null) return -1;
@@ -114,6 +112,7 @@ angular.module('cpucoolerchart', [])
       return function () {
         var noise = $scope.g.noise,
             power = $scope.g.power;
+        updateLocation();
         var cached = cachedMeasurementSelections[noise][power];
         if (cached) {
           $scope.currentMeasurements = cached;
@@ -136,6 +135,23 @@ angular.module('cpucoolerchart', [])
       };
     })();
 
+    var readLocation = function () {
+      var query = util.deserialize($location.path().substr(1));
+      $scope.g.noise = util.parseNumber(query.noise, 35);
+      $scope.g.power = util.parseNumber(query.power, 62);
+      $scope.g.sortOption = sortOptionsByAlias[query.sort] || sortOptionsByAlias['cpu'];
+    };
+
+    var updateLocation = function () {
+      var query = {
+        noise: $scope.g.noise,
+        power: $scope.g.power,
+        sort: $scope.g.sortOption.alias
+      };
+      $location.path(util.serialize(query));
+    };
+
+    readLocation();
     $q.all([
       getResources('/makers', 'makers'),
       getResources('/heatsinks', 'heatsinks'),
@@ -163,6 +179,43 @@ angular.module('cpucoolerchart', [])
           }
         });
       }
+    };
+  })
+
+  .service('util', function () {
+
+    this.parseNumber = function (x, defaultValue) {
+      x = Number(x);
+      return isNaN(x) ? (defaultValue === undefined ? null : defaultValue) : x;
+    };
+
+    this.serialize = function (obj) {
+      var temp = [];
+      for (var name in obj) {
+        if (!obj.hasOwnProperty(name)) continue;
+        temp.push(name + '=' + obj[name]);
+      }
+      return temp.join(',');
+    };
+
+    this.deserialize = function (str) {
+      var obj = {},
+          args = str.split(',');
+      for (var i = 0; i < args.length; i++) {
+        var x = args[i].split('='),
+            name = x[0],
+            value = x[1];
+        obj[name] = value;
+      }
+      return obj;
+    };
+
+    this.indexBy = function (arr, value) {
+      var map = {};
+      for (var i = 0; i < arr.length; i++) {
+        map[arr[i][value]] = arr[i];
+      }
+      return map;
     };
   })
 
