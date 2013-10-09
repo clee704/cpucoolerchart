@@ -87,7 +87,7 @@ def update_data(force=False):
   data_list = fetch_measurement_data()
   update_measurement_data(data_list)
   update_price_data()
-  cache.set('last_updated', now, timeout=interval)
+  cache.set('last_updated', now)
   __logger__.info('Successfully updated data from remote sources')
 
 

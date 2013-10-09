@@ -23,7 +23,7 @@ def heroku_scale(process_name, qty):
     cloud._http_resource(method='POST',
       resource=('apps', current_app.config['HEROKU_APP_NAME'], 'ps', 'scale'),
       data=dict(type=process_name, qty=qty))
-    cache.set(key, qty, 86400 * 7)
+    cache.set(key, qty)
   except requests.HTTPError as e:
     __logger__.error('Could not scale heroku: %s', e.message)
 
