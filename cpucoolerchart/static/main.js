@@ -27,10 +27,23 @@ angular.module('cpucoolerchart', [])
       {name: '무게', value: 'weight', alias: 'weight'},
       {name: '소음', value: 'noise_avg', alias: 'noise'}
     ];
-    $scope.g = {};
+    $scope.heatsinkTypeOptions = [
+      {name: '타워', value: 'tower'},
+      {name: '플라워', value: 'flower'}
+    ];
+    $scope.g = {
+      priceMin: null,
+      priceMax: null,
+      heightMin: null,
+      heightMax: null,
+      weightMin: null,
+      weightMax: null,
+      heatsinkType: null
+    };
 
     var privateScope = {
-      sortOptionsByAlias: util.indexBy($scope.sortOptions, 'alias')
+      sortOptionsByAlias: util.indexBy($scope.sortOptions, 'alias'),
+      heatsinkTypeOptionsByValue: util.indexBy($scope.heatsinkTypeOptions, 'value')
     };
 
     var defaultValues = {
@@ -71,12 +84,13 @@ angular.module('cpucoolerchart', [])
         }
         m.noise_avg = m.noise_actual_min === null ? empty :
             (Math.round((m.noise_actual_min + m.noise_actual_max) / 2 * 10) / 10);
-        m.price = m.heatsink.price ? (m.heatsink.price / 10000).toFixed(1) : '-';
+        m.price_formatted = m.heatsink.price ? (m.heatsink.price / 10000).toFixed(1) : '-';
         if (m.heatsink.danawa_id) {
           m.danawa_url = 'http://prod.danawa.com/info/?pcode=' + m.heatsink.danawa_id;
         }
-        m.weight = m.heatsink.weight;
-        m.height = m.heatsink.height;
+        m.price = m.heatsink.price === null ? null : m.heatsink.price / 10000;
+        m.height = m.heatsink.height === null ? 0 : m.heatsink.height;
+        m.weight = m.heatsink.weight === null ? 0 : m.heatsink.weight;
       }
     };
 
@@ -107,15 +121,24 @@ angular.module('cpucoolerchart', [])
     })();
 
     var findVisibleMeasurements = function () {
-      var filter = $scope.g.filterByMaker,
+      var g = $scope.g,
+          filter = g.filterByMaker,
           current = $scope.measurements.items,
           found = false,
           length = 0;
       for (var i = 0; i < current.length; i++) {
         var m = current[i];
-        m.first = $scope.g.filterByMaker && !found && m.maker.selected;
+        m.visible = (!g.filterByMaker || m.maker.selected) &&
+            (g.priceMin === null || m.price !== null && g.priceMin <= m.price) &&
+            (g.priceMax === null || m.price !== null && g.priceMax >= m.price) &&
+            (g.heightMin === null || m.height !== null && g.heightMin <= m.height) &&
+            (g.heightMax === null || m.height !== null && g.heightMax >= m.height) &&
+            (g.weightMin === null || m.weight !== null && g.weightMin <= m.weight) &&
+            (g.weightMax === null || m.weight !== null && g.weightMax >= m.weight) &&
+            (g.heatsinkType === null || g.heatsinkType === m.heatsink.heatsink_type);
+        m.first = !found && m.visible;
         if (m.first) found = true;
-        if (!$scope.g.filterByMaker || m.maker.selected) length += 1;
+        if (m.visible) length += 1;
       }
       $scope.measurements.length = length;
     };
@@ -166,6 +189,24 @@ angular.module('cpucoolerchart', [])
         }
         $scope.g.filterByMaker = filtered;
       }
+      if (query.price) {
+        var values = query.price.split('~');
+        $scope.g.priceMin = util.parseNumber(values[0]);
+        $scope.g.priceMax = util.parseNumber(values[1]);
+      }
+      if (query.height) {
+        var values = query.height.split('~');
+        $scope.g.heightMin = util.parseNumber(values[0]);
+        $scope.g.heightMax = util.parseNumber(values[1]);
+      }
+      if (query.weight) {
+        var values = query.weight.split('~');
+        $scope.g.weightMin = util.parseNumber(values[0]);
+        $scope.g.weightMax = util.parseNumber(values[1]);
+      }
+      if (privateScope.heatsinkTypeOptionsByValue[query.type]) {
+        $scope.g.heatsinkType = query.type;
+      }
     };
 
     var updateLocation = function () {
@@ -176,12 +217,20 @@ angular.module('cpucoolerchart', [])
         maker: !$scope.g.filterByMaker ? '' :
             privateScope.makers.filter(function (maker) { return maker.selected; })
                                .map(function (maker) { return maker.name; })
-                               .join('/')
+                               .join('/'),
+        price: util.parseNumber($scope.g.priceMin, '') + '~' + util.parseNumber($scope.g.priceMax, ''),
+        height: util.parseNumber($scope.g.heightMin, '') + '~' + util.parseNumber($scope.g.heightMax, ''),
+        weight: util.parseNumber($scope.g.weightMin, '') + '~' + util.parseNumber($scope.g.weightMax, ''),
+        type: $scope.g.heatsinkType
       };
       if (query.noise === defaultValues.noise) delete query.noise;
       if (query.power === defaultValues.power) delete query.power;
       if (query.sort === defaultValues.sort) delete query.sort;
       if (query.maker === '') delete query.maker;
+      if (query.price === '~') delete query.price;
+      if (query.height === '~') delete query.height;
+      if (query.weight === '~') delete query.weight;
+      if (query.type === null) delete query.type;
       $location.path(util.serialize(query));
     };
 
@@ -195,11 +244,17 @@ angular.module('cpucoolerchart', [])
       privateScope.makersByName = util.indexBy(privateScope.makers, 'name');
       readLocation();
       augmentMeasurements();
-      $scope.$watch('g', function () {
-        updateLocation();
-        selectMeasurements();
-      }, true);
+      $scope.$watch('g', updateLocation, true);
+      $scope.$watch('g.noise', selectMeasurements);
+      $scope.$watch('g.power', selectMeasurements);
       $scope.$watch('g.sortOption', sortMeasurements);
+      $scope.$watch('g.priceMin', findVisibleMeasurements);
+      $scope.$watch('g.priceMax', findVisibleMeasurements);
+      $scope.$watch('g.heightMin', findVisibleMeasurements);
+      $scope.$watch('g.heightMax', findVisibleMeasurements);
+      $scope.$watch('g.weightMin', findVisibleMeasurements);
+      $scope.$watch('g.weightMax', findVisibleMeasurements);
+      $scope.$watch('g.heatsinkType', findVisibleMeasurements);
       $scope.$watch('makers', function (makers) {
         updateLocation();
         $scope.g.filterByMaker = makers.some(function (maker) { return maker.selected; });
@@ -208,14 +263,14 @@ angular.module('cpucoolerchart', [])
     });
   })
 
-  .directive('barGraph', function () {
+  .directive('barGraph', function (util) {
     return {
       template: '<div class="bar"></div>',
       link: function (scope, element, attr) {
         var value = scope.$eval(attr.barGraph),
             bar = element.find('.bar');
         bar.text(value);
-        if (isNaN(value)) {
+        if (value === null || isNaN(value)) {
           element.addClass('invisible');
         } else {
           // Scale 25-90 to 0-100
@@ -229,8 +284,11 @@ angular.module('cpucoolerchart', [])
   .service('util', function () {
 
     this.parseNumber = function (x, defaultValue) {
+      if (x === null || x === undefined || x === '') {
+        return (defaultValue === undefined ? null : defaultValue);
+      }
       x = Number(x);
-      return isNaN(x) ? (defaultValue === undefined ? null : defaultValue) : x;
+      return x === null || isNaN(x) ? (defaultValue === undefined ? null : defaultValue) : x;
     };
 
     this.serialize = function (obj) {

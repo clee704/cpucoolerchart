@@ -59,50 +59,47 @@
         </div>
       </div>
       <div class="filter">
-        <label class="filter-label">쿨러 속성</label>
-        <form class="form-horizontal">
-          <div class="form-group">
-            <label for="width" class="col-xs-4 control-label">가로</label>
-            <div class="col-xs-8">
-              <div class="input-group">
-                <input type="number" pattern="\d*" id="width" class="form-control">
-                <span class="input-group-addon">이하</span>
-              </div>
+        <form class="form-horizontal" autocomplete="off">
+          <div class="form-group filter-range">
+            <label for="price-max" class="col-xs-3 control-label">가격</label>
+            <div class="col-xs-9">
+              <input type="number" pattern="\d*" id="price-min" class="form-control"
+                     ng-model="g.priceMin">
+              <span class="range-marker">~</span>
+              <input type="number" pattern="\d*" id="price-max" class="form-control"
+                     ng-model="g.priceMax">
+            </div>
+          </div>
+          <div class="form-group filter-range">
+            <label for="height-max" class="col-xs-3 control-label">높이</label>
+            <div class="col-xs-9">
+              <input type="number" pattern="\d*" id="height-min" class="form-control"
+                     ng-model="g.heightMin">
+              <span class="range-marker">~</span>
+              <input type="number" pattern="\d*" id="height-max" class="form-control"
+                     ng-model="g.heightMax">
+            </div>
+          </div>
+          <div class="form-group filter-range">
+            <label for="weight-max" class="col-xs-3 control-label">무게</label>
+            <div class="col-xs-9">
+              <input type="number" pattern="\d*" id="weight-min" class="form-control"
+                     ng-model="g.weightMin">
+              <span class="range-marker">~</span>
+              <input type="number" pattern="\d*" id="weight-max" class="form-control"
+                     ng-model="g.weightMax">
             </div>
           </div>
           <div class="form-group">
-            <label for="depth" class="col-xs-4 control-label">세로</label>
-            <div class="col-xs-8">
-              <div class="input-group">
-                <input type="number" pattern="\d*" id="depth" class="form-control">
-                <span class="input-group-addon">이하</span>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="height" class="col-xs-4 control-label">높이</label>
-            <div class="col-xs-8">
-              <div class="input-group">
-                <input type="number" pattern="\d*" id="height" class="form-control">
-                <span class="input-group-addon">이하</span>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="weight" class="col-xs-4 control-label">무게</label>
-            <div class="col-xs-8">
-              <div class="input-group">
-                <input type="number" pattern="\d*" id="weight" class="form-control">
-                <span class="input-group-addon">이하</span>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-xs-4 control-label">종류</label>
-            <div class="col-xs-8">
+            <label class="col-xs-3 control-label">종류</label>
+            <div class="col-xs-9">
               <div class="btn-group filter-select-heatsink-type">
-                <button class="btn btn-default tower-button">타워</button>
-                <button class="btn btn-default flower-button">플라워</button>
+                <button class="btn btn-default"
+                        ng-repeat="opt in heatsinkTypeOptions"
+                        ng-click="g.heatsinkType = (g.heatsinkType != opt.value ? opt.value : null)"
+                        ng-class="{active: g.heatsinkType == opt.value, '{@opt.value@}-button': true}"
+                        bo-bind="opt.name">
+                </button>
               </div>
             </div>
           </div>
@@ -151,7 +148,7 @@
           </thead>
           <tbody open-links-in-new-window ng-if="measurements.length > 0">
             <tr ng-repeat="m in measurements.items track by m.id"
-                ng-show="!g.filterByMaker || m.maker.selected"
+                ng-show="m.visible"
                 ng-class="{first: g.filterByMaker &amp;&amp; m.first}">
               <td class="chart-model">
                 <div bo-bind="m.maker.name"></div>
@@ -176,8 +173,9 @@
                 <div class="chart-temp-power" bar-graph="m.power_temp_delta"></div>
               </td>
               <td class="chart-price">
-                <span bo-if="!m.danawa_url" bo-bind="m.price"></span>
-                <a bo-attr="{href: 'm.danawa_url'}" bo-if="m.danawa_url" bo-bind="m.price"></a>
+                <span bo-if="!m.danawa_url" bo-bind="m.price_formatted"></span>
+                <a bo-attr="{href: 'm.danawa_url'}" bo-if="m.danawa_url"
+                   bo-bind="m.price_formatted"></a>
               </td>
             </tr>
           </tbody>
