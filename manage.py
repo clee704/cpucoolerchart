@@ -94,6 +94,17 @@ def clear():
   """
   cache.clear()
 
+@cache_manager.command
+def remove(kind):
+  """Removes cached data of the given kind. Possible values: html, json"""
+  if kind == 'html':
+    cache.delete('view//')
+  elif kind == 'json':
+    cache.delete('view//makers')
+    cache.delete('view//heatsinks')
+    cache.delete('view//fan-configs')
+    cache.delete('view//measurements')
+
 
 if __name__ == '__main__':
   manager.run()
