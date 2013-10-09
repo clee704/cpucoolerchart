@@ -68,7 +68,7 @@ class DefaultConfig(object):
       },
     }
   }
-  LESS_BIN = '../../node_modules/.bin/lessc'
+  LESS_BIN = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../node_modules/.bin/lessc'))
 
   @classmethod
   def from_envvars(cls):

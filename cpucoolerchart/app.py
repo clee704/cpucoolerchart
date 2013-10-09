@@ -97,11 +97,17 @@ def configure_extensions(app):
       filters='yui_js', output='compiled/%(version)s.vendor.js'
     )
   assets_env.register('js_all',
-    'main.js',
+    'js/main.js',
+    'js/controllers.js',
+    'js/directives.js',
+    'js/util.js',
     filters='ngmin,yui_js', output='compiled/%(version)s.script.js'
   )
   assets_env.register('css_all',
-    Bundle('main.css.less', filters='less', output='compiled/%(version)s.main.css'),
+    Bundle(
+      'css/main.css.less',
+      filters='less', output='compiled/%(version)s.main.css'
+    ),
     filters='yui_css', output='compiled/%(version)s.styles.css'
   )
 
