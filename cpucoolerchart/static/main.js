@@ -110,7 +110,8 @@ angular.module('cpucoolerchart', [])
           if (isNaN(value)) {
             element.addClass('invisible');
           } else {
-            var width = Math.min(100, (value - 25) * (100 / 75)) + '%';
+            // Scale 25-90 to 0-100
+            var width = Math.min(100, (value - 25) * (100 / 65)) + '%';
             element.find('.bar').css({width: width}).removeClass('invisible');
           }
         });
