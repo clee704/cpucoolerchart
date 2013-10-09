@@ -71,10 +71,13 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
           Math.round(m.heatsink.depth) || empty,
           Math.round(m.heatsink.height) || empty
         ].join('x');
-        if (m.heatsink_size === [empty, empty, empty].join('x')) m.heatsink_size = empty;
+        if (m.heatsink_size === [empty, empty, empty].join('x')) {
+          m.heatsink_size = empty;
+        }
         m.heatsink_weight = m.heatsink.weight === null ? empty :
             Math.round(m.heatsink.weight) + ' g';
-        m.fan_size = m.fan_config.fan_size + '/' + m.fan_config.fan_thickness + 'T' +
+        m.fan_size = m.fan_config.fan_size + '/' +
+            m.fan_config.fan_thickness + 'T' +
             ' x' + m.fan_config.fan_count;
         m.rpm_avg = m.rpm_min === null ? empty : Math.round((m.rpm_min + m.rpm_max) / 2) + ' rpm';
         if (m.power_temp_delta === null) {
@@ -118,7 +121,7 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       };
     })();
 
-    var findVisibleMeasurements = function () {
+    var updateMeasurementsVisibility = function () {
       var g = $scope.g,
           filter = g.filterByMaker,
           current = $scope.measurements.items,
@@ -165,7 +168,7 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
           $scope.measurements = cachedMeasurementSelections[noise][power];
         }
         sortMeasurements();
-        findVisibleMeasurements();
+        updateMeasurementsVisibility();
       };
     })();
 
@@ -191,7 +194,7 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       $scope.g.numSelectedHeatsinks = 0;
     };
 
-    var readLocation = function () {
+    var readPath = function () {
       var query = util.deserialize($location.path().substr(1));
       $scope.g.noise = util.parseNumber(query.noise, defaultValues.noise);
       $scope.g.power = util.parseNumber(query.power, defaultValues.power);
@@ -253,7 +256,7 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       }
     };
 
-    var updateLocation = function () {
+    var updatePath = function () {
       var query = {
         noise: $scope.g.noise,
         power: $scope.g.power,
@@ -290,25 +293,25 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
     ]).then(function () {
       $scope.makers = privateScope.makers;
       privateScope.makersByName = util.indexBy(privateScope.makers, 'name');
-      readLocation();
+      readPath();
       augmentMeasurements();
-      $scope.$watch('g', updateLocation, true);
+      $scope.$watch('g', updatePath, true);
       $scope.$watch('g.noise', selectMeasurements);
       $scope.$watch('g.power', selectMeasurements);
       $scope.$watch('g.sortOption', sortMeasurements);
-      $scope.$watch('g.priceMin', findVisibleMeasurements);
-      $scope.$watch('g.priceMax', findVisibleMeasurements);
-      $scope.$watch('g.heightMin', findVisibleMeasurements);
-      $scope.$watch('g.heightMax', findVisibleMeasurements);
-      $scope.$watch('g.weightMin', findVisibleMeasurements);
-      $scope.$watch('g.weightMax', findVisibleMeasurements);
-      $scope.$watch('g.heatsinkType', findVisibleMeasurements);
-      $scope.$watch('g.showSelectedOnly', findVisibleMeasurements);
+      $scope.$watch('g.priceMin', updateMeasurementsVisibility);
+      $scope.$watch('g.priceMax', updateMeasurementsVisibility);
+      $scope.$watch('g.heightMin', updateMeasurementsVisibility);
+      $scope.$watch('g.heightMax', updateMeasurementsVisibility);
+      $scope.$watch('g.weightMin', updateMeasurementsVisibility);
+      $scope.$watch('g.weightMax', updateMeasurementsVisibility);
+      $scope.$watch('g.heatsinkType', updateMeasurementsVisibility);
+      $scope.$watch('g.showSelectedOnly', updateMeasurementsVisibility);
       $scope.$watch('makers', function (makers) {
-        updateLocation();
+        updatePath();
         $scope.g.filterByMaker = makers.some(function (maker) { return maker.selected; });
-        findVisibleMeasurements();
+        updateMeasurementsVisibility();
       }, true);
-      $scope.$on('$locationChangeSuccess', readLocation);
+      $scope.$on('$locationChangeSuccess', readPath);
     });
   });
