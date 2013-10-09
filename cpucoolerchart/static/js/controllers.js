@@ -200,16 +200,17 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       $scope.g.power = util.parseNumber(query.power, defaultValues.power);
       $scope.g.sortOption = privateScope.sortOptionsByAlias[query.sort] ||
           privateScope.sortOptionsByAlias[defaultValues.sort];
+      $scope.g.filterByMaker = false;
+      $scope.makers.forEach(function (maker) { maker.selected = false; });
       if (query.maker) {
-        var makerNames = query.maker.split('/'),
+        var makerIds = query.maker.split('|'),
             filtered = false;
-        for (var i = 0; i < makerNames.length; i++) {
-          var name = makerNames[i];
-          var maker = privateScope.makersByName[name];
-          if (maker) {
-            maker.selected = true;
-            filtered = true;
-          }
+        for (var i = 0; i < makerIds.length; i++) {
+          var id = makerIds[i],
+              maker = privateScope.makersById[id];
+          if (!maker) continue;
+          maker.selected = true;
+          filtered = true;
         }
         $scope.g.filterByMaker = filtered;
       }
@@ -246,11 +247,11 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       }
       $scope.unselectAll();
       if (query.select) {
-        var heatsinkIds = query.select.split('+');
+        var heatsinkIds = query.select.split('|');
         for (var i = 0; i < heatsinkIds.length; i++) {
-          var id = util.parseNumber(heatsinkIds[i]);
-          if (!privateScope.heatsinksById.hasOwnProperty(id)) continue;
-          var heatsink = privateScope.heatsinksById[id];
+          var id = util.parseNumber(heatsinkIds[i]),
+              heatsink = privateScope.heatsinksById[id];
+          if (!heatsink) continue;
           $scope.toggleSelection(heatsink, true);
         }
       }
@@ -263,14 +264,14 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
         sort: $scope.g.sortOption.alias,
         maker: !$scope.g.filterByMaker ? '' :
             privateScope.makers.filter(function (maker) { return maker.selected; })
-                               .map(function (maker) { return maker.name; })
-                               .join('/'),
+                               .map(function (maker) { return maker.id; })
+                               .join('|'),
         price: util.parseNumber($scope.g.priceMin, '') + '~' + util.parseNumber($scope.g.priceMax, ''),
         height: util.parseNumber($scope.g.heightMin, '') + '~' + util.parseNumber($scope.g.heightMax, ''),
         weight: util.parseNumber($scope.g.weightMin, '') + '~' + util.parseNumber($scope.g.weightMax, ''),
         type: $scope.g.heatsinkType,
         show: $scope.g.showSelectedOnly ? 'selection' : '',
-        select: util.keys(privateScope.selectedHeatsinks).join('+')
+        select: util.keys(privateScope.selectedHeatsinks).join('|')
       };
       if (query.noise === defaultValues.noise) delete query.noise;
       if (query.power === defaultValues.power) delete query.power;
