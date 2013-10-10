@@ -1,8 +1,8 @@
 'use strict';
 
-angular.module('cpucoolerchart.directives', ['cpucoolerchart.util'])
+angular.module('cpucoolerchart.directives', [])
 
-  .directive('barGraph', function (util) {
+  .directive('barGraph', function () {
     return {
       template: '<div class="bar"></div>',
       link: function (scope, element, attr) {
@@ -23,7 +23,7 @@ angular.module('cpucoolerchart.directives', ['cpucoolerchart.util'])
   .directive('selectAll', function () {
     return {
       scope: {'items': '=selectAll'},
-      link: function (scope, element, attr) {
+      link: function (scope, element) {
         if (!element.is('input[type=checkbox]')) return;
         element.on('click', function () {
           scope.$apply(function () {
@@ -47,15 +47,15 @@ angular.module('cpucoolerchart.directives', ['cpucoolerchart.util'])
           margin: 0
         });
         var win = angular.element($window);
-        var resize = function () {
+        function resizeElement() {
           element.css({
             top: ((win.height() - element.outerHeight()) / 2) + 'px',
             left: ((win.width() - element.outerWidth()) / 2) + 'px'
           });
-        };
-        win.on('resize', resize);
+        }
+        win.on('resize', resizeElement);
         $timeout(function () {
-          resize();
+          resizeElement();
         }, 100);
       }
     };
@@ -87,7 +87,7 @@ angular.module('cpucoolerchart.directives', ['cpucoolerchart.util'])
             scope.$eval(attr.click);
           });
           e.preventDefault();
-        })
+        });
       }
     };
   })
@@ -103,8 +103,7 @@ angular.module('cpucoolerchart.directives', ['cpucoolerchart.util'])
   .directive('boAttr', function () {
     return {
       link: function (scope, element, attr) {
-        var exprs = scope.$eval(attr.boAttr),
-            unwatch = {};
+        var exprs = scope.$eval(attr.boAttr);
         for (var name in exprs) {
           if (!exprs.hasOwnProperty(name)) continue;
           var value = exprs[name];

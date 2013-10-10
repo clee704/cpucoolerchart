@@ -1,20 +1,24 @@
 'use strict';
 
-angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
+angular.module('cpucoolerchart.controllers', [])
 
-  .controller('DataCtrl', function ($scope, $http, $q, $location, util) {
+  .controller('DataCtrl', function ($scope, $http, $q, $location,
+                                    QUERY_DELIMETER, QUERY_ARRAY_DELIMETER) {
+
     $scope.noiseOptions = [
       {name: '35dB', value: 35},
       {name: '40dB', value: 40},
       {name: '45dB', value: 45},
       {name: '최대', value: 100}
     ];
+
     $scope.powerOptions = [
       {name: '62W', value: 62},
       {name: '92W', value: 92},
       {name: '150W', value: 150},
       {name: '200W', value: 200}
     ];
+
     $scope.sortOptions = [
       {name: 'CPU 온도', value: 'cpu_temp_delta', alias: 'cpu'},
       {name: '전원부 온도', value: 'power_temp_delta', alias: 'power'},
@@ -23,10 +27,12 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       {name: '무게', value: 'weight', alias: 'weight'},
       {name: '소음', value: 'noise_avg', alias: 'noise'}
     ];
+
     $scope.heatsinkTypeOptions = [
       {name: '타워', value: 'tower'},
       {name: '플라워', value: 'flower'}
     ];
+
     $scope.g = {
       priceMin: null,
       priceMax: null,
@@ -38,28 +44,54 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       numSelectedHeatsinks: 0
     };
 
-    var privateScope = {
-      sortOptionsByAlias: util.indexBy($scope.sortOptions, 'alias'),
-      heatsinkTypeOptionsByValue: util.indexBy($scope.heatsinkTypeOptions, 'value'),
-      selectedHeatsinks: {}
+    $scope.toggleSelection = function (heatsink, bypassProtection) {
+      if ($scope.g.showSelectedOnly && !bypassProtection) return;
+      heatsink.selected = !heatsink.selected;
+      if (heatsink.selected) {
+        $scope.g.numSelectedHeatsinks += 1;
+        privateScope.selectedHeatsinks[heatsink.id] = heatsink;
+      } else {
+        $scope.g.numSelectedHeatsinks -= 1;
+        delete privateScope.selectedHeatsinks[heatsink.id];
+      }
     };
 
-    var defaultValues = {
-      noise: 35,
-      power: 62,
-      sort: 'cpu'
+    $scope.clearSelection = function () {
+      var selected = privateScope.selectedHeatsinks;
+      for (var id in selected) {
+        if (!selected.hasOwnProperty(id)) continue;
+        selected[id].selected = false;
+        delete selected[id];
+      }
+      $scope.g.numSelectedHeatsinks = 0;
     };
 
-    var getResources = function (url, name) {
+    function indexBy(arr, value) {
+      var map = {};
+      for (var i = 0; i < arr.length; i++) {
+        map[arr[i][value]] = arr[i];
+      }
+      return map;
+    }
+
+    function parseNumber(x, defaultValue) {
+      if (x === null || x === undefined || x === '') {
+        return (defaultValue === undefined ? null : defaultValue);
+      }
+      x = Number(x);
+      return x === null || isNaN(x) ? (defaultValue === undefined ? null : defaultValue) : x;
+    }
+
+    function getResources(url, name) {
       return $http.get(url).success(function (data) {
         privateScope[name] = data.items;
-        privateScope[name + 'ById'] = util.indexBy(data.items, 'id');
+        privateScope[name + 'ById'] = indexBy(data.items, 'id');
       }).error(function () {
         $scope.error = '데이터를 가져오는 동안 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
       });
-    };
+    }
 
-    var augmentMeasurements = function () {
+    function augmentMeasurements() {
       var empty = '-';
       for (var i = 0; i < privateScope.measurements.length; i++) {
         var m = privateScope.measurements[i];
@@ -93,12 +125,12 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
         m.height = m.heatsink.height === null ? 0 : m.heatsink.height;
         m.weight = m.heatsink.weight === null ? 0 : m.heatsink.weight;
       }
-    };
+    }
 
     var sortMeasurements = (function () {
       var compareNumbers = function (a, b, key) {
-        var x = util.parseNumber(a[key]),
-            y = util.parseNumber(b[key]);
+        var x = parseNumber(a[key]),
+            y = parseNumber(b[key]);
         if (x === y) return 0;
         else if (x === null) return 1;
         else if (y === null) return -1;
@@ -111,19 +143,18 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
         if ($scope.measurements.sortKey === key) return;
         $scope.measurements.items.sort(function (a, b) {
           var c;
-          if ((c = compareNumbers(a, b, key)) != 0) return c;
-          if ((c = compareNumbers(a, b, 'cpu_temp_delta')) != 0) return c;
-          if ((c = compareNumbers(a, b, 'power_temp_delta')) != 0) return c;
-          if ((c = compareNumbers(a, b, 'price')) != 0) return c;
+          if ((c = compareNumbers(a, b, key)) !== 0) return c;
+          if ((c = compareNumbers(a, b, 'cpu_temp_delta')) !== 0) return c;
+          if ((c = compareNumbers(a, b, 'power_temp_delta')) !== 0) return c;
+          if ((c = compareNumbers(a, b, 'price')) !== 0) return c;
           return 0;
         });
         $scope.measurements.sortKey = key;
       };
     })();
 
-    var updateMeasurementsVisibility = function () {
+    function updateMeasurementsVisibility() {
       var g = $scope.g,
-          filter = g.filterByMaker,
           current = $scope.measurements.items,
           found = false,
           length = 0;
@@ -143,7 +174,7 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
         if (m.visible) length += 1;
       }
       $scope.measurements.length = length;
-    };
+    }
 
     var selectMeasurements = (function () {
       var cachedMeasurementSelections = {35: {}, 40: {}, 45: {}, 100: {}};
@@ -172,118 +203,140 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       };
     })();
 
-    $scope.toggleSelection = function (heatsink, bypassProtection) {
-      if ($scope.g.showSelectedOnly && !bypassProtection) return;
-      heatsink.selected = !heatsink.selected;
-      if (heatsink.selected) {
-        $scope.g.numSelectedHeatsinks += 1;
-        privateScope.selectedHeatsinks[heatsink.id] = heatsink;
-      } else {
-        $scope.g.numSelectedHeatsinks -= 1;
-        delete privateScope.selectedHeatsinks[heatsink.id];
-      }
-    };
-
-    $scope.clearSelection = function () {
-      var selected = privateScope.selectedHeatsinks;
-      for (var id in selected) {
-        if (!selected.hasOwnProperty(id)) continue;
-        selected[id].selected = false;
-        delete selected[id];
-      }
-      $scope.g.numSelectedHeatsinks = 0;
-    };
-
-    var readPath = function () {
-      var query = util.deserialize($location.path().substr(1));
-      $scope.g.noise = util.parseNumber(query.noise, defaultValues.noise);
-      $scope.g.power = util.parseNumber(query.power, defaultValues.power);
-      $scope.g.sortOption = privateScope.sortOptionsByAlias[query.sort] ||
-          privateScope.sortOptionsByAlias[defaultValues.sort];
-      $scope.g.filterByMaker = false;
-      $scope.makers.forEach(function (maker) { maker.selected = false; });
-      if (query.maker) {
-        var makerIds = query.maker.split('|'),
-            filtered = false;
-        for (var i = 0; i < makerIds.length; i++) {
-          var id = makerIds[i],
-              maker = privateScope.makersById[id];
-          if (!maker) continue;
-          maker.selected = true;
-          filtered = true;
+    var readPath = (function () {
+      function deserialize(str) {
+        var obj = {},
+            args = str.split(QUERY_DELIMETER);
+        for (var i = 0; i < args.length; i++) {
+          var x = args[i].split('='),
+              name = x[0],
+              value = x[1];
+          obj[name] = value;
         }
-        $scope.g.filterByMaker = filtered;
+        return obj;
       }
-      if (query.price) {
-        var values = query.price.split('~');
-        $scope.g.priceMin = util.parseNumber(values[0]);
-        $scope.g.priceMax = util.parseNumber(values[1]);
-      } else {
-        $scope.g.priceMin = $scope.g.priceMax = null;
-      }
-      if (query.height) {
-        var values = query.height.split('~');
-        $scope.g.heightMin = util.parseNumber(values[0]);
-        $scope.g.heightMax = util.parseNumber(values[1]);
-      } else {
-        $scope.g.heightMin = $scope.g.heightMax = null;
-      }
-      if (query.weight) {
-        var values = query.weight.split('~');
-        $scope.g.weightMin = util.parseNumber(values[0]);
-        $scope.g.weightMax = util.parseNumber(values[1]);
-      } else {
-        $scope.g.weightMin = $scope.g.weightMax = null;
-      }
-      if (privateScope.heatsinkTypeOptionsByValue.hasOwnProperty(query.type)) {
-        $scope.g.heatsinkType = query.type;
-      } else {
-        $scope.g.heatsinkType = null;
-      }
-      if (query.show && query.show === 'selection') {
-        $scope.g.showSelectedOnly = true;
-      } else {
-        $scope.g.showSelectedOnly = false;
-      }
-      $scope.clearSelection();
-      if (query.select) {
-        var heatsinkIds = query.select.split('|');
-        for (var i = 0; i < heatsinkIds.length; i++) {
-          var id = util.parseNumber(heatsinkIds[i]),
-              heatsink = privateScope.heatsinksById[id];
-          if (!heatsink) continue;
-          $scope.toggleSelection(heatsink, true);
+      return function () {
+        var query = deserialize($location.path().substr(1)),
+            values, i;
+        $scope.g.noise = parseNumber(query.noise, defaultValues.noise);
+        $scope.g.power = parseNumber(query.power, defaultValues.power);
+        $scope.g.sortOption = privateScope.sortOptionsByAlias[query.sort] ||
+            privateScope.sortOptionsByAlias[defaultValues.sort];
+        $scope.g.filterByMaker = false;
+        $scope.makers.forEach(function (maker) { maker.selected = false; });
+        if (query.maker) {
+          var makerIds = query.maker.split(QUERY_ARRAY_DELIMETER),
+              filtered = false;
+          for (i = 0; i < makerIds.length; i++) {
+            var makerId = makerIds[i],
+                maker = privateScope.makersById[makerId];
+            if (!maker) continue;
+            maker.selected = true;
+            filtered = true;
+          }
+          $scope.g.filterByMaker = filtered;
         }
-      }
-    };
-
-    var updatePath = function () {
-      var query = {
-        noise: $scope.g.noise,
-        power: $scope.g.power,
-        sort: $scope.g.sortOption.alias,
-        maker: !$scope.g.filterByMaker ? '' :
-            privateScope.makers.filter(function (maker) { return maker.selected; })
-                               .map(function (maker) { return maker.id; })
-                               .join('|'),
-        price: util.parseNumber($scope.g.priceMin, '') + '~' + util.parseNumber($scope.g.priceMax, ''),
-        height: util.parseNumber($scope.g.heightMin, '') + '~' + util.parseNumber($scope.g.heightMax, ''),
-        weight: util.parseNumber($scope.g.weightMin, '') + '~' + util.parseNumber($scope.g.weightMax, ''),
-        type: $scope.g.heatsinkType,
-        show: $scope.g.showSelectedOnly ? 'selection' : '',
-        select: util.keys(privateScope.selectedHeatsinks).join('|')
+        if (query.price) {
+          values = query.price.split('~');
+          $scope.g.priceMin = parseNumber(values[0]);
+          $scope.g.priceMax = parseNumber(values[1]);
+        } else {
+          $scope.g.priceMin = $scope.g.priceMax = null;
+        }
+        if (query.height) {
+          values = query.height.split('~');
+          $scope.g.heightMin = parseNumber(values[0]);
+          $scope.g.heightMax = parseNumber(values[1]);
+        } else {
+          $scope.g.heightMin = $scope.g.heightMax = null;
+        }
+        if (query.weight) {
+          values = query.weight.split('~');
+          $scope.g.weightMin = parseNumber(values[0]);
+          $scope.g.weightMax = parseNumber(values[1]);
+        } else {
+          $scope.g.weightMin = $scope.g.weightMax = null;
+        }
+        if (privateScope.heatsinkTypeOptionsByValue.hasOwnProperty(query.type)) {
+          $scope.g.heatsinkType = query.type;
+        } else {
+          $scope.g.heatsinkType = null;
+        }
+        if (query.show && query.show === 'selection') {
+          $scope.g.showSelectedOnly = true;
+        } else {
+          $scope.g.showSelectedOnly = false;
+        }
+        $scope.clearSelection();
+        if (query.select) {
+          var heatsinkIds = query.select.split(QUERY_ARRAY_DELIMETER);
+          for (i = 0; i < heatsinkIds.length; i++) {
+            var heatsinkId = parseNumber(heatsinkIds[i]),
+                heatsink = privateScope.heatsinksById[heatsinkId];
+            if (!heatsink) continue;
+            $scope.toggleSelection(heatsink, true);
+          }
+        }
       };
-      if (query.noise === defaultValues.noise) delete query.noise;
-      if (query.power === defaultValues.power) delete query.power;
-      if (query.sort === defaultValues.sort) delete query.sort;
-      if (query.maker === '') delete query.maker;
-      if (query.price === '~') delete query.price;
-      if (query.height === '~') delete query.height;
-      if (query.weight === '~') delete query.weight;
-      if (query.type === null) delete query.type;
-      if (query.show === '') delete query.show;
-      if (query.select === '') delete query.select;
-      $location.path(util.serialize(query));
+    })();
+
+    var updatePath = (function () {
+      function keys(obj) {
+        var rv = [];
+        for (var key in obj) {
+          if (!obj.hasOwnProperty(key)) continue;
+          rv.push(key);
+        }
+        return rv;
+      }
+      function serialize(obj) {
+        var temp = [];
+        for (var name in obj) {
+          if (!obj.hasOwnProperty(name)) continue;
+          temp.push(name + '=' + obj[name]);
+        }
+        return temp.join(QUERY_DELIMETER);
+      }
+      return function () {
+        var query = {
+          noise: $scope.g.noise,
+          power: $scope.g.power,
+          sort: $scope.g.sortOption.alias,
+          maker: !$scope.g.filterByMaker ? '' :
+              privateScope.makers.filter(function (maker) { return maker.selected; })
+                                 .map(function (maker) { return maker.id; })
+                                 .join(QUERY_ARRAY_DELIMETER),
+          price: parseNumber($scope.g.priceMin, '') + '~' + parseNumber($scope.g.priceMax, ''),
+          height: parseNumber($scope.g.heightMin, '') + '~' + parseNumber($scope.g.heightMax, ''),
+          weight: parseNumber($scope.g.weightMin, '') + '~' + parseNumber($scope.g.weightMax, ''),
+          type: $scope.g.heatsinkType,
+          show: $scope.g.showSelectedOnly ? 'selection' : '',
+          select: keys(privateScope.selectedHeatsinks).join(QUERY_ARRAY_DELIMETER)
+        };
+        if (query.noise === defaultValues.noise) delete query.noise;
+        if (query.power === defaultValues.power) delete query.power;
+        if (query.sort === defaultValues.sort) delete query.sort;
+        if (query.maker === '') delete query.maker;
+        if (query.price === '~') delete query.price;
+        if (query.height === '~') delete query.height;
+        if (query.weight === '~') delete query.weight;
+        if (query.type === null) delete query.type;
+        if (query.show === '') delete query.show;
+        if (query.select === '') delete query.select;
+        $location.path(serialize(query));
+      };
+    })();
+
+    var defaultValues = {
+      noise: 35,
+      power: 62,
+      sort: 'cpu'
+    };
+
+    var privateScope = {
+      sortOptionsByAlias: indexBy($scope.sortOptions, 'alias'),
+      heatsinkTypeOptionsByValue: indexBy($scope.heatsinkTypeOptions, 'value'),
+      selectedHeatsinks: {}
     };
 
     $q.all([
@@ -293,7 +346,7 @@ angular.module('cpucoolerchart.controllers', ['cpucoolerchart.util'])
       getResources('/measurements', 'measurements')
     ]).then(function () {
       $scope.makers = privateScope.makers;
-      privateScope.makersByName = util.indexBy(privateScope.makers, 'name');
+      privateScope.makersByName = indexBy(privateScope.makers, 'name');
       readPath();
       augmentMeasurements();
       $scope.$watch('g', updatePath, true);

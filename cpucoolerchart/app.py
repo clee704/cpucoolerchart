@@ -100,7 +100,6 @@ def configure_extensions(app):
     'js/main.js',
     'js/controllers.js',
     'js/directives.js',
-    'js/util.js',
     filters='ngmin,yui_js', output='compiled/%(version)s.script.js'
   )
   assets_env.register('css_all',
