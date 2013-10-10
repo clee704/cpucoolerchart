@@ -8,7 +8,7 @@ body {
   margin-bottom: 20px;
 }
 
-h1, .h1 { font-size: floor(@font-size-base * 1.80); }
+h1 { font-size: floor(@font-size-base * 1.80); }
 
 input[type="text"],
 input[type="number"] {
@@ -32,8 +32,17 @@ label {
   font-weight: normal;
 }
 
-[ng-cloak] {
+.ng-hide, [ng-cloak] {
   display: none !important;
+}
+
+.container {
+  margin-top: @line-height-computed;
+  margin-bottom: @line-height-computed;
+  max-height: 99999px;  // hack for Android Chrome to disable font boosting
+  > h1:first-child {
+    margin-top: 0;
+  }
 }
 
 .glyphicon {
@@ -154,9 +163,7 @@ label {
     }
   }
   @media (min-width: @screen-sm) {
-    position: relative;
-    top: -(@input-height-base + @line-height-computed);
-    z-index: 2010;
+    margin-top: -(@input-height-base + @line-height-computed);
   }
 }
 
@@ -230,7 +237,6 @@ label {
 
 .footer {
   color: @text-muted;
-  margin-bottom: @line-height-computed;
   padding-top: @line-height-computed;
   border-top: 1px solid @hr-border;
   font-size: @font-size-small;

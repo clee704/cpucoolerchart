@@ -8,6 +8,10 @@
     <!--[if lt IE 9]>
       <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.2.0/respond.js"></script>
     <![endif]-->
+  </head>
+  <body ng-controller="DataCtrl">
+    {% block body %}{% endblock %}
+
     {% if config.ASSETS_DEBUG %}
       {% assets "js_vendor" %}<script src="{{ASSET_URL}}"></script>{% endassets %}
     {% else %}
@@ -21,14 +25,13 @@
       <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-sham.min.js"></script>
     <![endif]-->
     {% assets "js_all" %}<script src="{{ASSET_URL}}"></script>{% endassets %}
-  </head>
-  <body ng-controller="DataCtrl">
-    {% block body %}{% endblock %}
+
     <script>
       // Use FastClick for better mobile experience
       $(function () { FastClick.attach(document.body); });
+
+      // Load Google Analytics if configured
       {% if config.GA_TRACKING_ID and config.GA_DOMAIN %}
-        // Load Google Analytics
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
         (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
         m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -36,9 +39,11 @@
         ga('create', '{{config.GA_TRACKING_ID}}', '{{config.GA_DOMAIN}}');
         ga('send', 'pageview');
       {% endif %}
+
+      // Setup LiveReload if configured
+      {% if config.LIVE_RELOAD %}
+        document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>');
+      {% endif %}
     </script>
-    {% if config.LIVE_RELOAD %}
-      <script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
-    {% endif %}
   </body>
 </html>
