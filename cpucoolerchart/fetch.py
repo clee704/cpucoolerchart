@@ -76,18 +76,22 @@ DEPENDENCIES = {
 }
 
 
-def update_data(force=False):
+def needs_update():
+  last_updated = cache.get('last_updated')
+  if not last_updated:
+    return True
   interval = current_app.config['UPDATE_INTERVAL']
-  now = datetime.now()
-  if not force:
-    last_updated = cache.get('last_updated')
-    if last_updated is not None and last_updated > now - timedelta(seconds=interval):
-      __logger__.info('Recently updated; nothing to do')
-      return
+  return last_updated <= datetime.now() - timedelta(seconds=interval)
+
+
+def update_data(force=False):
+  if not force and not needs_update():
+    __logger__.info('Recently updated; nothing to do')
+    return
   data_list = fetch_measurement_data()
   update_measurement_data(data_list)
   update_price_data()
-  cache.set('last_updated', now)
+  cache.set('last_updated', datetime.now())
   __logger__.info('Successfully updated data from remote sources')
 
 

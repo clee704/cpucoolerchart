@@ -29,18 +29,21 @@ def export(csv=False, delim=','):
   print 'not implemented yet'
 
 @manager.command
-def update(force=False):
+def update(force=False, quit_worker=False):
   """
   Updates the database with data fetched from remote sources (Coolenjoy and
   Danawa). If --force is used, always update the database even if it is done
   recently. Note that the fetched data are cached for 1 day, so it may not be
   up-to-date.
 
+  If --quit_worker is set, it scales back the heroku worker process after it
+  is done.
+
   """
   try:
     update_data(force)
   finally:
-    if app.config.get('REDIS_QUEUE_BURST_MODE_IN_HEROKU'):
+    if quit_worker:
       heroku_scale('worker', 0)
 
 @manager.command

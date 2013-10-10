@@ -3,7 +3,9 @@ import logging
 from flask import Blueprint, current_app, jsonify, render_template, request
 
 from .extensions import db, cache
+from .fetch import needs_update
 from .models import Maker, Heatsink, FanConfig, Measurement
+from .util import heroku_scale
 
 
 __logger__ = logging.getLogger(__name__)
@@ -16,6 +18,8 @@ cached_unless_debug = lambda f: cache.cached(unless=lambda: current_app.debug)(f
 @views.route('/')
 @cached_unless_debug
 def index():
+  if needs_update():
+    heroku_scale('worker', 1)
   return render_template('index.html')
 
 
