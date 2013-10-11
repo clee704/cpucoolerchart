@@ -64,16 +64,23 @@ label {
 
 .selectors {
   margin-bottom: (@line-height-computed / 2);
+  position: relative;
 }
 
 .selector {
   float: left;
   margin-right: 10px;
   margin-bottom: (@line-height-computed / 2);
-  position: relative;
-  z-index: 2020;
   label {
     display: block;
+  }
+}
+
+.filters {
+  margin-top: @line-height-computed;
+  @media (min-width: @screen-sm) {
+    display: block !important;
+    margin-top: 0;
   }
 }
 
@@ -172,9 +179,6 @@ label {
       }
     }
   }
-  @media (min-width: @screen-sm) {
-    margin-top: -(@input-height-base + @line-height-computed);
-  }
 }
 
 .chart-controls {
@@ -187,13 +191,17 @@ label {
     left: auto;
     right: 0;
   }
+  .selectors & {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    margin-bottom: (@line-height-computed / 2);
+  }
 }
 
 .chart-control {
   display: inline-block;
   margin-left: 5px;
-  position: relative;
-  z-index: 2030;
 }
 
 .chart-model .line {

@@ -36,111 +36,87 @@
         </button>
       </div>
     </div>
+    <div class="hidden-xs" ng-include="'chartControls.html'"></div>
   </div>
   <div class="row">
     <div class="col-sm-4 col-md-3">
-      <div class="filter">
-        <div class="checkbox filter-label">
-          <label>
-            <input type="checkbox" select-all="makers" ng-model="$parent.g.filterByMaker"> 제조사
-          </label>
-        </div>
-        <div class="panel panel-default">
-          <div class="panel-body">
-            <div class="firefox-padding-hack-748518">
-              <div class="checkbox" ng-repeat="maker in makers">
-                <label>
-                  <input type="checkbox" ng-model="maker.selected">
-                  <span bo-bind-unwrap="maker.name"></span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="visible-xs" ng-include="'chartControls.html'"></div>
+      <div class="visible-xs">
+        <button class="btn btn-default" ng-click="showFilters = !showFilters" data-toggle="button">
+          <i class="glyphicon glyphicon-filter"></i>
+        </button>
       </div>
-      <div class="filter">
-        <form class="form-horizontal" autocomplete="off">
-          <div class="form-group filter-range">
-            <label for="price-max" class="col-xs-3 control-label">가격</label>
-            <div class="col-xs-9">
-              <input type="number" pattern="\d*" id="price-min" class="form-control"
-                     ng-model="g.priceMin">
-              <span class="range-marker">~</span>
-              <input type="number" pattern="\d*" id="price-max" class="form-control"
-                     ng-model="g.priceMax">
-            </div>
+      <div class="filters ng-hide" ng-show="showFilters">
+        <div class="filter">
+          <div class="checkbox filter-label">
+            <label>
+              <input type="checkbox" select-all="makers" ng-model="$parent.g.filterByMaker"> 제조사
+            </label>
           </div>
-          <div class="form-group filter-range">
-            <label for="height-max" class="col-xs-3 control-label">높이</label>
-            <div class="col-xs-9">
-              <input type="number" pattern="\d*" id="height-min" class="form-control"
-                     ng-model="g.heightMin">
-              <span class="range-marker">~</span>
-              <input type="number" pattern="\d*" id="height-max" class="form-control"
-                     ng-model="g.heightMax">
-            </div>
-          </div>
-          <div class="form-group filter-range">
-            <label for="weight-max" class="col-xs-3 control-label">무게</label>
-            <div class="col-xs-9">
-              <input type="number" pattern="\d*" id="weight-min" class="form-control"
-                     ng-model="g.weightMin">
-              <span class="range-marker">~</span>
-              <input type="number" pattern="\d*" id="weight-max" class="form-control"
-                     ng-model="g.weightMax">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="col-xs-3 control-label">종류</label>
-            <div class="col-xs-9">
-              <div class="btn-group filter-select-heatsink-type">
-                <button class="btn btn-default"
-                        ng-repeat="opt in heatsinkTypeOptions"
-                        ng-click="g.heatsinkType = (g.heatsinkType != opt.value ? opt.value : null)"
-                        ng-class="{active: g.heatsinkType == opt.value, '{@opt.value@}-button': true}"
-                        bo-bind="opt.name">
-                </button>
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <div class="firefox-padding-hack-748518">
+                <div class="checkbox" ng-repeat="maker in makers">
+                  <label>
+                    <input type="checkbox" ng-model="maker.selected">
+                    <span bo-bind-unwrap="maker.name"></span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
-        </form>
+        </div>
+        <div class="filter">
+          <form class="form-horizontal" autocomplete="off">
+            <div class="form-group filter-range">
+              <label for="price-max" class="col-xs-3 control-label">가격</label>
+              <div class="col-xs-9">
+                <input type="number" pattern="\d*" id="price-min" class="form-control"
+                       ng-model="g.priceMin">
+                <span class="range-marker">~</span>
+                <input type="number" pattern="\d*" id="price-max" class="form-control"
+                       ng-model="g.priceMax">
+              </div>
+            </div>
+            <div class="form-group filter-range">
+              <label for="height-max" class="col-xs-3 control-label">높이</label>
+              <div class="col-xs-9">
+                <input type="number" pattern="\d*" id="height-min" class="form-control"
+                       ng-model="g.heightMin">
+                <span class="range-marker">~</span>
+                <input type="number" pattern="\d*" id="height-max" class="form-control"
+                       ng-model="g.heightMax">
+              </div>
+            </div>
+            <div class="form-group filter-range">
+              <label for="weight-max" class="col-xs-3 control-label">무게</label>
+              <div class="col-xs-9">
+                <input type="number" pattern="\d*" id="weight-min" class="form-control"
+                       ng-model="g.weightMin">
+                <span class="range-marker">~</span>
+                <input type="number" pattern="\d*" id="weight-max" class="form-control"
+                       ng-model="g.weightMax">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="col-xs-3 control-label">종류</label>
+              <div class="col-xs-9">
+                <div class="btn-group filter-select-heatsink-type">
+                  <button class="btn btn-default"
+                          ng-repeat="opt in heatsinkTypeOptions"
+                          ng-click="g.heatsinkType = (g.heatsinkType != opt.value ? opt.value : null)"
+                          ng-class="{active: g.heatsinkType == opt.value, '{@opt.value@}-button': true}"
+                          bo-bind="opt.name">
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
     <div class="col-sm-8 col-md-9">
       <div class="chart">
-        <div class="chart-controls">
-          <div class="chart-control">
-            <button class="btn btn-success ng-hide"
-                    ng-show="!g.showSelectedOnly &amp;&amp; g.numSelectedHeatsinks"
-                    ng-click="g.showSelectedOnly = true">
-              비교
-            </button>
-            <button class="btn btn-default ng-hide"
-                    ng-show="!g.showSelectedOnly &amp;&amp; g.numSelectedHeatsinks"
-                    ng-click="clearSelection()">
-              취소
-            </button>
-            <button class="btn btn-primary ng-hide"
-                    ng-show="g.showSelectedOnly"
-                    ng-click="g.showSelectedOnly = false">
-              모두 보기
-            </button>
-          </div>
-          <div class="chart-control">
-            <label>정렬</label>
-            <div class="btn-group">
-              <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                <span ng-bind="g.sortOption.name"></span>
-                <span class="caret"></span>
-              </button>
-              <ul class="dropdown-menu">
-                <li ng-repeat="opt in sortOptions">
-                  <a href="#" click="g.sortOption = opt" bo-bind="opt.name"></a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
         <div class="clearfix"></div>
         <table>
           <thead>
@@ -224,4 +200,39 @@
 <div class="alert alert-danger ng-hide" ng-show="error" center width="300">
   <p ng-bind="error"></p>
 </div>
+<script type="text/ng-template" id="chartControls.html">
+  <div class="chart-controls">
+    <div class="chart-control">
+      <button class="btn btn-success ng-hide"
+              ng-show="!g.showSelectedOnly &amp;&amp; g.numSelectedHeatsinks"
+              ng-click="g.showSelectedOnly = true">
+        비교
+      </button>
+      <button class="btn btn-default ng-hide"
+              ng-show="!g.showSelectedOnly &amp;&amp; g.numSelectedHeatsinks"
+              ng-click="clearSelection()">
+        취소
+      </button>
+      <button class="btn btn-primary ng-hide"
+              ng-show="g.showSelectedOnly"
+              ng-click="g.showSelectedOnly = false">
+        모두 보기
+      </button>
+    </div>
+    <div class="chart-control">
+      <label>정렬</label>
+      <div class="btn-group">
+        <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+          <span ng-bind="g.sortOption.name"></span>
+          <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+          <li ng-repeat="opt in sortOptions">
+            <a href="#" click="g.sortOption = opt" bo-bind="opt.name"></a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</script>
 {% endblock %}
