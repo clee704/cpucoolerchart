@@ -100,6 +100,14 @@ angular.module('cpucoolerchart.directives', [])
     };
   })
 
+  .directive('boBindUnwrap', function () {
+    return {
+      link: function (scope, element, attr) {
+        element.text(scope.$eval(attr.boBindUnwrap)).contents().unwrap();
+      }
+    };
+  })
+
   .directive('boAttr', function () {
     return {
       link: function (scope, element, attr) {

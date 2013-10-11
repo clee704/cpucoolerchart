@@ -51,7 +51,7 @@
               <div class="checkbox" ng-repeat="maker in makers">
                 <label>
                   <input type="checkbox" ng-model="maker.selected">
-                  <span bo-bind="maker.name"></span>
+                  <span bo-bind-unwrap="maker.name"></span>
                 </label>
               </div>
             </div>

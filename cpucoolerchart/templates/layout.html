@@ -24,6 +24,11 @@
       <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-shim.min.js"></script>
       <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-sham.min.js"></script>
     <![endif]-->
+
+    <script>
+      // Check browser capabilities
+      if ('ontouchstart' in document) $('html').addClass('touch');
+    </script>
     {% assets "js_all" %}<script src="{{ASSET_URL}}"></script>{% endassets %}
 
     <script>

@@ -16,7 +16,16 @@ input[type="number"] {
 }
 
 input[type="checkbox"] {
+  height: 1em;
   margin-top: 2px;  // 4px -> 2px
+}
+
+.checkbox label {
+  cursor: pointer;
+  .touch & {
+    display: block;
+    padding: 8px 2px;
+  }
 }
 
 input::-webkit-outer-spin-button,
@@ -78,6 +87,7 @@ label {
     padding: 0;
     overflow: hidden;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     .firefox-padding-hack-748518 {
       // https://bugzilla.mozilla.org/show_bug.cgi?id=748518
       padding: 0 10px;
