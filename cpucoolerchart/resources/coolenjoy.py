@@ -26,6 +26,7 @@ MAKER_FIX = {
   u'apack': u'Apack',
   u'zalman': u'Zalman',
   u'apachi': u'Apachi',
+  u'gelid': u'Gelid',
 }
 
 MODEL_FIX = {
