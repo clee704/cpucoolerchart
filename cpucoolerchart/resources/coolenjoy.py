@@ -30,29 +30,45 @@ MAKER_FIX = {
 }
 
 MODEL_FIX = {
-  u'cnps9700nt': u'CNPS9700 NT',
-  u'cnps9900led': u'CNPS9900 LED',
+  # 3Rsystem
   u'iceage 120': u'iCEAGE 120',
   u'iceage 120 boss': u'iCEAGE 120 BOSS',
   u'iceage 120 prima': u'iCEAGE 120 PRIMA',
   u'iceage 90mm': u'iCEAGE 90mm',
-  u'triton 79 amazing': u'TRITON 79 AMAZING',
-  u'true spirit': u'True Spirit',
+  # AMD
   u'amd정품': u'AMD 정품',
-  u'core_contact freezer 92': u'Core-Contact Freezer 92',
-  u'baram shine(바람 샤인)': u'BARAM Shine',
-  u'baram(바람)': u'BARAM',
-  u'baram 2010': u'BARAM2010',
-  u'bigtyp 14pro(cl-p0456)': u'BigTyp 14Pro CL-P0456',
-  u'hydro series h50': u'H50',
+  # ASUS
+  u'triton 79 amazing': u'TRITON 79 AMAZING',
+  # CoolerMaster
   u'geminll (풍신장)∩': u'Gemin II ∩',
   u'geminll (풍신장)∪': u'Gemin II ∪',
+  # Corsair
+  u'hydro series h50': u'H50',
+  # SilverStone
   u'sst-he01': u'Heligon HE01',
   u'he-02': u'Heligon HE02',
+  u'ar01': u'Argon AR01',
+  u'ar03': u'Argon AR03',
+  u'td02': u'Tundra TD02',
+  u'td03': u'Tundra TD03',
+  # Sunbeamtech
+  u'core_contact freezer 92': u'Core-Contact Freezer 92',
+  # Thermalright
   u'silverarrow sb-e': u'Silver Arrow SB-E',
+  u'true spirit': u'True Spirit',
   u'ultra 120': u'Ultra-120',
   u'ultra 120 extreme': u'Ultra-120 eXtreme',
+  # Thermaltake
+  u'bigtyp 14pro(cl-p0456)': u'BigTyp 14Pro CL-P0456',
+  # ThermoLab
+  u'baram(바람)': u'BARAM',
+  u'baram shine(바람 샤인)': u'BARAM Shine',
+  u'baram 2010': u'BARAM2010',
+  # Xigmatek
   u'dark knight-s1283': u'Dark Knight S1283',
+  # Zalman
+  u'cnps9700nt': u'CNPS9700 NT',
+  u'cnps9900led': u'CNPS9900 LED',
 }
 
 INCONSISTENCY_FIX = {
