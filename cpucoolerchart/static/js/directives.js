@@ -2,6 +2,25 @@
 
 angular.module('cpucoolerchart.directives', [])
 
+  .directive('heatsinkInfo', function ($rootScope) {
+    return {
+      scope: {'g': '=scope'},
+      link: function (scope, element, attr) {
+        scope.$watch('g', function (value) {
+          if (value.heatsink) {
+            scope.heatsink = value.heatsink;
+            element.modal('show');
+          } else {
+            element.modal('hide');
+          }
+        }, true);
+        element.on('hidden.bs.modal', function () {
+          scope.$apply(function () { scope.g.heatsink = null; });
+        });
+      }
+    };
+  })
+
   .directive('barGraph', function () {
     return {
       template: '<div class="bar"></div>',
@@ -68,7 +87,6 @@ angular.module('cpucoolerchart.directives', [])
     return {
       link: function (scope, element/*, attr */) {
         element.on('click', function (e) {
-          console.log(e);
           if (!(e.ctrlKey || e.metaKey || e.altKey || e.shiftKey)) {
             var url = angular.element(e.target).attr('href');
             if (url && url.charAt(0) !== '#') {
@@ -86,10 +104,13 @@ angular.module('cpucoolerchart.directives', [])
     return {
       link: function(scope, element, attr) {
         element.on('click', function (e) {
-          scope.$apply(function () {
-            scope.$eval(attr.click);
-          });
-          e.preventDefault();
+          if (!(e.ctrlKey || e.metaKey || e.altKey || e.shiftKey)) {
+            scope.$apply(function () {
+              scope.$eval(attr.click);
+            });
+            if (attr.hasOwnProperty('preventDefault')) e.preventDefault();
+          }
+          if (attr.hasOwnProperty('stopPropagation')) e.stopPropagation();
         });
       }
     };

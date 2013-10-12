@@ -4,6 +4,7 @@
 @font-size-base: 13px;
 @font-family-sans-serif: "Nanum Gothic", NanumGothic, "나눔고딕", "서울남산체", "Malgun Gothic", "맑은 고딕", "맑은고딕", "Apple SD Gothic Neo", "Helvetica Neue", Helvetica, Arial, sans-serif;
 @icon-font-path: "/static/bower_components/bootstrap/fonts/";
+@grid-float-breakpoint: 0px;
 
 body {
   margin-bottom: 20px;
@@ -77,6 +78,15 @@ label {
 @keyframes spin {
   0% { .rotate(0deg); }
   100% { .rotate(360deg); }
+}
+
+.modal {
+  -webkit-overflow-scrolling: touch;
+}
+
+// See https://github.com/twbs/bootstrap/issues/9855
+.modal-open, .modal-open .navbar-fixed-top {
+  margin-right: 0 !important;
 }
 
 .loading, .empty {
@@ -276,6 +286,30 @@ label {
   a {
     color: @text-color;
     text-decoration: none;
+  }
+}
+
+.heatsink-info {
+  .image-pane {
+    text-align: center;
+    overflow: hidden;
+    img {
+      max-width: 100%;
+    }
+  }
+  .modal-body {
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+  }
+  .dl-horizontal {
+    @component-offset-horizontal: 120px;
+    dt {
+      width: (@component-offset-horizontal - 20);
+    }
+    dd {
+      margin-left: @component-offset-horizontal;
+    }
   }
 }
 

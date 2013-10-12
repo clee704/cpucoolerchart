@@ -159,7 +159,7 @@
                 }">
               <td class="chart-model">
                 <a link-if="m.danawa_url" open-link-in-new-window>
-                  <div>
+                  <div click="g.modal.heatsink = m.heatsink" stop-propagation prevent-default>
                     <div class="line" bo-bind="m.maker.name"></div>
                     <div class="line" bo-bind="m.heatsink.name"
                          bo-attr="{title: m.heatsink.name}"></div>
@@ -208,6 +208,40 @@
 <div class="alert alert-danger ng-hide" ng-show="error" center="error" width="300">
   <p ng-bind="error"></p>
 </div>
+<div class="modal fade heatsink-info" heatsink-info scope="g.modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">{@heatsink.maker.name @} {@heatsink.name@}</h4>
+      </div>
+      <div class="modal-body">
+        <div class="image-pane">
+          <img ng-if="heatsink.image_url" ng-src="{@heatsink.image_url@}">
+        </div>
+        <dl class="dl-horizontal">
+          <dt>크기</dt>
+          <dd>{@heatsink.size@}</dd>
+          <dt>무게</dt>
+          <dd>{@heatsink.weight_formatted@}</dd>
+          <dt>종류</dt>
+          <dd>{@heatsink.heatsink_type@}</dd>
+          <dt>최저가</dt>
+          <dd>{@heatsink.price ? (heatsink.price | number) + '원' : '-'@}</dd>
+          <dt>판매몰</dt>
+          <dd>{@heatsink.shop_count || '-'@}</dd>
+          <dt>등록일</dt>
+          <dd>{@(heatsink.first_seen_timestamp | date:'yyyy-MM-dd') || '-'@}</dd>
+        </dl>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal">닫기</button>
+        <a href="{@heatsink.danawa_url@}" class="btn btn-success"
+           ng-if="heatsink.danawa_url">다나와 상품정보</a>
+      </div>
+    </div>
+  </div>
+</div>
 <script type="text/ng-template" id="chartControls.html">
   <div class="chart-controls">
     <div class="chart-control">
@@ -236,7 +270,7 @@
         </button>
         <ul class="dropdown-menu">
           <li ng-repeat="opt in sortOptions">
-            <a href="#" click="g.sortOption = opt" bo-bind="opt.name"></a>
+            <a href="#" click="g.sortOption = opt" prevent-default bo-bind="opt.name"></a>
           </li>
         </ul>
       </div>

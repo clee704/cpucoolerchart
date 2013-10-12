@@ -92,7 +92,7 @@ def update_data(force=False):
   fix_existing_data()
   data_list = fetch_measurement_data()
   update_measurement_data(data_list)
-  update_price_data()
+  update_danawa_data()
   cache.set('last_updated', datetime.now())
   __logger__.info('Successfully updated data from remote sources')
 
@@ -376,27 +376,40 @@ def update_measurement(fan_config, data):
     measurement.update(**data)
 
 
-def update_price_data():
+def update_danawa_data():
   if 'DANAWA_API_KEY_PRODUCT_INFO' not in current_app.config:
     __logger__.warning('DANAWA_API_KEY_PRODUCT_INFO not found')
     return
   api_key = current_app.config['DANAWA_API_KEY_PRODUCT_INFO']
-  for heatsink, maker_name in heatsinks_with_maker_names():
-    key = (maker_name + ' ' + heatsink.name).lower()
-    if key in MAPPING and MAPPING[key] != heatsink.danawa_id:
-      heatsink.danawa_id = MAPPING[key]
-    if heatsink.danawa_id is None:
-      continue
-    url = 'http://api.danawa.com/api/main/product/info'
-    query = {'key': api_key, 'mediatype': 'json', 'prodCode': heatsink.danawa_id}
-    json_text = get_cached_response_text(url + '?' + urllib.urlencode(query))
-    data = load_danawa_json(json_text)
-    if data is None:
-      continue
-    min_price = int(data.get('minPrice', 0))
-    if min_price:
-      heatsink.price = min_price
-  db.session.commit()
+  try:
+    for heatsink, maker_name in heatsinks_with_maker_names():
+      key = (maker_name + ' ' + heatsink.name).lower()
+      if key in MAPPING and MAPPING[key] != heatsink.danawa_id:
+        heatsink.danawa_id = MAPPING[key]
+      if heatsink.danawa_id is None:
+        continue
+      url = 'http://api.danawa.com/api/main/product/info'
+      query = {'key': api_key, 'mediatype': 'json', 'prodCode': heatsink.danawa_id}
+      json_text = get_cached_response_text(url + '?' + urllib.urlencode(query))
+      data = load_danawa_json(json_text)
+      if data is None:
+        continue
+      min_price = int(data.get('minPrice', 0))
+      if min_price:
+        heatsink.price = min_price
+      shop_count = int(data.get('shopCount', 0))
+      if shop_count:
+        heatsink.shop_count = shop_count
+      input_date = datetime.strptime(data['inputDate'], '%Y-%m-%d %H:%M:%S')
+      heatsink.first_seen = input_date
+      for image_info in data['images']['image']:
+        if image_info['name'] == 'large_1':
+          heatsink.image_url = image_info['url']
+          break
+    db.session.commit()
+  except Exception:
+    __logger__.exception('An error occurred while updating danawa data')
+    db.session.rollback()
 
 
 def print_danawa_results():

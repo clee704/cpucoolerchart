@@ -53,6 +53,9 @@ class Heatsink(Model):
   weight = db.Column(db.Float)
   danawa_id = db.Column(db.Integer)
   price = db.Column(db.Integer)
+  shop_count = db.Column(db.Integer)
+  first_seen = db.Column(db.DateTime)
+  image_url = db.Column(db.String(511))
   maker = db.relationship('Maker', backref=db.backref('heatsinks', order_by=name.asc()))
 
   __table_args__ = (db.UniqueConstraint('name', 'maker_id'),)

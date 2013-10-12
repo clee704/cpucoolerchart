@@ -41,9 +41,9 @@ angular.module('cpucoolerchart.controllers', [])
       weightMin: null,
       weightMax: null,
       heatsinkType: null,
-      numSelectedHeatsinks: 0
+      numSelectedHeatsinks: 0,
+      modal: {}
     };
-
     $scope.loading = {};
 
     $scope.toggleSelection = function (heatsink, bypassProtection) {
@@ -96,36 +96,42 @@ angular.module('cpucoolerchart.controllers', [])
       });
     }
 
-    function augmentMeasurements() {
+    function attachProperties() {
       var empty = '-';
+      for (var j = 0; j < privateScope.heatsinks.length; j++) {
+        var heatsink = privateScope.heatsinks[j];
+        heatsink.maker = privateScope.makersById[heatsink.maker_id];
+        heatsink.size = [
+          Math.round(heatsink.width) || empty,
+          Math.round(heatsink.depth) || empty,
+          Math.round(heatsink.height) || empty
+        ].join('x');
+        if (heatsink.size === [empty, empty, empty].join('x')) heatsink.size = empty;
+        heatsink.weight_formatted = heatsink.weight === null ? empty :
+            Math.round(heatsink.weight) + ' g';
+        if (heatsink.danawa_id) {
+          heatsink.danawa_url = 'http://prod.danawa.com/info?pcode=' + heatsink.danawa_id;
+        }
+        if (heatsink.first_seen) {
+          heatsink.first_seen_timestamp = Date.parse(heatsink.first_seen);
+        }
+      }
       for (var i = 0; i < privateScope.measurements.length; i++) {
         var m = privateScope.measurements[i];
         m.fan_config = privateScope.fanConfigsById[m.fan_config_id];
         m.heatsink = privateScope.heatsinksById[m.fan_config.heatsink_id];
         m.maker = privateScope.makersById[m.heatsink.maker_id];
-        m.heatsink_size = [
-          Math.round(m.heatsink.width) || empty,
-          Math.round(m.heatsink.depth) || empty,
-          Math.round(m.heatsink.height) || empty
-        ].join('x');
-        if (m.heatsink_size === [empty, empty, empty].join('x')) {
-          m.heatsink_size = empty;
-        }
-        m.heatsink_weight = m.heatsink.weight === null ? empty :
-            Math.round(m.heatsink.weight) + ' g';
+        m.heatsink_size = m.heatsink.size;
+        m.heatsink_weight = m.heatsink.weight_formatted;
         m.fan_size = m.fan_config.fan_size + '/' +
             m.fan_config.fan_thickness + 'T' +
             ' x' + m.fan_config.fan_count;
         m.rpm_avg = m.rpm_min === null ? empty : Math.round((m.rpm_min + m.rpm_max) / 2) + ' rpm';
-        if (m.power_temp_delta === null) {
-          m.power_temp_delta = empty;
-        }
+        if (m.power_temp_delta === null) m.power_temp_delta = empty;
         m.noise_avg = m.noise_actual_min === null ? empty :
             (Math.round((m.noise_actual_min + m.noise_actual_max) / 2 * 10) / 10);
-        m.price_formatted = m.heatsink.price ? (m.heatsink.price / 10000).toFixed(1) : '-';
-        if (m.heatsink.danawa_id) {
-          m.danawa_url = 'http://prod.danawa.com/info/?pcode=' + m.heatsink.danawa_id;
-        }
+        m.price_formatted = m.heatsink.price ? (m.heatsink.price / 10000).toFixed(1) : empty;
+        m.danawa_url = m.heatsink.danawa_url;
         m.price = m.heatsink.price === null ? null : m.heatsink.price / 10000;
         m.height = m.heatsink.height === null ? 0 : m.heatsink.height;
         m.weight = m.heatsink.weight === null ? 0 : m.heatsink.weight;
@@ -282,6 +288,11 @@ angular.module('cpucoolerchart.controllers', [])
             $scope.toggleSelection(heatsink, true);
           }
         }
+        if (query.info && privateScope.heatsinksById[query.info]) {
+          $scope.g.modal.heatsink = privateScope.heatsinksById[query.info];
+        } else {
+          $scope.g.modal.heatsink = null;
+        }
       };
     })();
 
@@ -316,7 +327,8 @@ angular.module('cpucoolerchart.controllers', [])
           weight: parseNumber($scope.g.weightMin, '') + '~' + parseNumber($scope.g.weightMax, ''),
           type: $scope.g.heatsinkType,
           show: $scope.g.showSelectedOnly ? 'selection' : '',
-          select: keys(privateScope.selectedHeatsinks).join(QUERY_ARRAY_DELIMETER)
+          select: keys(privateScope.selectedHeatsinks).join(QUERY_ARRAY_DELIMETER),
+          info: $scope.g.modal.heatsink ? $scope.g.modal.heatsink.id : ''
         };
         if (query.noise === defaultValues.noise) delete query.noise;
         if (query.power === defaultValues.power) delete query.power;
@@ -328,6 +340,7 @@ angular.module('cpucoolerchart.controllers', [])
         if (query.type === null) delete query.type;
         if (query.show === '') delete query.show;
         if (query.select === '') delete query.select;
+        if (query.info === '') delete query.info;
         $location.path(serialize(query));
       };
     })();
@@ -344,6 +357,13 @@ angular.module('cpucoolerchart.controllers', [])
       selectedHeatsinks: {}
     };
 
+    function ignoreInit(func) {
+      return function (newValue, oldValue) {
+        if (newValue === oldValue) return;
+        func(newValue, oldValue);
+      };
+    }
+
     $q.all([
       getResources('/makers', 'makers'),
       getResources('/heatsinks', 'heatsinks'),
@@ -353,19 +373,20 @@ angular.module('cpucoolerchart.controllers', [])
       $scope.makers = privateScope.makers;
       privateScope.makersByName = indexBy(privateScope.makers, 'name');
       readPath();
-      augmentMeasurements();
+      attachProperties();
+      selectMeasurements();
       $scope.$watch('g', updatePath, true);
-      $scope.$watch('g.noise', selectMeasurements);
-      $scope.$watch('g.power', selectMeasurements);
-      $scope.$watch('g.sortOption', sortMeasurements);
-      $scope.$watch('g.priceMin', updateMeasurementsVisibility);
-      $scope.$watch('g.priceMax', updateMeasurementsVisibility);
-      $scope.$watch('g.heightMin', updateMeasurementsVisibility);
-      $scope.$watch('g.heightMax', updateMeasurementsVisibility);
-      $scope.$watch('g.weightMin', updateMeasurementsVisibility);
-      $scope.$watch('g.weightMax', updateMeasurementsVisibility);
-      $scope.$watch('g.heatsinkType', updateMeasurementsVisibility);
-      $scope.$watch('g.showSelectedOnly', updateMeasurementsVisibility);
+      $scope.$watch('g.noise', ignoreInit(selectMeasurements));
+      $scope.$watch('g.power', ignoreInit(selectMeasurements));
+      $scope.$watch('g.sortOption', ignoreInit(sortMeasurements));
+      $scope.$watch('g.priceMin', ignoreInit(updateMeasurementsVisibility));
+      $scope.$watch('g.priceMax', ignoreInit(updateMeasurementsVisibility));
+      $scope.$watch('g.heightMin', ignoreInit(updateMeasurementsVisibility));
+      $scope.$watch('g.heightMax', ignoreInit(updateMeasurementsVisibility));
+      $scope.$watch('g.weightMin', ignoreInit(updateMeasurementsVisibility));
+      $scope.$watch('g.weightMax', ignoreInit(updateMeasurementsVisibility));
+      $scope.$watch('g.heatsinkType', ignoreInit(updateMeasurementsVisibility));
+      $scope.$watch('g.showSelectedOnly', ignoreInit(updateMeasurementsVisibility));
       $scope.$watch('makers', function (makers) {
         updatePath();
         $scope.g.filterByMaker = makers.some(function (maker) { return maker.selected; });
