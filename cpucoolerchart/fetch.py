@@ -318,6 +318,7 @@ def update_maker(data_list, maker_name):
   if maker is None:
     maker = Maker(**data)
     db.session.add(maker)
+    __logger__.info(u'Added new maker: %s', maker.name)
   else:
     maker.update(**data)
   groups = itertools.groupby(data_list, dictitemgetter(
@@ -334,6 +335,7 @@ def update_heatsink(data_list, maker, model_name, width, depth, height, heatsink
   if heatsink is None:
     heatsink = Heatsink(**data)
     db.session.add(heatsink)
+    __logger__.info(u'Added new heatsink: %s', heatsink.name)
   else:
     heatsink.update(**data)
   groups = itertools.groupby(data_list, dictitemgetter(
@@ -351,6 +353,7 @@ def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
   if fan_config is None:
     fan_config = FanConfig(**data)
     db.session.add(fan_config)
+    __logger__.info(u'Added new fan config')
   else:
     fan_config.update(**data)
   for data in data_list:
@@ -368,6 +371,7 @@ def update_measurement(fan_config, data):
   if measurement is None:
     measurement = Measurement(**data)
     db.session.add(measurement)
+    __logger__.info(u'Added new measurement')
   else:
     measurement.update(**data)
 
