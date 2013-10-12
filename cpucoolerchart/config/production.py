@@ -7,7 +7,7 @@ from ..config import DefaultConfig, autocast
 class Config(DefaultConfig):
   LOGGING = deepcopy(DefaultConfig.LOGGING)
   LOGGING['loggers']['cpucoolerchart']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')
-  LOGGING['loggers']['sqlalchemy.engine']['level'] = os.environ.get('LOG_LEVEL', 'WARNING')
+  LOGGING['loggers']['sqlalchemy.engine']['level'] = os.environ.get('SQL_LOG_LEVEL', 'WARNING')
 
   @classmethod
   def setup_smtp(cls):
