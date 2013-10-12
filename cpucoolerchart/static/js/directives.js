@@ -47,16 +47,19 @@ angular.module('cpucoolerchart.directives', [])
           margin: 0
         });
         var win = angular.element($window);
-        function resizeElement() {
+        function centerElement() {
           element.css({
             top: ((win.height() - element.outerHeight()) / 2) + 'px',
             left: ((win.width() - element.outerWidth()) / 2) + 'px'
           });
         }
-        win.on('resize', resizeElement);
-        $timeout(function () {
-          resizeElement();
-        }, 100);
+        win.on('resize', centerElement);
+        centerElement();
+        scope.$watch(attr.center, function () {
+          $timeout(function () {
+            centerElement();
+          });
+        });
       }
     };
   })
