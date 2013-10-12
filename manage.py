@@ -98,8 +98,8 @@ def clear():
   cache.clear()
 
 @cache_manager.command
-def remove(kind):
-  """Removes cached data of the given kind. Possible values: html, json"""
+def delete(kind):
+  """Deletes cached data of the given kind. Possible values: html, json"""
   if kind == 'html':
     cache.delete('view//')
   elif kind == 'json':
