@@ -18,7 +18,7 @@ cached_unless_debug = lambda f: cache.cached(unless=lambda: current_app.debug)(f
 @views.route('/')
 @cached_unless_debug
 def index():
-  if needs_update():
+  if current_app.config.get('HEROKU_API_KEY') and needs_update():
     heroku_scale('worker', 1)
   return render_template('index.html')
 
