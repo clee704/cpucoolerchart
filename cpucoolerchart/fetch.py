@@ -14,6 +14,7 @@ from flask import current_app
 import lxml.etree
 import lxml.html
 from prettytable import PrettyTable
+from sqlalchemy import func
 import requests
 
 from .extensions import db, cache
@@ -88,11 +89,24 @@ def update_data(force=False):
   if not force and not needs_update():
     __logger__.info('Recently updated; nothing to do')
     return
+  fix_existing_data()
   data_list = fetch_measurement_data()
   update_measurement_data(data_list)
   update_price_data()
   cache.set('last_updated', datetime.now())
   __logger__.info('Successfully updated data from remote sources')
+
+
+def fix_existing_data():
+  for maker in Maker.query.filter(func.lower(Maker.name).in_(MAKER_FIX.keys())):
+    maker.name = MAKER_FIX[maker.name.lower()]
+  for heatsink in Heatsink.query.filter(func.lower(Heatsink.name).in_(MODEL_FIX.keys())):
+    heatsink.name = MODEL_FIX[heatsink.name.lower()]
+  for heatsink, maker_name in heatsinks_with_maker_names():
+    key = (maker_name + ' ' + heatsink.name).lower()
+    if key in INCONSISTENCY_FIX:
+      heatsink.update(**INCONSISTENCY_FIX[key])
+  db.session.commit()
 
 
 def fetch_measurement_data():
@@ -363,9 +377,7 @@ def update_price_data():
     __logger__.warning('DANAWA_API_KEY_PRODUCT_INFO not found')
     return
   api_key = current_app.config['DANAWA_API_KEY_PRODUCT_INFO']
-  heatsinks = db.session.query(Maker.name, Heatsink).join(
-      Heatsink, Maker.id == Heatsink.maker_id)
-  for maker_name, heatsink in heatsinks:
+  for heatsink, maker_name in heatsinks_with_maker_names():
     key = (maker_name + ' ' + heatsink.name).lower()
     if key in MAPPING and MAPPING[key] != heatsink.danawa_id:
       heatsink.danawa_id = MAPPING[key]
@@ -388,9 +400,7 @@ def print_danawa_results():
     __logger__.warning('DANAWA_API_KEY_SEARCH not found')
     return
   api_key = current_app.config['DANAWA_API_KEY_SEARCH']
-  heatsinks = db.session.query(Maker.name, Heatsink).join(
-      Heatsink, Maker.id == Heatsink.maker_id).order_by(Maker.name, Heatsink.name)
-  for maker_name, heatsink in heatsinks:
+  for heatsink, maker_name in heatsinks_with_maker_names():
     if heatsink.danawa_id is not None:
       continue
     url = 'http://api.danawa.com/api/search/product/info'
@@ -439,6 +449,11 @@ def load_danawa_json(text):
         __logger__.warning(u'Danawa responded with an invalid XML')
     else:
       __logger__.warning(u'Danawa responded with an incomprehensible text')
+
+
+def heatsinks_with_maker_names():
+  return db.session.query(Heatsink, Maker.name).join(
+      Maker, Heatsink.maker_id == Maker.id)
 
 
 def compress_spaces(s):
