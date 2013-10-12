@@ -44,6 +44,8 @@ angular.module('cpucoolerchart.controllers', [])
       numSelectedHeatsinks: 0
     };
 
+    $scope.loading = {};
+
     $scope.toggleSelection = function (heatsink, bypassProtection) {
       if ($scope.g.showSelectedOnly && !bypassProtection) return;
       heatsink.selected = !heatsink.selected;
@@ -83,11 +85,14 @@ angular.module('cpucoolerchart.controllers', [])
     }
 
     function getResources(url, name) {
+      $scope.loading[name] = true;
       return $http.get(url).success(function (data) {
         privateScope[name] = data.items;
         privateScope[name + 'ById'] = indexBy(data.items, 'id');
+        $scope.loading[name] = false;
       }).error(function () {
         $scope.error = '데이터를 가져오는 동안 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+        $scope.loading[name] = false;
       });
     }
 

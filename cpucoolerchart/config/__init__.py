@@ -3,6 +3,7 @@ import re
 
 
 __all__ = ['development', 'test', 'production']
+__project_root__ = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 
 class DefaultConfig(object):
@@ -68,7 +69,7 @@ class DefaultConfig(object):
       },
     }
   }
-  LESS_BIN = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../node_modules/.bin/lessc'))
+  LESS_BIN = os.path.join(__project_root__, 'node_modules/.bin/lessc')
 
   @classmethod
   def from_envvars(cls):

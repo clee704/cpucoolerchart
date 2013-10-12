@@ -1,4 +1,5 @@
 @import "../bower_components/bootstrap/less/bootstrap.less";
+@import "mixins.less";
 
 @font-size-base: 13px;
 @font-family-sans-serif: "Nanum Gothic", NanumGothic, "나눔고딕", "서울남산체", "Malgun Gothic", "맑은 고딕", "맑은고딕", "Apple SD Gothic Neo", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -58,6 +59,31 @@ label {
   top: 2px;  // 1px -> 2px
 }
 
+.glyphicon-spin {
+  .animation(spin 2s infinite linear);
+}
+
+// No way to abstract these in LESS! Only SASS can do that!
+@-webkit-keyframes spin {
+  0% { .rotate(0deg); }
+  100% { .rotate(360deg); }
+}
+
+@-moz-keyframes spin {
+  0% { .rotate(0deg); }
+  100% { .rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { .rotate(0deg); }
+  100% { .rotate(360deg); }
+}
+
+.loading, .empty {
+  color: @gray;
+  text-align: center;
+}
+
 .description {
   color: @gray;
 }
@@ -81,6 +107,9 @@ label {
   @media (min-width: @screen-sm) {
     display: block !important;
     margin-top: 0;
+  }
+  .loading {
+    padding: 10px;
   }
 }
 
@@ -153,9 +182,6 @@ label {
     a {
       text-decoration: none;
     }
-  }
-  .empty {
-    text-align: center;
   }
   thead {
     tr {
