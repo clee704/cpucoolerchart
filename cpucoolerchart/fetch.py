@@ -21,7 +21,7 @@ from .extensions import db, cache
 from .models import Maker, Heatsink, FanConfig, Measurement
 from .resources.coolenjoy import MAKER_FIX, MODEL_FIX, INCONSISTENCY_FIX
 from .resources.danawa import MAPPING
-from .util import strip_xml_encoding, print_utf8
+from .util import print_utf8
 
 
 __logger__ = logging.getLogger(__name__)
@@ -478,6 +478,19 @@ def load_danawa_json(text):
         __logger__.warning(u'Danawa responded with an invalid XML')
     else:
       __logger__.warning(u'Danawa responded with an incomprehensible text')
+
+
+# from lxml@d441222/src/lxml/apihelpers.pxi:576-588
+RE_XML_ENCODING =  re.compile(
+    ur'^(<\?xml[^>]+)\s+encoding\s*=\s*["\'][^"\']*["\'](\s*\?>|)', re.U)
+HAS_XML_ENCODING = lambda s: RE_XML_ENCODING.match(s) is not None
+REPLACE_XML_ENCODING = lambda s: RE_XML_ENCODING.sub(ur'\g<1>\g<2>', s)
+
+def strip_xml_encoding(string):
+  if HAS_XML_ENCODING(string):
+    return REPLACE_XML_ENCODING(string)
+  else:
+    return string
 
 
 def heatsinks_with_maker_names():

@@ -1,11 +1,15 @@
 import logging
+import os
+import subprocess
+import urlparse
 
-from flask import Blueprint, current_app, jsonify, render_template, request, Response
+from flask import Blueprint, current_app, jsonify, render_template, request, Response, abort
 
+from .config import __project_root__
 from .extensions import db, cache
 from .fetch import needs_update, export_data
 from .models import Maker, Heatsink, FanConfig, Measurement
-from .util import heroku_scale, urlpath, take_snapshot
+from .util import heroku_scale
 
 
 __logger__ = logging.getLogger(__name__)
@@ -64,3 +68,23 @@ def csv():
   resp = Response(export_data(), mimetype='text/csv')
   resp.headers['Content-Disposition'] = 'filename="cooler.csv"'
   return resp
+
+
+def urlpath(url):
+  parts = urlparse.urlsplit(url)
+  path = parts.path
+  if parts.query:
+      path += '?' + parts.query
+  if parts.fragment:
+      path += '#' + parts.fragment
+  return path
+
+
+def take_snapshot():
+  phantomjs_bin = os.path.join(__project_root__, 'node_modules/.bin/phantomjs')
+  script = os.path.join(__project_root__, 'snapshot.js')
+  url = current_app.config.get('URL_ROOT')
+  if not url:
+    __logger__.warning('Could not take a snapshot; URL_ROOT is not set.')
+    return abort(500)
+  return subprocess.check_output([phantomjs_bin, script, url])
