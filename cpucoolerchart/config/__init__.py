@@ -7,16 +7,31 @@ __project_root__ = os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 
 
 class DefaultConfig(object):
+
   DEBUG = False
-  UPDATE_INTERVAL = 86400 * 3
-  SEND_FILE_MAX_AGE_DEFAULT = 31536000
+  TESTING = False
   GZIP = True
+  SEND_FILE_MAX_AGE_DEFAULT = 31536000
   ASSETS_URL = '/static'
+  ASSETS_DEBUG = False
   LIVE_RELOAD = False
-  CACHE_KEY_PREFIX = 'cpucoolerchart:'
+
+  # SQLALCHEMY_DATABASE_URI = 'sqlite://'  # In-memory database
+
   CACHE_TYPE = 'simple'
   CACHE_DEFAULT_TIMEOUT = 3600
+  CACHE_KEY_PREFIX = 'cpucoolerchart:'
   CACHE_COMPRESSION = True
+
+  UPDATE_INTERVAL = 86400 * 3
+
+  # GA_TRACKING_ID = 'UA-xxxxxxxx-x'
+  # GA_DOMAIN = 'yourdomain.com'
+  # DANAWA_API_KEY_PRODUCT_INFO = '...'
+  # DANAWA_API_KEY_SEARCH = '...'
+
+  # URL_ROOT = 'http://yourdomain.com/'
+
   LOGGER_NAME = 'cpucoolerchart'
   LOGGING = {
     'version': 1,

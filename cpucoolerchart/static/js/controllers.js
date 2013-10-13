@@ -5,7 +5,7 @@ if (jQuery('html').hasClass('lt-ie8')) return;
 
 angular.module('cpucoolerchart.controllers', [])
 
-  .controller('DataCtrl', function ($scope, $http, $q, $location,
+  .controller('DataCtrl', function ($scope, $http, $q, $location, $window, $timeout,
                                     QUERY_DELIMETER, QUERY_ARRAY_DELIMETER) {
 
     $scope.noiseOptions = [
@@ -396,6 +396,11 @@ angular.module('cpucoolerchart.controllers', [])
         updateMeasurementsVisibility();
       }, true);
       $scope.$on('$locationChangeSuccess', readPath);
+
+      // Wait for rendering to complete and set the snapshot status as ready
+      $timeout(function () {
+        $window.__snapshotStatus = 'ready';
+      });
     });
   });
 

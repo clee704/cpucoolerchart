@@ -5,14 +5,17 @@ from flask import Blueprint, current_app, jsonify, render_template, request
 from .extensions import db, cache
 from .fetch import needs_update
 from .models import Maker, Heatsink, FanConfig, Measurement
-from .util import heroku_scale
+from .util import heroku_scale, urlpath, take_snapshot
 
 
 __logger__ = logging.getLogger(__name__)
 
 
 views = Blueprint('views', __name__, template_folder='templates')
-cached_unless_debug = lambda f: cache.cached(unless=lambda: current_app.debug)(f)
+current_path = lambda: request.environ.get('RAW_URI', urlpath(request.url))
+cached_unless_debug = lambda f: cache.cached(
+  key_prefix=lambda: 'view:' + current_path(),
+  unless=lambda: current_app.debug)(f)
 
 
 @views.route('/')
@@ -20,7 +23,10 @@ cached_unless_debug = lambda f: cache.cached(unless=lambda: current_app.debug)(f
 def index():
   if current_app.config.get('HEROKU_API_KEY') and needs_update():
     heroku_scale('worker', 1)
-  return render_template('index.html')
+  if '_escaped_fragment_' in request.args:
+    return take_snapshot()
+  else:
+    return render_template('index.html')
 
 
 @views.route('/makers')

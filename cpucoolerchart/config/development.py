@@ -11,7 +11,7 @@ class Config(DefaultConfig):
   CACHE_TYPE = 'redis'
   CACHE_REDIS_HOST = 'localhost'
   CACHE_REDIS_PORT = 6379
-  USE_REDIS_QUEUE = True
+  URL_ROOT = 'http://localhost:5000/'
   LOGGING = deepcopy(DefaultConfig.LOGGING)
   LOGGING['loggers']['cpucoolerchart']['level'] = 'DEBUG'
   LOGGING['loggers']['sqlalchemy.engine']['level'] = 'INFO'

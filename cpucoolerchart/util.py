@@ -1,10 +1,14 @@
 import logging
+import os
 import re
+import subprocess
+import urlparse
 
-from flask import current_app
+from flask import current_app, abort
 import heroku
 import requests
 
+from .config import __project_root__
 from .extensions import cache
 
 
@@ -39,3 +43,23 @@ def strip_xml_encoding(string):
     return REPLACE_XML_ENCODING(string)
   else:
     return string
+
+
+def urlpath(url):
+  parts = urlparse.urlsplit(url)
+  path = parts.path
+  if parts.query:
+      path += '?' + parts.query
+  if parts.fragment:
+      path += '#' + parts.fragment
+  return path
+
+
+def take_snapshot():
+  phantomjs_bin = os.path.join(__project_root__, 'node_modules/.bin/phantomjs')
+  script = os.path.join(__project_root__, 'snapshot.js')
+  url = current_app.config.get('URL_ROOT')
+  if not url:
+    __logger__.warning('Cannot take a snapshot; URL_ROOT is not set.')
+    return abort(500)
+  return subprocess.check_output([phantomjs_bin, script, url])

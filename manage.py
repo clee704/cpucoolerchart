@@ -101,12 +101,13 @@ def clear():
 def delete(kind):
   """Deletes cached data of the given kind. Possible values: html, json"""
   if kind == 'html':
-    cache.delete('view//')
+    cache.delete('view:/')
+    cache.delete('view:/?_escaped_fragment_=')
   elif kind == 'json':
-    cache.delete('view//makers')
-    cache.delete('view//heatsinks')
-    cache.delete('view//fan-configs')
-    cache.delete('view//measurements')
+    cache.delete('view:/makers')
+    cache.delete('view:/heatsinks')
+    cache.delete('view:/fan-configs')
+    cache.delete('view:/measurements')
 
 
 if __name__ == '__main__':
