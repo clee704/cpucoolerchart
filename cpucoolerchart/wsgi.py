@@ -6,4 +6,4 @@ application = create_app()
 
 # Purge the index page cache
 from .extensions import cache
-cache.delete('view//')
+cache.delete('view:/')
