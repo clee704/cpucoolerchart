@@ -8,7 +8,7 @@ from flask import Flask, request, redirect
 from flask.ext.assets import Bundle
 
 from .config import DefaultConfig
-from .extensions import db, cache, assets_env, gzip, redis_connection, RedisCache, CompressedRedisCache
+from .extensions import db, cache, assets_env, gzip, RedisCache, CompressedRedisCache
 from .views import views
 
 
@@ -144,11 +144,6 @@ def configure_extensions(app):
 
   if app.config.get('GZIP'):
     gzip.init_app(app)
-
-  if app.config.get('USE_REDIS_QUEUE'):
-    redis_connection.init_app(host=app.config['CACHE_REDIS_HOST'],
-        port=app.config['CACHE_REDIS_PORT'],
-        password=app.config.get('CACHE_REDIS_PASSWORD'))
 
 
 def configure_templates(app):

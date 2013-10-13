@@ -46,19 +46,6 @@ class MyGzip(Gzip):
 gzip = MyGzip()
 
 
-try:
-  from redis import Redis
-
-  class MyRedis(Redis):
-    def __init__(self):
-      pass
-    def init_app(self, *args, **kwargs):
-      Redis.__init__(self, *args, **kwargs)
-
-  redis_connection = MyRedis()
-except ImportError:
-  redis_connection = None
-
 import zlib
 from werkzeug.contrib.cache import RedisCache
 
