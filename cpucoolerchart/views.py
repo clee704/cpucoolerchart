@@ -1,9 +1,9 @@
 import logging
 
-from flask import Blueprint, current_app, jsonify, render_template, request
+from flask import Blueprint, current_app, jsonify, render_template, request, Response
 
 from .extensions import db, cache
-from .fetch import needs_update
+from .fetch import needs_update, export_data
 from .models import Maker, Heatsink, FanConfig, Measurement
 from .util import heroku_scale, urlpath, take_snapshot
 
@@ -56,3 +56,11 @@ def fan_configs():
 def measurements():
   items = Measurement.query.order_by('cpu_temp_delta', 'power_temp_delta').all_as_dict()
   return jsonify(count=len(items), items=items)
+
+
+@views.route('/csv')
+@cached_unless_debug
+def csv():
+  resp = Response(export_data(), mimetype='text/csv')
+  resp.headers['Content-Disposition'] = 'filename="cooler.csv"'
+  return resp
