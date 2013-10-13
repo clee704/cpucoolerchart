@@ -60,7 +60,7 @@ def take_snapshot():
   script = os.path.join(__project_root__, 'snapshot.js')
   url = current_app.config.get('URL_ROOT')
   if not url:
-    __logger__.warning('Cannot take a snapshot; URL_ROOT is not set.')
+    __logger__.warning('Could not take a snapshot; URL_ROOT is not set.')
     return abort(500)
   return subprocess.check_output([phantomjs_bin, script, url])
 
