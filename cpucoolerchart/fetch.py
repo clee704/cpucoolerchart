@@ -442,10 +442,14 @@ def export_data(delim=','):
       Maker.name, Heatsink.name, FanConfig.fan_size, FanConfig.fan_thickness,
           FanConfig.fan_count, Measurement.noise, Measurement.power,
           Measurement.noise_actual_min).all()
+  def convert(x):
+    if x is None:
+      return ''
+    return unicode(x).replace(delim, '_' if delim != '_' else '-')
   temp = []
   temp.append(delim.join(column_names))
   for row in rows:
-    temp.append(delim.join(unicode(x) if x is not None else '' for x in row))
+    temp.append(delim.join(convert(x) for x in row))
   return '\n'.join(temp)
 
 
