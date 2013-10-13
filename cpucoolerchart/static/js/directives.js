@@ -1,4 +1,7 @@
+(function () {
 'use strict';
+
+if ($('html').hasClass('lt-ie8')) return;
 
 angular.module('cpucoolerchart.directives', [])
 
@@ -7,7 +10,7 @@ angular.module('cpucoolerchart.directives', [])
       scope: {'g': '=scope'},
       link: function (scope, element, attr) {
         scope.$watch('g', function (value) {
-          if (value.heatsink) {
+          if (value && value.heatsink) {
             scope.heatsink = value.heatsink;
             element.modal('show');
           } else {
@@ -169,3 +172,5 @@ angular.module('cpucoolerchart.directives', [])
       }
     };
   });
+
+})();

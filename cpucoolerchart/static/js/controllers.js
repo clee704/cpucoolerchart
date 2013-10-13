@@ -1,4 +1,7 @@
+(function () {
 'use strict';
+
+if ($('html').hasClass('lt-ie8')) return;
 
 angular.module('cpucoolerchart.controllers', [])
 
@@ -395,3 +398,5 @@ angular.module('cpucoolerchart.controllers', [])
       $scope.$on('$locationChangeSuccess', readPath);
     });
   });
+
+})();

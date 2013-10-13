@@ -94,20 +94,20 @@ def configure_extensions(app):
       'bower_components/angular/angular.js',
       'bower_components/fastclick/lib/fastclick.js',
       'bower_components/bootstrap/dist/js/bootstrap.js',
-      filters='yui_js', output='compiled/%(version)s.vendor.js'
+      filters='yui_js', output='webassets/%(version)s.vendor.js'
     )
   assets_env.register('js_all',
     'js/main.js',
     'js/controllers.js',
     'js/directives.js',
-    filters='ngmin,yui_js', output='compiled/%(version)s.script.js'
+    filters='ngmin,yui_js', output='webassets/%(version)s.script.js'
   )
   assets_env.register('css_all',
     Bundle(
       'css/main.css.less',
-      filters='less', output='compiled/%(version)s.main.css'
+      filters='less', output='webassets/%(version)s.main.css'
     ),
-    filters='yui_css', output='compiled/%(version)s.styles.css'
+    filters='yui_css', output='webassets/%(version)s.styles.css'
   )
 
   if app.config.get('LIVE_RELOAD'):

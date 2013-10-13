@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="ko" ng-app="cpucoolerchart">
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="ko"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang="ko"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang="ko"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="ko"> <!--<![endif]-->
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
@@ -9,8 +12,10 @@
       <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.2.0/respond.js"></script>
     <![endif]-->
   </head>
-  <body ng-controller="DataCtrl">
-    {% block body %}{% endblock %}
+  <body ng-app="cpucoolerchart">
+    <div ng-controller="DataCtrl">
+      {% block body %}{% endblock %}
+    </div>
 
     {% if config.ASSETS_DEBUG %}
       {% assets "js_vendor" %}<script src="{{ASSET_URL}}"></script>{% endassets %}
@@ -22,11 +27,11 @@
     {% endif %}
     <!--[if lt IE 9]>
       <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-shim.min.js"></script>
-      <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-sham.min.js"></script>
     <![endif]-->
 
     <script>
       // Check browser capabilities
+      $('html').removeClass('no-js');
       if ('ontouchstart' in document) $('html').addClass('touch');
     </script>
     {% assets "js_all" %}<script src="{{ASSET_URL}}"></script>{% endassets %}

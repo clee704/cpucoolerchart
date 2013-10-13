@@ -13,7 +13,7 @@ server:
 	python manage.py runserver -t 0.0.0.0
 
 clean:
-	rm -rf cpucoolerchart/static/compiled
+	rm -rf cpucoolerchart/static/webassets
 	rm -rf cpucoolerchart/static/.webassets-cache
 	find . -type f -name *.pyc -exec rm {} \;
 	find . -type d -name __pycache__ -depth -exec rm -rf {} \;

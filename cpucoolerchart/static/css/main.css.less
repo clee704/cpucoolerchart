@@ -43,14 +43,35 @@ label {
   font-weight: normal;
 }
 
-.ng-hide, [ng-cloak] {
+.ng-hide,
+[ng-cloak],
+.visible-lt-ie8,
+.visible-no-js {
   display: none !important;
+}
+
+.lt-ie8 {
+  .visible-lt-ie8 { display: block !important; }
+  .hidden-lt-ie8 { display: none !important; }
+}
+
+.no-js {
+  .visible-no-js { display: block !important; }
+  .hidden-no-js { display: none !important; }
 }
 
 .hidden-xxs {
   display: none !important;
-  @media (min-width: @screen-xs) {
-    display: block !important;
+  @media (min-width: @screen-xs) { display: block !important; }
+}
+
+.browser-choice {
+  display: inline-block;
+  text-align: center;
+  margin-top: @line-height-computed;
+  margin-right: 10px;
+  img {
+    display: block;
   }
 }
 
