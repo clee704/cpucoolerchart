@@ -19,11 +19,11 @@ class DefaultConfig(object):
   # SQLALCHEMY_DATABASE_URI = 'sqlite://'  # In-memory database
 
   CACHE_TYPE = 'simple'
-  CACHE_DEFAULT_TIMEOUT = 3600
+  CACHE_DEFAULT_TIMEOUT = 3600 * 3  # 3 hours
   CACHE_KEY_PREFIX = 'cpucoolerchart:'
   CACHE_COMPRESSION = True
 
-  UPDATE_INTERVAL = 86400 * 3
+  UPDATE_INTERVAL = 86400 * 3  # 3 days
 
   # GA_TRACKING_ID = 'UA-xxxxxxxx-x'
   # GA_DOMAIN = 'yourdomain.com'
