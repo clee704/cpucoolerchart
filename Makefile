@@ -3,8 +3,8 @@
 init:
 	pip install -r requirements.txt
 
-updatedata:
-	python manage.py updatedata
+update:
+	python manage.py update
 
 server:
 	python manage.py runserver -t 0.0.0.0
