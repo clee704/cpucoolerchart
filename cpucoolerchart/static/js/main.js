@@ -1,9 +1,9 @@
 (function () {
 'use strict';
 
-if ($('html').hasClass('lt-ie8')) {
-  $('.get-new-browser img').each(function (index, element) {
-    $(element).attr('src', $(element).data('src'));
+if (jQuery('html').hasClass('lt-ie8')) {
+  jQuery('.get-new-browser img').each(function (index, element) {
+    jQuery(element).attr('src', jQuery(element).data('src'));
   });
   return;
 }

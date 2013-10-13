@@ -20,3 +20,6 @@ clean:
 
 lint:
 	jshint cpucoolerchart/static/js/*.js
+
+push:
+	git push heroku master

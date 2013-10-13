@@ -1,14 +1,14 @@
 (function () {
 'use strict';
 
-if ($('html').hasClass('lt-ie8')) return;
+if (jQuery('html').hasClass('lt-ie8')) return;
 
 angular.module('cpucoolerchart.directives', [])
 
-  .directive('heatsinkInfo', function ($rootScope) {
+  .directive('heatsinkInfo', function () {
     return {
       scope: {'g': '=scope'},
-      link: function (scope, element, attr) {
+      link: function (scope, element) {
         scope.$watch('g', function (value) {
           if (value && value.heatsink) {
             scope.heatsink = value.heatsink;
