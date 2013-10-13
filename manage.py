@@ -2,9 +2,9 @@
 from flask.ext.script import Manager, prompt_bool
 from cpucoolerchart import create_app
 from cpucoolerchart.extensions import db, cache
-from cpucoolerchart.fetch import update_data, print_danawa_results
+from cpucoolerchart.fetch import update_data, print_danawa_results, export_data
 from cpucoolerchart.models import Maker, Heatsink, FanConfig, Measurement
-from cpucoolerchart.util import heroku_scale
+from cpucoolerchart.util import heroku_scale, print_utf8
 
 
 app = create_app()
@@ -19,14 +19,16 @@ def make_shell_context():
 
 
 @manager.command
-def export(csv=False, delim=','):
+def export(delim=','):
   """
-  Prints data in the database in a single table. It prints data in a
-  pretty-formatted table by default. If --csv is specified, data will be
-  comma-separated. Use --delim to change the delimeter to other than a comma.
+  Prints data in a comma-separated format. Use --delim to change the delimeter
+  to other than a comma.
 
   """
-  print 'not implemented yet'
+  if delim == '\\t':
+    delim = '\t'
+  print_utf8(export_data(delim))
+
 
 @manager.command
 def update(force=False, quit_worker=False):
@@ -46,6 +48,7 @@ def update(force=False, quit_worker=False):
     if quit_worker:
       heroku_scale('worker', 0)
 
+
 @manager.command
 def danawa():
   """
@@ -59,6 +62,7 @@ def danawa():
 db_manager = Manager(help="Makes changes to the database.")
 manager.add_command('db', db_manager)
 
+
 @db_manager.command
 def create():
   """
@@ -68,6 +72,7 @@ def create():
   """
   db.create_all()
 
+
 @db_manager.command
 def drop():
   """Drops all database tables."""
@@ -76,6 +81,7 @@ def drop():
       db.drop_all()
   except Exception:
     pass
+
 
 @db_manager.command
 def reset():
@@ -87,6 +93,7 @@ def reset():
 cache_manager = Manager(help="Manipulates the cache.")
 manager.add_command('cache', cache_manager)
 
+
 @cache_manager.command
 def clear():
   """
@@ -96,6 +103,7 @@ def clear():
 
   """
   cache.clear()
+
 
 @cache_manager.command
 def delete(kind):

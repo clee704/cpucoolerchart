@@ -21,7 +21,7 @@ from .extensions import db, cache
 from .models import Maker, Heatsink, FanConfig, Measurement
 from .resources.coolenjoy import MAKER_FIX, MODEL_FIX, INCONSISTENCY_FIX
 from .resources.danawa import MAPPING
-from .util import strip_xml_encoding
+from .util import strip_xml_encoding, print_utf8
 
 
 __logger__ = logging.getLogger(__name__)
@@ -35,32 +35,8 @@ NOISE_MAX = 100
 NOISE_LEVELS = {35: 4, 40: 3, 45: 2, NOISE_MAX: 1}
 CPU_POWER = {62: 1, 92: 2, 150: 3, 200: 4}
 
-SINGLE_TABLE_COLUMNS = [
-  'maker', 'model', 'width', 'depth', 'height', 'heatsink_type', 'weight',  # heatsink
-  'fan_size', 'fan_thickness', 'fan_count',                                 # fan
-  'noise', 'noise_actual_min', 'noise_actual_max', 'rpm_min', 'rpm_max',    # noise / rpm
-  'power',                                                                  # power
-  'cpu_temp_delta', 'power_temp_delta',                                     # temperature
-]
-
 ORDER_BY = ('maker', 'model', 'fan_size', 'fan_thickness', 'fan_count',
     'noise', 'power', 'noise_actual_min')
-
-COLUMN_MAPPING = {
-  Maker: ('maker',),
-  Heatsink: ('maker', 'model', 'width', 'depth', 'height', 'heatsink_type', 'weight'),
-  FanConfig: ('maker', 'model', 'fan_size', 'fan_thickness', 'fan_count'),
-  Measurement: ('maker', 'model', 'fan_size', 'fan_thickness', 'fan_count',
-      'noise', 'noise_actual_min', 'noise_actual_max', 'rpm_min', 'rpm_max',
-      'power', 'cpu_temp_delta', 'power_temp_delta'),
-}
-
-# Numeric columns that should be aligned right when printed in a table.
-NUMERIC_COLUMNS = [
-  'width', 'depth', 'height', 'weight', 'fan_size', 'fan_thickness', 'fan_count',
-  'noise', 'noise_actual_min', 'noise_actual_max', 'rpm_min', 'rpm_max', 'power',
-  'cpu_temp_delta', 'power_temp_delta',
-]
 
 # Theoretical depedencies between columns to check integrity of the original
 # data. There should be, if any, very small number of violations of these deps.
@@ -432,13 +408,45 @@ def print_danawa_results():
     if data is None:
       continue
     if int(data['totalCount']) == 0:
-      print u'{0} {1}: NO DATA'.format(maker_name, heatsink.name)
+      print_utf8(u'{0} {1}: NO DATA'.format(maker_name, heatsink.name))
       continue
     if not isinstance(data['productList'], list):
       data['productList'] = [data['productList']]
-    print u'{0} {1}'.format(maker_name, heatsink.name)
+    print_utf8(u'{0} {1}'.format(maker_name, heatsink.name))
     for product_data in data['productList']:
-      print u'  {maker} {prod_name} id={prod_id} min_price={min_price}'.format(**product_data)
+      print_utf8(u'  {maker} {prod_name} id={prod_id} min_price={min_price}'.format(**product_data))
+
+
+def export_data(delim=','):
+  columns = [
+    Maker.name, Heatsink.name, Heatsink.width, Heatsink.depth, Heatsink.height,
+    Heatsink.heatsink_type, Heatsink.weight, Heatsink.price,
+    Heatsink.shop_count, Heatsink.first_seen, FanConfig.fan_size,
+    FanConfig.fan_thickness, FanConfig.fan_count, Measurement.noise,
+    Measurement.noise_actual_min, Measurement.noise_actual_max,
+    Measurement.rpm_min, Measurement.rpm_max, Measurement.power,
+    Measurement.cpu_temp_delta, Measurement.power_temp_delta
+  ]
+  column_names = [
+    'maker', 'model', 'width', 'depth', 'height', 'heatsink_type', 'weight',
+    'price', 'shop_count', 'first_seen',                                      # heatsink
+    'fan_size', 'fan_thickness', 'fan_count',                                 # fan
+    'noise', 'noise_actual_min', 'noise_actual_max', 'rpm_min', 'rpm_max',    # noise / rpm
+    'power',                                                                  # power
+    'cpu_temp_delta', 'power_temp_delta',                                     # temperature
+  ]
+  rows = db.session.query(*columns).select_from(Measurement).join(
+      FanConfig, FanConfig.id == Measurement.fan_config_id).join(
+      Heatsink, Heatsink.id == FanConfig.heatsink_id).join(
+      Maker, Maker.id == Heatsink.maker_id).order_by(
+      Maker.name, Heatsink.name, FanConfig.fan_size, FanConfig.fan_thickness,
+          FanConfig.fan_count, Measurement.noise, Measurement.power,
+          Measurement.noise_actual_min).all()
+  temp = []
+  temp.append(delim.join(column_names))
+  for row in rows:
+    temp.append(delim.join(unicode(x) if x is not None else '' for x in row))
+  return '\n'.join(temp)
 
 
 def get_cached_response_text(url):

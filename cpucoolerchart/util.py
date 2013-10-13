@@ -63,3 +63,10 @@ def take_snapshot():
     __logger__.warning('Cannot take a snapshot; URL_ROOT is not set.')
     return abort(500)
   return subprocess.check_output([phantomjs_bin, script, url])
+
+
+def print_utf8(x):
+  if isinstance(x, unicode):
+    print x.encode('UTF-8')
+  else:
+    print x
