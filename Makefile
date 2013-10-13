@@ -1,7 +1,10 @@
-.PHONY: init updatedata server clean lint
+.PHONY: init reset update server clean lint
 
 init:
 	pip install -r requirements.txt
+
+reset:
+	python manage.py db reset
 
 update:
 	python manage.py update
