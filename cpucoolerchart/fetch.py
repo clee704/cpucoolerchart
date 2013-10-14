@@ -282,8 +282,15 @@ def ensure_consistency(data_list):
 
 def update_measurement_data(data_list):
   groups = itertools.groupby(data_list, dictitemgetter('maker'))
+  maker_ids = set()
   for maker_name, data_sublist in groups:
-    update_maker(data_sublist, maker_name)
+    maker_id = update_maker(data_sublist, maker_name)
+    if maker_id is not None:
+      maker_ids.add(maker_id)
+  for maker in Maker.query.filter(~Maker.id.in_(maker_ids)):
+    db.session.delete(maker)
+    __logger__.info(u'Deleted old maker: %s', maker.name)
+
   db.session.commit()
 
 
@@ -297,10 +304,22 @@ def update_maker(data_list, maker_name):
     __logger__.info(u'Added new maker: %s', maker.name)
   else:
     maker.update(**data)
+
   groups = itertools.groupby(data_list, dictitemgetter(
       'model', 'width', 'depth', 'height', 'heatsink_type', 'weight'))
+  heatsink_ids = set()
   for heatsink_data, data_sublist in groups:
-    update_heatsink(data_sublist, maker, *heatsink_data)
+    heatsink_id = update_heatsink(data_sublist, maker, *heatsink_data)
+    if heatsink_id is not None:
+      heatsink_ids.add(heatsink_id)
+  if maker.id is not None:
+    for heatsink in Heatsink.query.filter(
+        Heatsink.maker_id == maker.id).filter(
+        ~Heatsink.id.in_(heatsink_ids)):
+      db.session.delete(heatsink)
+      __logger__.info(u'Deleted old heatsink: %s', heatsink.name)
+
+  return maker.id
 
 
 def update_heatsink(data_list, maker, model_name, width, depth, height, heatsink_type, weight):
@@ -314,10 +333,22 @@ def update_heatsink(data_list, maker, model_name, width, depth, height, heatsink
     __logger__.info(u'Added new heatsink: %s', heatsink.name)
   else:
     heatsink.update(**data)
+
   groups = itertools.groupby(data_list, dictitemgetter(
       'fan_size', 'fan_thickness', 'fan_count'))
+  fan_config_ids = set()
   for fan_config_data, data_sublist in groups:
-    update_fan_config(data_sublist, heatsink, *fan_config_data)
+    fan_config_id = update_fan_config(data_sublist, heatsink, *fan_config_data)
+    if fan_config_id is not None:
+      fan_config_ids.add(fan_config_id)
+  if heatsink.id is not None:
+    for fan_config in FanConfig.query.filter(
+        FanConfig.heatsink_id == heatsink.id).filter(
+        ~FanConfig.id.in_(fan_config_ids)):
+      db.session.delete(fan_config)
+      __logger__.info(u'Deleted old fan config (id=%d)', fan_config.id)
+
+  return heatsink.id
 
 
 def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
@@ -332,8 +363,20 @@ def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
     __logger__.info(u'Added new fan config')
   else:
     fan_config.update(**data)
+
+  measurement_ids = set()
   for data in data_list:
-    update_measurement(fan_config, data)
+    measurement_id = update_measurement(fan_config, data)
+    if measurement_id is not None:
+      measurement_ids.add(measurement_id)
+  if fan_config.id is not None:
+    for measurement in Measurement.query.filter(
+        Measurement.fan_config_id == fan_config.id).filter(
+        ~Measurement.id.in_(measurement_ids)):
+      db.session.delete(measurement)
+      __logger__.info(u'Deleted old measurement (id=%d)', measurement.id)
+
+  return fan_config.id
 
 
 def update_measurement(fan_config, data):
@@ -350,6 +393,8 @@ def update_measurement(fan_config, data):
     __logger__.info(u'Added new measurement')
   else:
     measurement.update(**data)
+
+  return measurement.id
 
 
 def update_danawa_data():

@@ -56,7 +56,9 @@ class Heatsink(Model):
   shop_count = db.Column(db.Integer)
   first_seen = db.Column(db.DateTime)
   image_url = db.Column(db.String(511))
-  maker = db.relationship('Maker', backref=db.backref('heatsinks', order_by=name.asc()))
+  maker = db.relationship('Maker', backref=db.backref('heatsinks',
+      order_by=name.asc(),
+      cascade='all, delete-orphan'))
 
   __table_args__ = (db.UniqueConstraint('name', 'maker_id'),)
 
@@ -68,7 +70,8 @@ class FanConfig(Model):
   fan_thickness = db.Column(db.Integer, nullable=False)
   fan_count = db.Column(db.Integer, nullable=False)
   heatsink = db.relationship('Heatsink', backref=db.backref('fan_configs',
-      order_by=(fan_size.asc(), fan_thickness.asc(), fan_count.asc())))
+      order_by=(fan_size.asc(), fan_thickness.asc(), fan_count.asc()),
+      cascade='all, delete-orphan'))
 
   __table_args__ = (db.UniqueConstraint('heatsink_id', 'fan_size', 'fan_thickness', 'fan_count'),)
 
@@ -85,6 +88,7 @@ class Measurement(Model):
   cpu_temp_delta = db.Column(db.Float, nullable=False, index=True)
   power_temp_delta = db.Column(db.Float, index=True)
   fan_config = db.relationship('FanConfig', backref=db.backref('measurements',
-      order_by=(noise.asc(), power.asc())))
+      order_by=(noise.asc(), power.asc()),
+      cascade='all, delete-orphan'))
 
   __table_args__ = (db.UniqueConstraint('fan_config_id', 'noise', 'power'),)
