@@ -1,4 +1,4 @@
-.PHONY: init reset update server clean lint
+.PHONY: init reset update server clean lint push
 
 init:
 	pip install -r requirements.txt
