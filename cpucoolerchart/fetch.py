@@ -1,5 +1,5 @@
 import base64
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from datetime import datetime, timedelta
 import itertools
 import json
@@ -365,7 +365,11 @@ def update_danawa_data():
       if heatsink.danawa_id is None:
         continue
       url = 'http://api.danawa.com/api/main/product/info'
-      query = {'key': api_key, 'mediatype': 'json', 'prodCode': heatsink.danawa_id}
+      query = OrderedDict([
+        ('key', api_key),
+        ('mediatype', 'json'),
+        ('prodCode', heatsink.danawa_id),
+      ])
       json_text = get_cached_response_text(url + '?' + urllib.urlencode(query))
       data = load_danawa_json(json_text)
       if data is None:
@@ -397,12 +401,12 @@ def print_danawa_results():
     if heatsink.danawa_id is not None:
       continue
     url = 'http://api.danawa.com/api/search/product/info'
-    query = {
-      'key': api_key,
-      'mediatype': 'json',
-      'keyword': (maker_name + ' ' + heatsink.name).encode('UTF-8'),
-      'cate_c1': 862,
-    }
+    query = OrderedDict([
+      ('key', api_key),
+      ('mediatype', 'json'),
+      ('keyword', (maker_name + ' ' + heatsink.name).encode('UTF-8')),
+      ('cate_c1', 862),
+    ])
     json_text = get_cached_response_text(url + '?' + urllib.urlencode(query))
     data = load_danawa_json(json_text)
     if data is None:
