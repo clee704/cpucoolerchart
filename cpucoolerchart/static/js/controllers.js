@@ -202,15 +202,12 @@ angular.module('cpucoolerchart.controllers', [])
           var current = [];
           for (var i = 0; i < privateScope.measurements.length; i++) {
             var m = privateScope.measurements[i];
-            if (m.noise === noise && m.power === power) {
-              current.push(m);
-            }
+            if (m.noise === noise && m.power === power) current.push(m);
           }
-          cachedMeasurementSelections[noise][power] = {
+          $scope.measurements = cachedMeasurementSelections[noise][power] = {
             sortKey: 'cpu_temp_delta',
             items: current
           };
-          $scope.measurements = cachedMeasurementSelections[noise][power];
         }
         sortMeasurements();
         updateMeasurementsVisibility();
@@ -271,7 +268,7 @@ angular.module('cpucoolerchart.controllers', [])
         } else {
           $scope.g.weightMin = $scope.g.weightMax = null;
         }
-        if (privateScope.heatsinkTypeOptionsByValue.hasOwnProperty(query.type)) {
+        if (privateScope.heatsinkTypeOptionsByValue[query.type]) {
           $scope.g.heatsinkType = query.type;
         } else {
           $scope.g.heatsinkType = null;
