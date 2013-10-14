@@ -157,7 +157,7 @@ label {
     display: block;
   }
   .panel-body {
-    height: 200px;
+    height: 170px;
     padding: 0;
     overflow: hidden;
     overflow-y: auto;
@@ -169,6 +169,7 @@ label {
   }
   .control-label {
     text-align: left;
+    white-space: nowrap;
   }
   .form-group {
     margin-bottom: 10px;
@@ -180,14 +181,18 @@ label {
   margin-bottom: 10px;
 }
 
-.filter-select-heatsink-type {
+.filter-select {
   width: 100%;
-  .tower-button {
-    width: 46%;
-  }
-  .flower-button {
-    width: 54%;
-  }
+}
+
+.filter-heatsink-type {
+  .tower-button { width: 46%; }
+  .flower-button { width: 54%; }
+}
+
+.filter-price-performance {
+  .best-button { width: 60%; }
+  .good-button { width: 40%; }
 }
 
 .filter-range {

@@ -36,6 +36,11 @@ angular.module('cpucoolerchart.controllers', [])
       {name: '플라워', value: 'flower'}
     ];
 
+    $scope.ppOptions = [
+      {name: '아주 좋음', value: 'best'},
+      {name: '좋음', value: 'good'}
+    ];
+
     $scope.g = {
       priceMin: null,
       priceMax: null,
@@ -44,6 +49,7 @@ angular.module('cpucoolerchart.controllers', [])
       weightMin: null,
       weightMax: null,
       heatsinkType: null,
+      pricePerformance: null,
       numSelectedHeatsinks: 0,
       modal: {}
     };
@@ -172,6 +178,7 @@ angular.module('cpucoolerchart.controllers', [])
           current = $scope.measurements.items,
           found = false,
           length = 0;
+      if (g.pricePerformance) calculatePricePerformance();
       for (var i = 0; i < current.length; i++) {
         var m = current[i];
         m.visible = (!g.filterByMaker || m.maker.selected) &&
@@ -182,12 +189,94 @@ angular.module('cpucoolerchart.controllers', [])
             (g.weightMin === null || m.weight !== null && g.weightMin <= m.weight) &&
             (g.weightMax === null || m.weight !== null && g.weightMax >= m.weight) &&
             (g.heatsinkType === null || g.heatsinkType === m.heatsink.heatsink_type) &&
-            (!g.showSelectedOnly || m.heatsink.selected);
+            (!g.showSelectedOnly || m.heatsink.selected) &&
+            (!g.pricePerformance || m.good_performance && m.good_price);
         m.first = !found && m.visible;
         if (m.first) found = true;
         if (m.visible) length += 1;
       }
       $scope.measurements.length = length;
+    }
+
+    function calculatePricePerformance() {
+      var g = $scope.g,
+          current = $scope.measurements.items,
+          i, m;
+      var thresholds = {
+            best: {price: 0.5, temp: 1, tempRatio: 10, priceRatio: 6},
+            good: {price: 1, temp: 2, tempRatio: 15, priceRatio: 9}
+          },
+          lastPrice, lastCpuTemp;
+      // Pass 1: ascend CPU temp from low to high
+      var orderedByCpuTemp = current.slice(0);
+      orderedByCpuTemp.sort(function (a, b) { return a.cpu_temp_delta - b.cpu_temp_delta; });
+      lastPrice = null;
+      lastCpuTemp = null;
+      for (i = 0; i < orderedByCpuTemp.length; i++) {
+        m = orderedByCpuTemp[i];
+        if (!m.price) continue;
+        var best = false,
+            refPoint = false;
+        if (lastPrice === null) {
+          best = true;
+          refPoint = true;
+        } else if (m.price < lastPrice) {
+          var ratio = thresholds[g.pricePerformance].tempRatio;
+          best = (m.cpu_temp_delta - lastCpuTemp) / (lastPrice - m.price) < ratio;
+          refPoint = true;
+        } else {
+          var x = m.price - lastPrice,
+              y = m.cpu_temp_delta - lastCpuTemp,
+              priceLimit = thresholds[g.pricePerformance].price,
+              tempLimit = thresholds[g.pricePerformance].temp;
+          best = (x * x) / (priceLimit * priceLimit) + (y * y) / (tempLimit * tempLimit) < 1;
+          refPoint = false;
+        }
+        if (best) {
+          m.good_performance = true;
+          if (refPoint) {
+            lastPrice = m.price;
+            lastCpuTemp = m.cpu_temp_delta;
+          }
+        } else {
+          m.good_performance = false;
+        }
+      }
+      // Pass 2: ascend price from low to high
+      var orderedByPrice = current.slice(0);
+      orderedByPrice.sort(function (a, b) { return a.price - b.price; });
+      lastPrice = null;
+      lastCpuTemp = null;
+      for (i = 0; i < orderedByPrice.length; i++) {
+        m = orderedByPrice[i];
+        if (!m.price) continue;
+        var best = false,
+            refPoint = false;
+        if (lastCpuTemp === null) {
+          best = true;
+          refPoint = true;
+        } else if (m.cpu_temp_delta < lastCpuTemp) {
+          var ratio = thresholds[g.pricePerformance].priceRatio;
+          best = (m.price - lastPrice) / (lastCpuTemp - m.cpu_temp_delta) < ratio;
+          refPoint = true;
+        } else {
+          var x = m.price - lastPrice,
+              y = m.cpu_temp_delta - lastCpuTemp,
+              priceLimit = thresholds[g.pricePerformance].price,
+              tempLimit = thresholds[g.pricePerformance].temp;
+          best = (x * x) / (priceLimit * priceLimit) + (y * y) / (tempLimit * tempLimit) < 1;
+          refPoint = false;
+        }
+        if (best) {
+          m.good_price = true;
+          if (refPoint) {
+            lastPrice = m.price;
+            lastCpuTemp = m.cpu_temp_delta;
+          }
+        } else {
+          m.good_price = false;
+        }
+      }
     }
 
     var selectMeasurements = (function () {
@@ -293,6 +382,11 @@ angular.module('cpucoolerchart.controllers', [])
         } else {
           $scope.g.modal.heatsink = null;
         }
+        if (privateScope.ppOptionsByValue[query.pp]) {
+          $scope.g.pricePerformance = query.pp;
+        } else {
+          $scope.g.pricePerformance = null;
+        }
       };
     })();
 
@@ -328,7 +422,8 @@ angular.module('cpucoolerchart.controllers', [])
           type: $scope.g.heatsinkType,
           show: $scope.g.showSelectedOnly ? 'selection' : '',
           select: keys(privateScope.selectedHeatsinks).join(QUERY_ARRAY_DELIMETER),
-          info: $scope.g.modal.heatsink ? $scope.g.modal.heatsink.id : ''
+          info: $scope.g.modal.heatsink ? $scope.g.modal.heatsink.id : '',
+          pp: $scope.g.pricePerformance
         };
         if (query.noise === defaultValues.noise) delete query.noise;
         if (query.power === defaultValues.power) delete query.power;
@@ -341,6 +436,7 @@ angular.module('cpucoolerchart.controllers', [])
         if (query.show === '') delete query.show;
         if (query.select === '') delete query.select;
         if (query.info === '') delete query.info;
+        if (query.pp === null) delete query.pp;
         $location.path(serialize(query));
       };
     })();
@@ -354,6 +450,7 @@ angular.module('cpucoolerchart.controllers', [])
     var privateScope = {
       sortOptionsByAlias: indexBy($scope.sortOptions, 'alias'),
       heatsinkTypeOptionsByValue: indexBy($scope.heatsinkTypeOptions, 'value'),
+      ppOptionsByValue: indexBy($scope.ppOptions, 'value'),
       selectedHeatsinks: {}
     };
 
@@ -386,6 +483,7 @@ angular.module('cpucoolerchart.controllers', [])
       $scope.$watch('g.weightMin', ignoreInit(updateMeasurementsVisibility));
       $scope.$watch('g.weightMax', ignoreInit(updateMeasurementsVisibility));
       $scope.$watch('g.heatsinkType', ignoreInit(updateMeasurementsVisibility));
+      $scope.$watch('g.pricePerformance', ignoreInit(updateMeasurementsVisibility));
       $scope.$watch('g.showSelectedOnly', ignoreInit(updateMeasurementsVisibility));
       $scope.$watch('makers', function (makers) {
         updatePath();

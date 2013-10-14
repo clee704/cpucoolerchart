@@ -106,11 +106,24 @@
               <div class="form-group">
                 <label class="col-xs-3 control-label">종류</label>
                 <div class="col-xs-9">
-                  <div class="btn-group filter-select-heatsink-type" ng-cloak>
+                  <div class="btn-group filter-select filter-heatsink-type" ng-cloak>
                     <button class="btn btn-default"
                             ng-repeat="opt in heatsinkTypeOptions"
                             ng-click="g.heatsinkType = (g.heatsinkType != opt.value ? opt.value : null)"
                             ng-class="{active: g.heatsinkType == opt.value, '{@opt.value@}-button': true}"
+                            bo-bind="opt.name">
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="col-xs-3 control-label">가성비</label>
+                <div class="col-xs-9">
+                  <div class="btn-group filter-select filter-price-performance" ng-cloak>
+                    <button class="btn btn-default"
+                            ng-repeat="opt in ppOptions"
+                            ng-click="g.pricePerformance = (g.pricePerformance != opt.value ? opt.value : null)"
+                            ng-class="{active: g.pricePerformance == opt.value, '{@opt.value@}-button': true}"
                             bo-bind="opt.name">
                     </button>
                   </div>
