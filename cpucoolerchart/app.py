@@ -6,12 +6,14 @@ import re
 
 from flask import Flask, request, redirect
 from flask.ext.assets import Bundle
+import yaml
 
 from .config import DefaultConfig
 from .extensions import db, cache, assets_env, gzip, RedisCache, CompressedRedisCache
 from .views import views
 
 
+__dir__ = os.path.dirname(__file__)
 __logger__ = logging.getLogger(__name__)
 
 
@@ -88,27 +90,7 @@ def configure_extensions(app):
       cache.cache.__class__ = RedisCache
 
   assets_env.init_app(app)
-  if app.config.get('ASSETS_DEBUG'):
-    assets_env.register('js_vendor',
-      'bower_components/jquery/jquery.js',
-      'bower_components/angular/angular.js',
-      'bower_components/fastclick/lib/fastclick.js',
-      'bower_components/bootstrap/dist/js/bootstrap.js',
-      filters='yui_js', output='webassets/%(version)s.vendor.js'
-    )
-  assets_env.register('js_all',
-    'js/main.js',
-    'js/controllers.js',
-    'js/directives.js',
-    filters='ngmin,yui_js', output='webassets/%(version)s.script.js'
-  )
-  assets_env.register('css_all',
-    Bundle(
-      'css/main.css.less',
-      filters='less', output='webassets/%(version)s.main.css'
-    ),
-    filters='yui_css', output='webassets/%(version)s.styles.css'
-  )
+  assets_env.from_yaml(os.path.join(__dir__, 'static/webassets.yml'))
 
   if app.config.get('LIVE_RELOAD'):
     # LiveReload hack

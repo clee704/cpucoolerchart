@@ -4,6 +4,9 @@ import re
 
 __all__ = ['development', 'test', 'production']
 __project_root__ = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+__package_dir__ = os.path.join(__project_root__, 'cpucoolerchart')
+__nodebin_dir__ = os.path.join(__project_root__, 'node_modules/.bin')
+_p = lambda relpath: os.path.join(__package_dir__, relpath)
 
 
 class DefaultConfig(object):
@@ -12,8 +15,11 @@ class DefaultConfig(object):
   TESTING = False
   GZIP = True
   SEND_FILE_MAX_AGE_DEFAULT = 31536000
-  ASSETS_URL = '/static'
   ASSETS_DEBUG = False
+  ASSETS_DIRECTORY = _p('static/webassets')
+  ASSETS_URL = '/static/webassets'
+  ASSETS_LOAD_PATH = [_p('static')]
+  ASSETS_URL_MAPPING = {_p('static'): '/static'}
   LIVE_RELOAD = False
 
   # SQLALCHEMY_DATABASE_URI = 'sqlite://'  # In-memory database
@@ -84,7 +90,7 @@ class DefaultConfig(object):
       },
     }
   }
-  LESS_BIN = os.path.join(__project_root__, 'node_modules/.bin/lessc')
+  LESS_BIN = os.path.join(__nodebin_dir__, 'lessc')
 
   @classmethod
   def from_envvars(cls):

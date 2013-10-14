@@ -4,7 +4,7 @@ import subprocess
 
 from flask import Blueprint, current_app, jsonify, render_template, request, Response, abort
 
-from .config import __project_root__
+from .config import __project_root__, __nodebin_dir__
 from .extensions import db, cache
 from .fetch import needs_update, export_data
 from .models import Maker, Heatsink, FanConfig, Measurement
@@ -69,7 +69,7 @@ def csv():
 
 
 def take_snapshot(path):
-  phantomjs_bin = os.path.join(__project_root__, 'node_modules/.bin/phantomjs')
+  phantomjs_bin = os.path.join(__nodebin_dir__, 'phantomjs')
   script = os.path.join(__project_root__, 'snapshot.js')
   url_root = current_app.config.get('URL_ROOT')
   if not url_root:
