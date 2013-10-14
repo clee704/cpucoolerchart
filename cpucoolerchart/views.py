@@ -1,7 +1,6 @@
 import logging
 import os
 import subprocess
-import urlparse
 
 from flask import Blueprint, current_app, jsonify, render_template, request, Response, abort
 
@@ -16,9 +15,8 @@ __logger__ = logging.getLogger(__name__)
 
 
 views = Blueprint('views', __name__, template_folder='templates')
-current_path = lambda: request.environ.get('RAW_URI', urlpath(request.url))
 cached_unless_debug = lambda f: cache.cached(
-  key_prefix=lambda: 'view:' + current_path(),
+  key_prefix=lambda: 'view:' + ('snapshot:' if '_escaped_fragment_' in request.args else '') + request.path,
   unless=lambda: current_app.debug)(f)
 
 
@@ -28,7 +26,7 @@ def index():
   if current_app.config.get('HEROKU_API_KEY') and needs_update():
     heroku_scale('worker', 1)
   if '_escaped_fragment_' in request.args:
-    return take_snapshot()
+    return take_snapshot('/')
   else:
     return render_template('index.html')
 
@@ -70,21 +68,11 @@ def csv():
   return resp
 
 
-def urlpath(url):
-  parts = urlparse.urlsplit(url)
-  path = parts.path
-  if parts.query:
-      path += '?' + parts.query
-  if parts.fragment:
-      path += '#' + parts.fragment
-  return path
-
-
-def take_snapshot():
+def take_snapshot(path):
   phantomjs_bin = os.path.join(__project_root__, 'node_modules/.bin/phantomjs')
   script = os.path.join(__project_root__, 'snapshot.js')
-  url = current_app.config.get('URL_ROOT')
-  if not url:
+  url_root = current_app.config.get('URL_ROOT')
+  if not url_root:
     __logger__.warning('Could not take a snapshot; URL_ROOT is not set.')
     return abort(500)
-  return subprocess.check_output([phantomjs_bin, script, url])
+  return subprocess.check_output([phantomjs_bin, script, url_root + path])
