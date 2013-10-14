@@ -201,12 +201,12 @@ angular.module('cpucoolerchart.controllers', [])
     function calculatePricePerformance() {
       var g = $scope.g,
           current = $scope.measurements.items,
-          i, m;
-      var thresholds = {
-            best: {price: 0.5, temp: 1, tempRatio: 10, priceRatio: 6},
-            good: {price: 1, temp: 2, tempRatio: 15, priceRatio: 9}
+          thresholds = {
+            best: {price: 0.25, temp: 0.5, tempRatio: 10, priceRatio: 6},
+            good: {price: 0.5, temp: 1, tempRatio: 15, priceRatio: 9}
           },
-          lastPrice, lastCpuTemp;
+          lastPrice, lastCpuTemp, i, m, best, refPoint, x, y, ratio,
+          priceLimit, tempLimit, best1, best2;
       // Pass 1: ascend CPU temp from low to high
       var orderedByCpuTemp = current.slice(0);
       orderedByCpuTemp.sort(function (a, b) { return a.cpu_temp_delta - b.cpu_temp_delta; });
@@ -215,22 +215,21 @@ angular.module('cpucoolerchart.controllers', [])
       for (i = 0; i < orderedByCpuTemp.length; i++) {
         m = orderedByCpuTemp[i];
         if (!m.price) continue;
-        var best = false,
-            refPoint = false;
+        best = false;
+        refPoint = false;
         if (lastPrice === null) {
           best = true;
           refPoint = true;
-        } else if (m.price < lastPrice) {
-          var ratio = thresholds[g.pricePerformance].tempRatio;
-          best = (m.cpu_temp_delta - lastCpuTemp) / (lastPrice - m.price) < ratio;
-          refPoint = true;
         } else {
-          var x = m.price - lastPrice,
-              y = m.cpu_temp_delta - lastCpuTemp,
-              priceLimit = thresholds[g.pricePerformance].price,
-              tempLimit = thresholds[g.pricePerformance].temp;
-          best = (x * x) / (priceLimit * priceLimit) + (y * y) / (tempLimit * tempLimit) < 1;
-          refPoint = false;
+          x = lastPrice - m.price;
+          y = m.cpu_temp_delta - lastCpuTemp;
+          ratio = thresholds[g.pricePerformance].tempRatio;
+          priceLimit = thresholds[g.pricePerformance].price;
+          tempLimit = thresholds[g.pricePerformance].temp;
+          best1 = y / x < ratio && x >= 0;
+          best2 = (x * x) / (priceLimit * priceLimit) + (y * y) / (tempLimit * tempLimit) < 1;
+          best = best1 || best2;
+          refPoint = best1;
         }
         if (best) {
           m.good_performance = true;
@@ -250,22 +249,21 @@ angular.module('cpucoolerchart.controllers', [])
       for (i = 0; i < orderedByPrice.length; i++) {
         m = orderedByPrice[i];
         if (!m.price) continue;
-        var best = false,
-            refPoint = false;
+        best = false;
+        refPoint = false;
         if (lastCpuTemp === null) {
           best = true;
           refPoint = true;
-        } else if (m.cpu_temp_delta < lastCpuTemp) {
-          var ratio = thresholds[g.pricePerformance].priceRatio;
-          best = (m.price - lastPrice) / (lastCpuTemp - m.cpu_temp_delta) < ratio;
-          refPoint = true;
         } else {
-          var x = m.price - lastPrice,
-              y = m.cpu_temp_delta - lastCpuTemp,
-              priceLimit = thresholds[g.pricePerformance].price,
-              tempLimit = thresholds[g.pricePerformance].temp;
-          best = (x * x) / (priceLimit * priceLimit) + (y * y) / (tempLimit * tempLimit) < 1;
-          refPoint = false;
+          x = lastCpuTemp - m.cpu_temp_delta;
+          y = m.price - lastPrice;
+          ratio = thresholds[g.pricePerformance].priceRatio;
+          priceLimit = thresholds[g.pricePerformance].price;
+          tempLimit = thresholds[g.pricePerformance].temp;
+          best1 = y / x < ratio && x >= 0;
+          best2 = (x * x) / (tempLimit * tempLimit) + (y * y) / (priceLimit * priceLimit) < 1;
+          best = best1 || best2;
+          refPoint = best1;
         }
         if (best) {
           m.good_price = true;
