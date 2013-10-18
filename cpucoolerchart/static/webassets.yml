@@ -4,13 +4,12 @@ js_vendor:
   - bower_components/angular/angular.js
   - bower_components/fastclick/lib/fastclick.js
   - bower_components/bootstrap/dist/js/bootstrap.js
+  - bower_components/d3/d3.js
   filters: yui_js
   output: '%(version)s.vendor.js'
 js_all:
   contents:
   - js/main.js
-  - js/controllers.js
-  - js/directives.js
   filters: ngmin,yui_js
   output: '%(version)s.script.js'
 css_all:

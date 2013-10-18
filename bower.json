@@ -2,9 +2,10 @@
   "name": "cpucoolerchart",
   "version": "0.0.0",
   "dependencies": {
-    "bootstrap": "~3.0.0",
     "jquery": "~1.10.2",
-    "angular": "~1.2.0-rc.2",
-    "fastclick": "~0.6.7"
+    "angular": "1.2.0-rc.3",
+    "fastclick": "~0.6.7",
+    "bootstrap": "~3.0.0",
+    "d3": "~3.3.3"
   }
 }

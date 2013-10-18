@@ -9,248 +9,81 @@
     <a href="/csv">파일로 받기 (CSV 형식)</a>
   </p>
   <div class="hidden-lt-ie8 hidden-no-js">
-    <div class="selectors clearfix">
-      <div class="selector">
-        <label>소음</label>
-        <div class="btn-group" ng-cloak>
-          <button class="btn btn-default"
-                  ng-repeat="opt in noiseOptions"
-                  ng-click="g.noise = opt.value"
-                  ng-class="{
-                    active: g.noise == opt.value,
-                    disabled: g.power >= 200 &amp;&amp; opt.value <= 40
-                  }"
-                  bo-bind="opt.name">
-          </button>
-        </div>
-      </div>
-      <div class="selector">
-        <label>CPU 소비전력</label>
-        <div class="btn-group" ng-cloak>
-          <button class="btn btn-default"
-                  ng-repeat="opt in powerOptions"
-                  ng-click="g.power = opt.value"
-                  ng-class="{
-                    active: g.power == opt.value,
-                    disabled: g.noise <= 40 &amp;&amp; opt.value >= 200
-                  }"
-                  bo-bind="opt.name">
-          </button>
-        </div>
-      </div>
-      <div class="hidden-xs" ng-include="'chartControls.html'"></div>
-    </div>
+    <div class="selectors clearfix" ng-include="'selectors.html'"></div>
     <div class="row">
       <div class="col-sm-4 col-md-3">
-        <div class="visible-xs" ng-include="'chartControls.html'"></div>
+        <div class="visible-xs" ng-include="'controls.html'"></div>
         <div class="visible-xs">
-          <button class="btn btn-default" ng-click="showFilters = !showFilters" data-toggle="button">
+          <button class="btn btn-default"
+                  ng-click="showFilters = !showFilters"
+                  ng-class="{active: showFilters}">
             <i class="glyphicon glyphicon-filter"></i>
           </button>
         </div>
-        <div class="filters ng-hide" ng-show="showFilters">
-          <div class="filter">
-            <div class="checkbox filter-label">
-              <label>
-                <input type="checkbox" select-all="makers" ng-model="$parent.g.filterByMaker"> 제조사
-              </label>
-            </div>
-            <div class="panel panel-default">
-              <div class="panel-body">
-                <div class="firefox-padding-hack-748518">
-                  <div class="loading" ng-if="loading.makers">
-                    <i class="glyphicon glyphicon-refresh glyphicon-spin"></i> 불러오는 중...
-                  </div>
-                  <div class="checkbox" ng-repeat="maker in makers" ng-cloak>
-                    <label>
-                      <input type="checkbox" ng-model="maker.selected">
-                      <span bo-bind-unwrap="maker.name"></span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="filter">
-            <form class="form-horizontal" autocomplete="off">
-              <div class="form-group filter-range">
-                <label for="price-max" class="col-xs-3 control-label">가격</label>
-                <div class="col-xs-9">
-                  <input type="number" pattern="\d*" id="price-min" class="form-control"
-                         ng-model="g.priceMin">
-                  <span class="range-marker">~</span>
-                  <input type="number" pattern="\d*" id="price-max" class="form-control"
-                         ng-model="g.priceMax">
-                </div>
-              </div>
-              <div class="form-group filter-range">
-                <label for="height-max" class="col-xs-3 control-label">높이</label>
-                <div class="col-xs-9">
-                  <input type="number" pattern="\d*" id="height-min" class="form-control"
-                         ng-model="g.heightMin">
-                  <span class="range-marker">~</span>
-                  <input type="number" pattern="\d*" id="height-max" class="form-control"
-                         ng-model="g.heightMax">
-                </div>
-              </div>
-              <div class="form-group filter-range">
-                <label for="weight-max" class="col-xs-3 control-label">무게</label>
-                <div class="col-xs-9">
-                  <input type="number" pattern="\d*" id="weight-min" class="form-control"
-                         ng-model="g.weightMin">
-                  <span class="range-marker">~</span>
-                  <input type="number" pattern="\d*" id="weight-max" class="form-control"
-                         ng-model="g.weightMax">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-xs-3 control-label">종류</label>
-                <div class="col-xs-9">
-                  <div class="btn-group filter-select filter-heatsink-type" ng-cloak>
-                    <button class="btn btn-default"
-                            ng-repeat="opt in heatsinkTypeOptions"
-                            ng-click="g.heatsinkType = (g.heatsinkType != opt.value ? opt.value : null)"
-                            ng-class="{active: g.heatsinkType == opt.value, '{@opt.value@}-button': true}"
-                            bo-bind="opt.name">
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-xs-3 control-label">가성비</label>
-                <div class="col-xs-9">
-                  <div class="btn-group filter-select filter-price-performance" ng-cloak>
-                    <button class="btn btn-default"
-                            ng-repeat="opt in ppOptions"
-                            ng-click="g.pricePerformance = (g.pricePerformance != opt.value ? opt.value : null)"
-                            ng-class="{active: g.pricePerformance == opt.value, '{@opt.value@}-button': true}"
-                            bo-bind="opt.name">
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
+        <div class="filters ng-hide"
+             ng-show="showFilters"
+             ng-include="'filters.html'"></div>
       </div>
-      <div class="col-sm-8 col-md-9">
-        <div class="chart">
-          <div class="clearfix"></div>
-          <table>
-            <thead>
-              <tr>
-                <th class="chart-model">
-                  <div>제조사</div>
-                  <div>제품명</div>
-                </th>
-                <th class="hidden-sm hidden-xs">
-                  <div>가로x세로x높이</div>
-                  <div>종류 / 무게</div>
-                </th>
-                <th class="hidden-xxs">
-                  <div>팬 크기x개수</div>
-                  <div>팬 속도</div>
-                </th>
-                <th ng-if="g.noise == 100">소음</th>
-                <th class="chart-temp">
-                  <div>CPU 온도</div>
-                  <div>전원부 온도</div>
-                </th>
-                <th class="chart-price">가격</th>
-              </tr>
-            </thead>
-            <tbody ng-if="loading.measurements || measurements.length &gt; 0" ng-cloak>
-              <tr ng-if="loading.measurements">
-                <td class="loading" colspan="{@g.noise == 100 ? 6 : 5@}">
-                  <i class="glyphicon glyphicon-refresh glyphicon-spin"></i> 불러오는 중...
-                </td>
-              </tr>
-              <tr ng-repeat="m in measurements.items track by m.id" ng-cloak
-                  ng-show="m.visible"
-                  ng-click="toggleSelection(m.heatsink)"
-                  ng-class="{
-                    first: m.first,
-                    selected: !g.showSelectedOnly &amp;&amp; m.heatsink.selected
-                  }">
-                <td class="chart-model">
-                  <a link-if="m.danawa_url" open-link-in-new-window>
-                    <div click="g.modal.heatsink = m.heatsink" stop-propagation prevent-default>
-                      <div class="line" bo-bind="m.maker.name"></div>
-                      <div class="line" bo-bind="m.heatsink.name"
-                           bo-attr="{title: m.heatsink.name}"></div>
-                    </div>
-                  </a>
-                </td>
-                <td class="hidden-sm hidden-xs">
-                  <div bo-bind="m.heatsink_size"></div>
-                  <div>
-                    <span bo-bind="m.heatsink.heatsink_type"></span>
-                    /
-                    <span bo-bind="m.heatsink_weight"></span>
-                  </div>
-                </td>
-                <td class="hidden-xxs">
-                  <div bo-bind="m.fan_size"></div>
-                  <div bo-bind="m.rpm_avg"></div>
-                </td>
-                <td ng-if="g.noise == 100" bo-bind="m.noise_avg">
-                </td>
-                <td class="chart-temp">
-                  <div class="chart-temp-cpu" bar-graph="m.cpu_temp_delta"></div>
-                  <div class="chart-temp-power" bar-graph="m.power_temp_delta"></div>
-                </td>
-                <td class="chart-price">
-                  <div bo-bind="m.price_formatted"></div>
-                </td>
-              </tr>
-            </tbody>
-            <tbody ng-if="!(loading.measurements || measurements.length &gt; 0)">
-              <tr>
-                <td class="empty" colspan="{@g.noise == 100 ? 6 : 5@}">
-                  데이터가 없습니다.
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="col-sm-8 col-md-9 col-xs-spacing">
+        <div class="hidden-xs" ng-include="'controls.html'"></div>
+        <ul class="nav nav-pills">
+          <li ng-class="{active: g.pane == 'table'}">
+            <a href="#" click="g.pane = 'table'" prevent-default>표</a>
+          </li>
+          <li ng-class="{active: g.pane == 'plot'}">
+            <a href="#" click="g.pane = 'plot'" prevent-default>그래프</a>
+          </li>
+        </ul>
+        <div class="chart-pane pane" ng-if="g.pane == 'table'">
+          <div ng-include="'chartPane.html'"></div>
+        </div>
+        <div class="scatter-plot-pane pane" ng-if="g.pane == 'plot'">
+          <div ng-include="'scatterPlotPane.html'"></div>
         </div>
       </div>
     </div>
   </div>
-  <div class="visible-lt-ie8 alert alert-warning get-new-browser">
+  <div class="visible-lt-ie8 alert alert-warning">
     <p>
-      지금 사용하고 계신 브라우저로는 이 페이지를 볼 수 없습니다. 최신 브라우저를 사용해 주세요.
+      지금 사용하고 계신 브라우저는 너무 오래되어서 이 페이지를 볼 수 없습니다.
+      아래 링크에서 더 빠르고 편리한 최신 브라우저를 다운로드 받으세요.
     </p>
-    <a class="browser-choice" href="http://www.mozilla.org/ko/firefox/new/">
-      <img data-src="{{url_for('static', filename='img/firefox_128x128.png')}}" width="128" height="128">
-      Firefox
-    </a>
-    <a class="browser-choice" href="https://www.google.com/intl/ko/chrome/browser/">
-      <img data-src="{{url_for('static', filename='img/chrome_128x128.png')}}" width="128" height="128">
-      Chrome
-    </a>
-    <a class="browser-choice" href="http://windows.microsoft.com/ko-kr/internet-explorer/download-ie">
-      <img data-src="{{url_for('static', filename='img/ie9-10_128x128.png')}}" width="128" height="128">
-      Internet Explorer
-    </a>
-    <a class="browser-choice" href="http://www.opera.com/computer">
-      <img data-src="{{url_for('static', filename='img/opera_128x128.png')}}" width="128" height="128">
-      Opera
-    </a>
+    <p>
+      <a class="browser-choice" href="http://www.mozilla.org/ko/firefox/new/">
+        <img data-src="{{url_for('static', filename='img/firefox_128x128.png')}}" width="128" height="128">
+        Firefox
+      </a>
+      <a class="browser-choice" href="https://www.google.com/intl/ko/chrome/browser/">
+        <img data-src="{{url_for('static', filename='img/chrome_128x128.png')}}" width="128" height="128">
+        Chrome
+      </a>
+      <a class="browser-choice" href="http://windows.microsoft.com/ko-kr/internet-explorer/download-ie">
+        <img data-src="{{url_for('static', filename='img/ie9-10_128x128.png')}}" width="128" height="128">
+        Internet Explorer
+      </a>
+      <a class="browser-choice" href="http://www.opera.com/computer">
+        <img data-src="{{url_for('static', filename='img/opera_128x128.png')}}" width="128" height="128">
+        Opera
+      </a>
+    </p>
+    <p>
+      현재 사용 중인 브라우저 정보: <span class="user-agent-string"></span>
+    </p>
   </div>
   <div class="visible-no-js alert alert-warning">
-    <p>
-      이 페이지를 보려면 JavaScript를 활성화해야 합니다.
-    </p>
+    <p>이 페이지를 보려면 JavaScript를 활성화해야 합니다.</p>
   </div>
   <div class="footer">
     이메일 <a href="mailto:choongmin@me.com">choongmin@me.com</a>
     트위터 <a href="https://twitter.com/ChoongminLee">@ChoongminLee</a>
   </div>
 </div>
-<div class="alert alert-danger ng-hide" ng-show="error" center="error" width="300">
+
+<div class="alert alert-danger ng-hide" ng-if="error" center="error" width="300">
   <p ng-bind="error"></p>
 </div>
-<div class="modal fade heatsink-info" heatsink-info scope="g.modal">
+
+<div class="modal fade heatsink-info-modal" heatsink-info-modal parent="g.modal">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -284,26 +117,143 @@
     </div>
   </div>
 </div>
-<script type="text/ng-template" id="chartControls.html">
-  <div class="chart-controls">
-    <div class="chart-control">
-      <button class="btn btn-success ng-hide"
-              ng-show="!g.showSelectedOnly &amp;&amp; g.numSelectedHeatsinks"
+
+<script type="text/ng-template" id="selectors.html">
+  <div class="selector">
+    <label>소음</label>
+    <div class="btn-group" ng-cloak>
+      <button class="btn btn-default"
+              ng-repeat="opt in options.noise"
+              ng-click="g.noise = opt.value"
+              ng-class="{
+                active: g.noise == opt.value,
+                disabled: g.power >= 200 &amp;&amp; opt.value <= 40
+              }"
+              bo-bind="opt.name">
+      </button>
+    </div>
+  </div>
+  <div class="selector">
+    <label>CPU 소비전력</label>
+    <div class="btn-group" ng-cloak>
+      <button class="btn btn-default"
+              ng-repeat="opt in options.power"
+              ng-click="g.power = opt.value"
+              ng-class="{
+                active: g.power == opt.value,
+                disabled: g.noise <= 40 &amp;&amp; opt.value >= 200
+              }"
+              bo-bind="opt.name">
+      </button>
+    </div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="filters.html">
+  <div class="filter">
+    <div class="checkbox filter-label">
+      <label>
+        <input type="checkbox" select-all="makers" ng-model="$parent.g.filterByMaker"> 제조사
+      </label>
+    </div>
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div class="firefox-padding-hack-748518">
+          <div class="loading" ng-if="loading.makers">
+            <i class="glyphicon glyphicon-refresh glyphicon-spin"></i> 불러오는 중...
+          </div>
+          <div class="checkbox" ng-repeat="maker in makers" ng-cloak>
+            <label>
+              <input type="checkbox" ng-model="maker.selected">
+              <span bo-bind-unwrap="maker.name"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="filter">
+    <form class="form-horizontal" autocomplete="off">
+      <div class="form-group filter-range">
+        <label for="price-max" class="col-xs-3 control-label">가격</label>
+        <div class="col-xs-9">
+          <input type="number" pattern="\d*" id="price-min" class="form-control"
+                 ng-model="g.priceMin">
+          <span class="range-marker">~</span>
+          <input type="number" pattern="\d*" id="price-max" class="form-control"
+                 ng-model="g.priceMax">
+        </div>
+      </div>
+      <div class="form-group filter-range">
+        <label for="height-max" class="col-xs-3 control-label">높이</label>
+        <div class="col-xs-9">
+          <input type="number" pattern="\d*" id="height-min" class="form-control"
+                 ng-model="g.heightMin">
+          <span class="range-marker">~</span>
+          <input type="number" pattern="\d*" id="height-max" class="form-control"
+                 ng-model="g.heightMax">
+        </div>
+      </div>
+      <div class="form-group filter-range">
+        <label for="weight-max" class="col-xs-3 control-label">무게</label>
+        <div class="col-xs-9">
+          <input type="number" pattern="\d*" id="weight-min" class="form-control"
+                 ng-model="g.weightMin">
+          <span class="range-marker">~</span>
+          <input type="number" pattern="\d*" id="weight-max" class="form-control"
+                 ng-model="g.weightMax">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-xs-3 control-label">종류</label>
+        <div class="col-xs-9">
+          <div class="btn-group filter-select filter-heatsink-type" ng-cloak>
+            <button class="btn btn-default"
+                    ng-repeat="opt in options.heatsinkType"
+                    ng-click="g.heatsinkType = (g.heatsinkType != opt.value ? opt.value : null)"
+                    ng-class="{active: g.heatsinkType == opt.value, '{@opt.value@}-button': true}"
+                    bo-bind="opt.name">
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-xs-3 control-label">가성비</label>
+        <div class="col-xs-9">
+          <div class="btn-group filter-select filter-price-performance" ng-cloak>
+            <button class="btn btn-default"
+                    ng-repeat="opt in options.pp"
+                    ng-click="g.pricePerformance = (g.pricePerformance != opt.value ? opt.value : null)"
+                    ng-class="{active: g.pricePerformance == opt.value, '{@opt.value@}-button': true}"
+                    bo-bind="opt.name">
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</script>
+
+<script type="text/ng-template" id="controls.html">
+  <div class="controls">
+    <div class="control">
+      <button class="btn btn-success"
+              ng-if="!g.showSelectedOnly &amp;&amp; g.numSelectedHeatsinks"
               ng-click="g.showSelectedOnly = true">
         비교
       </button>
-      <button class="btn btn-default ng-hide"
-              ng-show="!g.showSelectedOnly &amp;&amp; g.numSelectedHeatsinks"
+      <button class="btn btn-default"
+              ng-if="!g.showSelectedOnly &amp;&amp; g.numSelectedHeatsinks"
               ng-click="clearSelection()">
         취소
       </button>
-      <button class="btn btn-primary ng-hide"
-              ng-show="g.showSelectedOnly"
+      <button class="btn btn-primary"
+              ng-if="g.showSelectedOnly"
               ng-click="g.showSelectedOnly = false">
         모두 보기
       </button>
     </div>
-    <div class="chart-control">
+    <div class="control" ng-if="g.pane == 'table'">
       <label>정렬</label>
       <div class="btn-group" ng-cloak>
         <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
@@ -311,12 +261,111 @@
           <span class="caret"></span>
         </button>
         <ul class="dropdown-menu">
-          <li ng-repeat="opt in sortOptions">
+          <li ng-repeat="opt in options.sort">
             <a href="#" click="g.sortOption = opt" prevent-default bo-bind="opt.name"></a>
           </li>
         </ul>
       </div>
     </div>
+  </div>
+</script>
+
+<script type="text/ng-template" id="chartPane.html">
+  <table class="chart">
+    <thead>
+      <tr>
+        <th class="chart-model">
+          <div>제조사</div>
+          <div>제품명</div>
+        </th>
+        <th class="hidden-sm hidden-xs">
+          <div>가로x세로x높이</div>
+          <div>종류 / 무게</div>
+        </th>
+        <th class="hidden-xxs">
+          <div>팬 크기x개수</div>
+          <div>팬 속도</div>
+        </th>
+        <th ng-if="g.noise == 100">소음</th>
+        <th class="chart-temp">
+          <div>CPU 온도</div>
+          <div>전원부 온도</div>
+        </th>
+        <th class="chart-price">가격</th>
+      </tr>
+    </thead>
+    <tbody ng-if="loading.measurements || measurements.length &gt; 0" ng-cloak>
+      <tr ng-if="loading.measurements">
+        <td class="loading" colspan="{@g.noise == 100 ? 6 : 5@}">
+          <i class="glyphicon glyphicon-refresh glyphicon-spin"></i> 불러오는 중...
+        </td>
+      </tr>
+      <tr ng-repeat="m in measurements.items track by m.id" ng-cloak
+          ng-show="m.visible"
+          ng-click="m.heatsink.selected = !m.heatsink.selected"
+          ng-class="{
+            first: m.first,
+            selected: !g.showSelectedOnly &amp;&amp; m.heatsink.selected
+          }">
+        <td class="chart-model">
+          <a link-if="m.danawa_url">
+            <div click="g.modal.heatsink = m.heatsink" stop-propagation prevent-default>
+              <div class="line" bo-bind="m.maker.name"></div>
+              <div class="line" bo-bind="m.heatsink.name"
+                   bo-attr="{title: m.heatsink.name}"></div>
+            </div>
+          </a>
+        </td>
+        <td class="hidden-sm hidden-xs">
+          <div bo-bind="m.heatsink_size"></div>
+          <div>
+            <span bo-bind="m.heatsink.heatsink_type"></span>
+            /
+            <span bo-bind="m.heatsink_weight"></span>
+          </div>
+        </td>
+        <td class="hidden-xxs">
+          <div bo-bind="m.fan_size"></div>
+          <div bo-bind="m.rpm_avg"></div>
+        </td>
+        <td ng-if="g.noise == 100" bo-bind="m.noise_avg">
+        </td>
+        <td class="chart-temp">
+          <div class="chart-temp-cpu" bar-graph="m.cpu_temp_delta"></div>
+          <div class="chart-temp-power" bar-graph="m.power_temp_delta"></div>
+        </td>
+        <td class="chart-price">
+          <div bo-bind="m.price_formatted"></div>
+        </td>
+      </tr>
+    </tbody>
+    <tbody ng-if="!(loading.measurements || measurements.length &gt; 0)">
+      <tr>
+        <td class="empty" colspan="{@g.noise == 100 ? 6 : 5@}">
+          데이터가 없습니다.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</script>
+
+<script type="text/ng-template" id="scatterPlotPane.html">
+  <div class="visible-svg">
+    <div scatter-plot data="measurements.items"
+                      resize="g.pane == 'plot'"
+                      fix-domain="g.fixDomain"
+                      show-names="g.showNames"></div>
+    <label class="checkbox-inline">
+      <input type="checkbox" ng-model="g.fixDomain">
+      눈금 고정
+    </label>
+    <label class="checkbox-inline">
+      <input type="checkbox" ng-model="g.showNames">
+      이름 표시
+    </label>
+  </div>
+  <div class="hidden-svg alert alert-warning">
+    <p>그래프를 보려면 SVG가 지원되는 최신 브라우저를 사용해 주세요.</p>
   </div>
 </script>
 {% endblock %}

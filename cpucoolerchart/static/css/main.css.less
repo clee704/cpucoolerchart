@@ -46,6 +46,8 @@ label {
 .ng-hide,
 [ng-cloak],
 .visible-lt-ie8,
+.visible-lt-ie9,
+.visible-svg,
 .visible-no-js {
   display: none !important;
 }
@@ -53,6 +55,16 @@ label {
 .lt-ie8 {
   .visible-lt-ie8 { display: block !important; }
   .hidden-lt-ie8 { display: none !important; }
+}
+
+.lt-ie9 {
+  .visible-lt-ie9 { display: block !important; }
+  .hidden-lt-ie9 { display: none !important; }
+}
+
+.svg {
+  .visible-svg { display: block !important; }
+  .hidden-svg { display: none !important; }
 }
 
 .no-js {
@@ -68,7 +80,6 @@ label {
 .browser-choice {
   display: inline-block;
   text-align: center;
-  margin-top: @line-height-computed;
   margin-right: 10px;
   img {
     display: block;
@@ -80,6 +91,13 @@ label {
   margin-bottom: @line-height-computed;
   max-height: 99999px;  // hack for Android Chrome to disable font boosting
   > h1:first-child {
+    margin-top: 0;
+  }
+}
+
+.col-xs-spacing {
+  margin-top: @line-height-computed;
+  @media (min-width: @screen-sm) {
     margin-top: 0;
   }
 }
@@ -110,11 +128,6 @@ label {
 
 .modal {
   -webkit-overflow-scrolling: touch;
-}
-
-// See https://github.com/twbs/bootstrap/issues/9855
-.modal-open, .modal-open .navbar-fixed-top {
-  margin-right: 0 !important;
 }
 
 .loading, .empty {
@@ -211,12 +224,41 @@ label {
   }
 }
 
-.chart {
-  @padding: 6px;
+.pane {
+  margin-top: @line-height-computed;
   margin-bottom: @line-height-computed;
-  table {
-    width: 100%;
+  overflow: hidden;
+}
+
+.controls {
+  float: right;
+  label {
+    margin-right: 5px;
   }
+  .dropdown-menu {
+    left: auto;
+    right: 0;
+  }
+  .selectors & {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    margin-bottom: (@line-height-computed / 2);
+  }
+}
+
+.control {
+  display: inline-block;
+  margin-left: 5px;
+}
+
+.chart-pane {
+  margin-bottom: @line-height-computed;
+}
+
+.chart {
+  width: 100%;
+  @padding: 6px;
   th, td {
     font-weight: normal;
     padding: @padding;
@@ -248,29 +290,6 @@ label {
       }
     }
   }
-}
-
-.chart-controls {
-  float: right;
-  margin-bottom: @line-height-computed;
-  label {
-    margin-right: 5px;
-  }
-  .dropdown-menu {
-    left: auto;
-    right: 0;
-  }
-  .selectors & {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    margin-bottom: (@line-height-computed / 2);
-  }
-}
-
-.chart-control {
-  display: inline-block;
-  margin-left: 5px;
 }
 
 .chart-model .line {
@@ -322,7 +341,7 @@ label {
   }
 }
 
-.heatsink-info {
+.heatsink-info-modal {
   .image-pane {
     text-align: center;
     overflow: hidden;
@@ -351,4 +370,41 @@ label {
   padding-top: @line-height-computed;
   border-top: 1px solid @hr-border;
   font-size: @font-size-small;
+}
+
+[scatter-plot] {
+  width: 100%;
+  overflow: hidden;
+  margin-bottom: @line-height-computed;
+  font-size: ceil(@font-size-base * 0.75);
+  @media (min-width: @screen-xs) {
+    font-size: @font-size-small;
+  }
+  text {
+    fill: @gray-light;
+  }
+  .axis {
+    .tick line, .domain {
+      fill: none;
+      stroke: @gray-light;
+      stroke-width: 1px;
+      shape-rendering: crispEdges;
+    }
+  }
+  .point-tooltip {
+    rect {
+      stroke: @table-border-color;
+      stroke-width: 1px;
+      fill: @body-bg;
+      shape-rendering: crispEdges;
+    }
+    text {
+      fill: @text-color;
+    }
+  }
+  .labels {
+    text {
+      fill: @text-color;
+    }
+  }
 }
