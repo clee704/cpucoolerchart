@@ -631,7 +631,8 @@ angular.module('cpucoolerchart', [])
         }
 
         var margin = {top: 10, right: 10, bottom: 20, left: 40},
-            svgWidthMin = 0,
+            svgWidthMin = 250,
+            svgHeightMin = 250,
             svgWidth, svgHeight, plotWidth, plotHeight;
 
         // Scales
@@ -787,7 +788,8 @@ angular.module('cpucoolerchart', [])
             element.css('overflow-x', '');
           }
           svgWidth = Math.max(svgWidthMin, elementWidth);
-          svgHeight = Math.min(Math.floor(svgWidth / 1.1), viewportHeight - 200);
+          svgHeight = Math.max(svgHeightMin,
+              Math.min(Math.floor(svgWidth / 1.1), viewportHeight - 200));
           plotWidth = svgWidth - margin.left - margin.right;
           plotHeight = svgHeight - margin.top - margin.bottom;
 
