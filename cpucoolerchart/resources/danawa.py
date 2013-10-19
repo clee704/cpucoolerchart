@@ -102,8 +102,8 @@ MAPPING = {
   u'prolimatech megahalems rev.b': 954649,
   u'prolimatech super mega': 1238453,
   u'scythe orochi': 662047,
-  u'silverstone ar01': 2049333,
-  u'silverstone ar03': 2049376,
+  u'silverstone argon ar01': 2049333,
+  u'silverstone argon ar03': 2049376,
   u'silverstone heligon he02': 1888564,
   u'thermalright axp-140': 1324140,
   u'tuniq tower 120': 220390,
@@ -128,4 +128,6 @@ MAPPING = {
   u'zalman cnps7000b-alcu': 43986,
   u'zalman cnps7000b-cu': 43987,
   u'청남아이티 hurricane': 967812,
+  u'deepcool gamer storm lucifer': 2220113,
+  u'xigmatek hdt-s1283': 576667,
 }
