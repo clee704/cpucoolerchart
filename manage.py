@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+import sys
+
 from flask.ext.script import Manager, prompt_bool
 from cpucoolerchart import create_app
 from cpucoolerchart.extensions import db, cache
@@ -117,6 +119,9 @@ def delete(kind):
     cache.delete('view:/heatsinks')
     cache.delete('view:/fan-configs')
     cache.delete('view:/measurements')
+  else:
+    print >>sys.stderr, u'invalid value for kind: {0} (possible values are: html, json)'.format(kind)
+    return 1
 
 
 if __name__ == '__main__':
