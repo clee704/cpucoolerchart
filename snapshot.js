@@ -4,7 +4,7 @@ if (url.length > 0) {
   var page = require('webpage').create();
   page.open(url, function (status) {
     if (status === 'success') {
-      var delay;
+      var timerId;
       var checker = function () {
         var html = page.evaluate(function () {
           if (window.__snapshotStatus === 'ready') {
@@ -16,13 +16,13 @@ if (url.length > 0) {
           }
         });
         if (html) {
-          clearTimeout(delay);
+          clearTimeout(timerId);
           console.log('<!DOCTYPE html>');
           console.log(html);
           phantom.exit();
         }
       };
-      delay = setInterval(checker, 1000);
+      timerId = setInterval(checker, 1000);
     }
   });
 }

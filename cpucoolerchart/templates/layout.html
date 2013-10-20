@@ -21,6 +21,28 @@
     <!--[if lt IE 9]>
       <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/2.1.0/es5-shim.min.js"></script>
     <![endif]-->
+    <script>
+      // Keep this polyfill until https://github.com/ariya/phantomjs/issues/10522
+      // is resolved.
+      if (typeof Function.prototype.bind !== "function") {
+        Function.prototype.bind = function (context) {
+          var slice = Array.prototype.slice;
+          var fn = this;
+          return function() {
+            var args = slice.call(arguments, 1);
+            if (args.length) {
+              return arguments.length
+                  ? fn.apply(context, args.concat(slice.call(arguments)))
+                  : fn.apply(context, args);
+            } else {
+              return arguments.length
+                  ? fn.apply(context, arguments)
+                  : fn.call(context);
+            }
+          };
+        };
+      }
+    </script>
     {% if config.ASSETS_DEBUG %}
       {% assets "js_vendor" %}<script src="{{ASSET_URL}}"></script>{% endassets %}
     {% else %}
