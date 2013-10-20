@@ -302,7 +302,7 @@
       </tr>
       <tr ng-repeat="m in measurements.items track by m.id" ng-cloak
           ng-show="m.visible"
-          ng-click="m.heatsink.selected = !m.heatsink.selected"
+          ng-click="!g.showSelectedOnly &amp;&amp; (m.heatsink.selected = !m.heatsink.selected)"
           ng-class="{
             first: m.first,
             selected: !g.showSelectedOnly &amp;&amp; m.heatsink.selected
