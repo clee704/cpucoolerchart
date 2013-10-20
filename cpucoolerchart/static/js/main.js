@@ -66,6 +66,8 @@ angular.module('cpucoolerchart', [])
   .constant('PLOT_TOOLTIP_PADDING', {top: 7, right: 9, bottom: 7, left: 9})
   .constant('PLOT_TOOLTIP_MARGIN', 10)
   .constant('PLOT_TRANSITION_DURATION', 400)
+  .constant('PLOT_PRICE_DOMAIN', [0, 24])
+  .constant('PLOT_CPU_TEMP_DOMAIN', [40, 90])
 
   .controller('DataCtrl', function ($scope, $http, $q, $window, $timeout,
                                     DEFAULTS, OPTIONS, PathSync, util) {
@@ -620,7 +622,7 @@ angular.module('cpucoolerchart', [])
       PLOT_POINT_COLOR, PLOT_POINT_OPACITY, PLOT_POINT_RADIUS,
       PLOT_POINT_RADIUS_HOVER, PLOT_POINT_SELECTED_STROKE_WIDTH,
       PLOT_LABEL_MARGIN, PLOT_TOOLTIP_PADDING, PLOT_TOOLTIP_MARGIN,
-      PLOT_TRANSITION_DURATION) {
+      PLOT_TRANSITION_DURATION, PLOT_PRICE_DOMAIN, PLOT_CPU_TEMP_DOMAIN) {
     return {
       link: function (scope, element, attr) {
 
@@ -770,8 +772,8 @@ angular.module('cpucoolerchart', [])
         function setDomains(fixed) {
           domainSet = true;
           if (fixed) {
-            x.domain([0, 24]);
-            y.domain([40, 100]);
+            x.domain(PLOT_PRICE_DOMAIN);
+            y.domain(PLOT_CPU_TEMP_DOMAIN);
           } else {
             var filtered = lastData.filter(visible);
             x.domain(d3.extent(filtered, xValue)).nice();
