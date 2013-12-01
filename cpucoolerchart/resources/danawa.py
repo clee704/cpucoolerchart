@@ -78,6 +78,7 @@ MAPPING = {
   u'coolermaster hyper 612s': 1485847,
   u'coolermaster hyper tx3': 1441296,
   u'coolermaster hyper z600': 838263,
+  u'coolermaster hyper n620': 933669,
   u'coolermaster seidon 120m': 1885320,
   u'coolermaster seidon 120v': 2181109,
   u'coolermaster seidon 120xl': 1925602,
