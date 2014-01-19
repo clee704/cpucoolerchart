@@ -1,19 +1,16 @@
+# pylint: disable=star-args
 import base64
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict
 from datetime import datetime, timedelta
 import itertools
 import json
 import logging
-import math
-import os
 import re
-import sys
 import urllib
 
 from flask import current_app
 import lxml.etree
 import lxml.html
-from prettytable import PrettyTable
 from sqlalchemy import func
 import requests
 
@@ -530,7 +527,7 @@ def load_danawa_json(text):
 
 
 # from lxml@d441222/src/lxml/apihelpers.pxi:576-588
-RE_XML_ENCODING =  re.compile(
+RE_XML_ENCODING = re.compile(
     ur'^(<\?xml[^>]+)\s+encoding\s*=\s*["\'][^"\']*["\'](\s*\?>|)', re.U)
 HAS_XML_ENCODING = lambda s: RE_XML_ENCODING.match(s) is not None
 REPLACE_XML_ENCODING = lambda s: RE_XML_ENCODING.sub(ur'\g<1>\g<2>', s)

@@ -5,12 +5,8 @@ Flask==0.10.1
 Flask-SQLAlchemy==1.0
 Flask-Cache==0.12
 -e git://github.com/clee704/flask-script.git@b3e2536799c48cf5485d9c11ffabd22a88b2d299#egg=Flask-Script
-Flask-Assets==0.8
 Flask-gzip==0.1
-yuicompressor==2.4.8
 redis==2.8.0
 psycopg2==2.5.1
 gunicorn==18.0
 heroku==0.1.4
-ipython==1.1.0
-PyYAML==3.10

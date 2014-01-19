@@ -1,3 +1,4 @@
+# pylint: disable=no-init
 from flask.ext.sqlalchemy import BaseQuery
 
 from .extensions import db

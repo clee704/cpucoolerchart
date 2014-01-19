@@ -6,8 +6,6 @@ from ..config import DefaultConfig
 
 class Config(DefaultConfig):
   DEBUG = True
-  ASSETS_DEBUG = True
-  LIVE_RELOAD = True
   SQLALCHEMY_DATABASE_URI = 'postgres://cpucoolerchart:8LcVJ3DQJHXjDo@localhost/cpucoolerchart'
   CACHE_TYPE = 'redis'
   CACHE_REDIS_HOST = 'localhost'

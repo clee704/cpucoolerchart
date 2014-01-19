@@ -7,4 +7,3 @@ dist
 build
 *.db
 *.db-journal
-node_modules

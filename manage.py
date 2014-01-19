@@ -112,8 +112,6 @@ def delete(kind):
   """Deletes cached data of the given kind. Possible values: html, json"""
   if kind == 'html':
     cache.delete('view:/')
-    cache.delete('view:/?_escaped_fragment_')
-    cache.delete('view:/?_escaped_fragment_=')
   elif kind == 'json':
     cache.delete('view:/makers')
     cache.delete('view:/heatsinks')

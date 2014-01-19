@@ -14,13 +14,6 @@ class DefaultConfig(object):
   DEBUG = False
   TESTING = False
   GZIP = True
-  SEND_FILE_MAX_AGE_DEFAULT = 31536000
-  ASSETS_DEBUG = False
-  ASSETS_DIRECTORY = _p('static/webassets')
-  ASSETS_URL = '/static/webassets'
-  ASSETS_LOAD_PATH = [_p('static')]
-  ASSETS_URL_MAPPING = {_p('static'): '/static'}
-  LIVE_RELOAD = False
 
   # SQLALCHEMY_DATABASE_URI = 'sqlite://'  # In-memory database
 
@@ -31,8 +24,6 @@ class DefaultConfig(object):
 
   UPDATE_INTERVAL = 86400 * 3  # 3 days
 
-  # GA_TRACKING_ID = 'UA-xxxxxxxx-x'
-  # GA_DOMAIN = 'yourdomain.com'
   # DANAWA_API_KEY_PRODUCT_INFO = '...'
   # DANAWA_API_KEY_SEARCH = '...'
 
@@ -90,7 +81,6 @@ class DefaultConfig(object):
       },
     }
   }
-  LESS_BIN = os.path.join(__nodebin_dir__, 'lessc')
 
   @classmethod
   def from_envvars(cls):
