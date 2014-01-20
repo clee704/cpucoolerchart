@@ -119,6 +119,7 @@ def test_extract_data():
         'maker': 'Deepcool', 'model': 'GAMER STORM ASSASSIN',
         'cpu_temp_delta': 57, 'fan_count': 2, 'fan_size': 140,
         'fan_thickness': 25, 'heatsink_type': 'tower', 'noise': 40,
-        'power': 150, 'power_temp_delta': 47.8, 'rpm_max': 1012, 'rpm_min': 998,
-        'depth': 154.0, 'height': 160.0, 'weight': 1378.0, 'width': 140.0
+        'power': 150, 'power_temp_delta': 47.8, 'rpm_max': 1012,
+        'rpm_min': 998, 'depth': 154.0, 'height': 160.0, 'width': 140.0,
+        'weight': 1378.0,
     }

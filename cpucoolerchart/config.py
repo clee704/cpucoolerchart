@@ -26,6 +26,7 @@ class Config(object):
     UPDATE_INTERVAL = 86400 * 3    # 3 days
 
     URL_ROOT = 'http://cpucoolerchart.yourdomain.com/'
+    ACCESS_CONTROL_ALLOW_ORIGIN = '*'
 
     DANAWA_API_KEY_PRODUCT_INFO = None
     DANAWA_API_KEY_SEARCH = None
