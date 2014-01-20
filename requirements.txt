@@ -1,12 +1,13 @@
-requests==2.0.0
-lxml==3.2.3
+requests==2.2.0
+lxml==3.2.5
 prettytable==0.7.2
 Flask==0.10.1
 Flask-SQLAlchemy==1.0
 Flask-Cache==0.12
--e git://github.com/clee704/flask-script.git@b3e2536799c48cf5485d9c11ffabd22a88b2d299#egg=Flask-Script
+Flask-Script==0.6.6
 Flask-gzip==0.1
-redis==2.8.0
-psycopg2==2.5.1
+redis==2.9.0
+psycopg2==2.5.2
 gunicorn==18.0
 heroku==0.1.4
+ipython==1.1.0
