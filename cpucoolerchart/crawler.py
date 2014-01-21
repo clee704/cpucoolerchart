@@ -280,7 +280,7 @@ DANAWA_ID = {
 }
 
 
-def needs_update():
+def is_update_needed():
     last_updated = cache.get('last_updated')
     if not last_updated:
         return True
@@ -288,16 +288,35 @@ def needs_update():
     return last_updated <= datetime.now() - timedelta(seconds=interval)
 
 
+def is_update_running():
+    return cache.get('update_running')
+
+
+def set_update_running():
+    cache.set('update_running', True, timeout=3600)
+
+
+def unset_update_running():
+    cache.delete('update_running')
+
+
 def update_data(force=False):
-    if not force and not needs_update():
-        __logger__.info('Recently updated; nothing to do')
-        return
-    fix_existing_data()
-    data_list = fetch_measurement_data()
-    update_measurement_data(data_list)
-    update_danawa_data()
-    cache.set('last_updated', datetime.now())
-    __logger__.info('Successfully updated data from remote sources')
+    try:
+        if not is_update_needed() and not force:
+            __logger__.info('Recently updated; nothing to do')
+        elif is_update_running():
+            __logger__.info('Update is in progress in other process')
+        else:
+            set_update_running()
+            fix_existing_data()
+            data_list = fetch_measurement_data()
+            update_measurement_data(data_list)
+            update_danawa_data()
+            cache.set('last_updated', datetime.now(),
+                      timeout=app.config['UPDATE_INTERVAL'])
+            __logger__.info('Successfully updated data from remote sources')
+    finally:
+        unset_update_running()
 
 
 def fix_existing_data():

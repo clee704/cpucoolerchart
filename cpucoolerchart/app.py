@@ -7,6 +7,7 @@
 
 from datetime import timedelta
 from functools import update_wrapper
+import logging
 import logging.config
 
 from flask import Flask, jsonify, Response, make_response, request, app
@@ -255,3 +256,28 @@ def all():
     resp = Response(export_data(), mimetype='text/csv')
     resp.headers['Content-Disposition'] = 'filename="cooler.csv"'
     return resp
+
+
+@app.route('/update', methods=['POST'])
+def update():
+    import heroku
+    from .crawler import (is_update_needed, is_update_running,
+                          set_update_running, unset_update_running,
+                          update_data)
+    if is_update_needed():
+        if is_update_running():
+            return jsonify(msg='already running')
+        else:
+            set_update_running()
+            try:
+                client = heroku.from_key(app.config['HEROKU_API_KEY'])
+                herokuapp = client.apps[app.config['HEROKU_APP_NAME']]
+                herokuapp.processes.add('update')
+                return jsonify(msg='process started')
+            except Exception:
+                logger = logging.getLogger(__name__ + '.update')
+                logger.exception("Couldn't start heroku process")
+                unset_update_running()
+                return jsonify(msg='failed'), 500
+    else:
+        return jsonify(msg='already up to date')

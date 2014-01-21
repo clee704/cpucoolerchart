@@ -9,5 +9,6 @@ Flask-gzip==0.1
 redis==2.9.0
 psycopg2==2.5.2
 gunicorn==18.0
-heroku==0.1.4
+# heroku==0.1.4
+-e git://github.com/clee704/heroku.py.git@fix-requests-1.0#egg=heroku
 ipython==1.1.0

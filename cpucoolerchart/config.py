@@ -29,6 +29,7 @@ class Config(object):
 
     DANAWA_API_KEY_PRODUCT_INFO = None
     DANAWA_API_KEY_SEARCH = None
+    HEROKU_API_KEY = None
 
     MAIL_TOADDRS = None
     GMAIL_USERNAME = None
