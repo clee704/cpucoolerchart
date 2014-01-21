@@ -14,7 +14,6 @@ class Config(object):
 
     DEBUG = False
     TESTING = False
-    GZIP = True
 
     SQLALCHEMY_DATABASE_URI = 'sqlite://'    # In-memory database
 

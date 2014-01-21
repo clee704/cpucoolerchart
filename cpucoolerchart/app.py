@@ -34,9 +34,6 @@ if app.config.get('CACHE_TYPE') == 'redis':
     else:
         cache.cache.__class__ = RedisCache
 
-# if app.config.get('GZIP'):
-#     pass  # TODO
-
 
 class Model(db.Model):
     __abstract__ = True
