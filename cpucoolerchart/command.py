@@ -5,7 +5,7 @@
 
     Various commands to manage the database. You can run the commands by typing
     ``cpucoolerchart [command]`` if you've installed the package, or
-    ``python command.py [command]`` if you've downloaded the source.
+    ``python manage.py [command]`` if you've downloaded the source.
 
 """
 
