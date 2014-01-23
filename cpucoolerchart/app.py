@@ -22,7 +22,6 @@ app = Flask(__name__)
 
 app.config.update(
     SQLALCHEMY_DATABASE_URI='sqlite://',
-    CACHE_TYPE='simple',
     CACHE_DEFAULT_TIMEOUT=3600 * 3,
     CACHE_KEY_PREFIX='cpucoolerchart:',
     ACCESS_CONTROL_ALLOW_ORIGIN='*',
