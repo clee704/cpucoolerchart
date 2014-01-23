@@ -1,8 +1,8 @@
 """
-    cpucoolerchart.redis
+    cpucoolerchart.cache
     ~~~~~~~~~~~~~~~~~~~~
 
-    Implements custom Redis cache.
+    Implements custom caches.
 """
 
 import zlib
@@ -10,8 +10,13 @@ from werkzeug.contrib.cache import RedisCache
 
 
 class CompressedRedisCache(RedisCache):
-    """RedisCache with data compression. Values are transparently compressed
-    and decompressed when storing and fetching.
+    """:class:`werkzeug.contrib.cache.RedisCache` with data compression.
+    Values are transparently compressed and decompressed when storing and
+    fetching.
+
+    To use this cache, set *CACHE_TYPE* to
+    ``"cpucoolerchart.cache.CompressedRedisCache"`` when configuring the app.
+
     """
 
     def dump_object(self, value):

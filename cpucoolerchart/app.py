@@ -8,32 +8,35 @@
 from datetime import timedelta
 from functools import update_wrapper
 import logging
-import logging.config
 
 from flask import Flask, jsonify, Response, make_response, request, app
 from flask.ext.cache import Cache
 from flask.ext.sqlalchemy import SQLAlchemy, BaseQuery
-
-from .config import Config
-from .redis import RedisCache, CompressedRedisCache
+try:
+    import heroku
+except ImportError:
+    heroku = None
 
 
 app = Flask(__name__)
 
-Config.from_envvars()
-Config.setup_gmail_smtp()
-app.config.from_object(Config)
-app.config.from_envvar('CCC_SETTINGS', silent=True)
-logging.config.dictConfig(app.config['LOGGING'])
+app.config.update(
+    SQLALCHEMY_DATABASE_URI='sqlite://',
+    CACHE_TYPE='simple',
+    CACHE_DEFAULT_TIMEOUT=3600 * 3,
+    CACHE_KEY_PREFIX='cpucoolerchart:',
+    ACCESS_CONTROL_ALLOW_ORIGIN='*',
+    UPDATE_INTERVAL=86400,
+    HEROKU_API_KEY=None,
+    HEROKU_APP_NAME=None,
+    DANAWA_API_KEY_SEARCH=None,
+    DANAWA_API_KEY_PRODUCT_INFO=None,
+)
+app.config.from_envvar('CPUCOOLERCHART_SETTINGS', silent=True)
 
 db = SQLAlchemy(app)
 
 cache = Cache(app)
-if app.config.get('CACHE_TYPE') == 'redis':
-    if app.config.get('CACHE_COMPRESSION'):
-        cache.cache.__class__ = CompressedRedisCache
-    else:
-        cache.cache.__class__ = RedisCache
 
 
 class Model(db.Model):
@@ -260,7 +263,14 @@ def all():
 
 @app.route('/update', methods=['POST'])
 def update():
-    import heroku
+    if not app.config.get('HEROKU_API_KEY'):
+        return jsonify(msg='Heroku API key is not set')
+    elif not app.config.get('HEROKU_APP_NAME'):
+        return jsonify(msg='Heroku app name is not set')
+    elif heroku is None:
+        return jsonify(msg='heroku is not installed. '
+                       'Add heroku to your requirements.txt')
+
     from .crawler import (is_update_needed, is_update_running,
                           set_update_running, unset_update_running,
                           update_data)

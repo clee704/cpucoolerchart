@@ -3,9 +3,10 @@ from __future__ import print_function
 import sys
 
 from flask.ext.script import Manager, prompt_bool
-from cpucoolerchart.app import (app, db, cache, Maker, Heatsink, FanConfig,
-                                Measurement, export_data)
-from cpucoolerchart.crawler import update_data, print_danawa_results
+
+from .app import (app, db, cache, Maker, Heatsink, FanConfig, Measurement,
+                  export_data)
+from .crawler import update_data, print_danawa_results
 
 
 manager = Manager(app)
@@ -97,5 +98,9 @@ def clear():
     cache.clear()
 
 
-if __name__ == '__main__':
+def main():
     manager.run()
+
+
+if __name__ == '__main__':
+    main()

@@ -1,9 +1,9 @@
 import json
 
-import heroku
 import mock
 
 from cpucoolerchart import crawler
+import cpucoolerchart.app
 from cpucoolerchart.app import app, db, Maker
 
 
@@ -30,6 +30,7 @@ def test_view_makers():
 
 
 def test_view_update():
+    heroku = cpucoolerchart.app.heroku = mock.Mock()
     heroku.from_key = mock.MagicMock()
     crawler.is_update_needed = mock.Mock(return_value=True)
 
