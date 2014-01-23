@@ -7,11 +7,13 @@ from cpucoolerchart.extensions import db
 from cpucoolerchart.models import Maker
 import cpucoolerchart.views
 
+from . import test_settings
+
 
 class TestViews(object):
 
     def setup(self):
-        self.app = create_app({'CACHE_TYPE': 'simple'})
+        self.app = create_app(test_settings)
         self.app.testing = True
         self.client = self.app.test_client()
         self.ctx = self.app.app_context()
