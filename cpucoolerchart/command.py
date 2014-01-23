@@ -1,22 +1,36 @@
 #! /usr/bin/env python
+"""
+    cpucoolerchart.command
+    ~~~~~~~~~~~~~~~~~~~~~~
+
+    Various commands to manage the database. You can run the commands by typing
+    ``cpucoolerchart [command]`` if you've installed the package, or
+    ``python command.py [command]`` if you've downloaded the source.
+
+"""
+
 from __future__ import print_function
 import sys
 
+from flask import current_app
 from flask.ext.script import Manager, prompt_bool
 
-from .app import (app, db, cache, Maker, Heatsink, FanConfig, Measurement,
-                  export_data)
+from .app import create_app
 from .crawler import update_data, print_danawa_results
+from .extensions import db, cache
+from .models import Maker, Heatsink, FanConfig, Measurement
+from .views import export_data
 
 
-manager = Manager(app)
+manager = Manager(create_app)
 
 
 @manager.shell
 def make_shell_context():
     """Returns shell context with frequently used objects."""
-    return dict(app=app, db=db, cache=cache, Maker=Maker, Heatsink=Heatsink,
-                FanConfig=FanConfig, Measurement=Measurement)
+    return dict(app=current_app, db=db, cache=cache, Maker=Maker,
+                Heatsink=Heatsink, FanConfig=FanConfig,
+                Measurement=Measurement)
 
 
 @manager.command
@@ -36,8 +50,10 @@ def update(force=False):
     """
     Updates the database with data fetched from remote sources (Coolenjoy and
     Danawa). If --force is used, always update the database even if it is done
-    recently. Note that the fetched data are cached for 1 day, so it may not be
-    up-to-date.
+    recently. Note that even if --force is used, the updated data might not be
+    up-to-date since responses from remote sources are cached. If you really
+    want to make sure the data is fresh, run this command after running
+    ``clearcache``.
 
     """
     update_data(force)
@@ -53,12 +69,8 @@ def danawa():
     print_danawa_results()
 
 
-db_manager = Manager(help="Makes changes to the database.")
-manager.add_command('db', db_manager)
-
-
-@db_manager.command
-def create():
+@manager.command
+def createdb():
     """
     Creates tables in the database. It first checks for the existence of each
     individual table, and if not found will issue the CREATE statements.
@@ -67,8 +79,8 @@ def create():
     db.create_all()
 
 
-@db_manager.command
-def drop():
+@manager.command
+def dropdb():
     """Drops all database tables."""
     try:
         if prompt_bool("Are you sure you want to lose all your data"):
@@ -77,19 +89,15 @@ def drop():
         pass
 
 
-@db_manager.command
-def reset():
+@manager.command
+def resetdb():
     """drop then create"""
     drop()
     create()
 
 
-cache_manager = Manager(help="Manipulates the cache.")
-manager.add_command('cache', cache_manager)
-
-
-@cache_manager.command
-def clear():
+@manager.command
+def clearcache():
     """
     Clears the cache which may contain returned HTML pages from Coolenjoy,
     the time when the database was updated, etc.
@@ -98,7 +106,9 @@ def clear():
     cache.clear()
 
 
-def main():
+def main(app=None):
+    if app is not None:
+        manager.app = app
     manager.run()
 
 

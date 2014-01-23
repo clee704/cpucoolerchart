@@ -31,16 +31,16 @@ class pytest(test):
 
 
 setup(
-    name = 'cpucoolerchart',
-    version = __version__,
-    url = 'https://github.com/clee704/cpucoolerchart',
-    license = 'GNU AGPL v3',
-    author = 'Choongmin Lee',
-    author_email = 'choongmin@me.com',
-    description = 'CPU cooler performance and price database',
-    long_description = readme(),
-    packages = ['cpucoolerchart'],
-    install_requires = [
+    name='cpucoolerchart',
+    version=__version__,
+    url='https://github.com/clee704/cpucoolerchart',
+    license='GNU AGPL v3',
+    author='Choongmin Lee',
+    author_email='choongmin@me.com',
+    description='CPU cooler performance and price database',
+    long_description=readme(),
+    packages=['cpucoolerchart'],
+    install_requires=[
         'requests>=2.2.0',
         'lxml>=3.2.5',
         'prettytable>=0.7.2',
@@ -49,19 +49,19 @@ setup(
         'Flask-Cache>=0.12',
         'Flask-Script>=0.6.6',
     ],
-    tests_require = [
+    tests_require=[
         'pytest>=2.5.1',
         'mock>=1.0.1',
         'redis>=2.9.0',
     ],
     cmdclass={'test': pytest},
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'cpucoolerchart = cpucoolerchart.command:main',
         ],
     },
-    keywords = 'cpu heatsink cooler performance price database',
-    classifiers = [
+    keywords='cpu heatsink cooler performance price database',
+    classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
         'Framework :: Flask',

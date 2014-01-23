@@ -5,6 +5,7 @@
 
     Implements functions for fetching and organizing data from Coolenjoy
     and Danawa.
+
 """
 
 from __future__ import print_function
@@ -18,14 +19,14 @@ import re
 import urllib
 import urllib2
 
+from flask import current_app
 import lxml.etree
 import lxml.html
 from sqlalchemy import func
 
-from .app import app, db, cache, Maker, Heatsink, FanConfig, Measurement
+from .extensions import db, cache
+from .models import Maker, Heatsink, FanConfig, Measurement
 
-
-__logger__ = logging.getLogger(__name__)
 
 # Constant for maximum noise level. It is not actually 100 dB; for real values,
 # refer to noise_actual_min and noise_actual_max (may be absent).
@@ -280,11 +281,23 @@ DANAWA_ID = {
 }
 
 
+def _log(type, message, *args, **kwargs):
+    _logger = current_app.logger
+    if not logging.root.handlers and _logger.level == logging.NOTSET:
+        _logger.setLevel(logging.INFO)
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            '%(asctime)s %(name)s %(levelname)s %(message)s')
+        handler.setFormatter(formatter)
+        _logger.addHandler(handler)
+    getattr(_logger, type)(message, *args, **kwargs)
+
+
 def is_update_needed():
     last_updated = cache.get('last_updated')
     if not last_updated:
         return True
-    interval = app.config['UPDATE_INTERVAL']
+    interval = current_app.config['UPDATE_INTERVAL']
     return last_updated <= datetime.now() - timedelta(seconds=interval)
 
 
@@ -303,18 +316,21 @@ def unset_update_running():
 def update_data(force=False):
     try:
         if not is_update_needed() and not force:
-            __logger__.info('Recently updated; nothing to do')
+            _log('info', 'Recently updated; nothing to do')
         elif is_update_running():
-            __logger__.info('Update is in progress in other process')
+            _log('info', 'Update is in progress in other process')
         else:
             set_update_running()
             fix_existing_data()
             data_list = fetch_measurement_data()
-            update_measurement_data(data_list)
-            update_danawa_data()
-            cache.set('last_updated', datetime.now(),
-                      timeout=app.config['UPDATE_INTERVAL'])
-            __logger__.info('Successfully updated data from remote sources')
+            if not data_list:
+                _log('warning', 'There was an error during updating data.')
+            else:
+                update_measurement_data(data_list)
+                update_danawa_data()
+                cache.set('last_updated', datetime.now(),
+                          timeout=current_app.config['UPDATE_INTERVAL'])
+                _log('info', 'Successfully updated data from remote sources')
     finally:
         unset_update_running()
 
@@ -344,8 +360,8 @@ def fetch_measurement_data():
             try:
                 table = get_html_table(noise, power)
             except Exception:
-                __logger__.warning('An error occurred while requesting a page',
-                                   exc_info=True)
+                _log('warning', 'An error occurred while requesting a page',
+                     exc_info=True)
                 return []  # Do not return partially fetched data list
             try:
                 new_data_list = extract_data(table, noise, power)
@@ -393,7 +409,7 @@ def extract_data(table, noise, power):
             fix_inconsistency(data)
             data_list.append({k: data[k] for k in data if data[k] is not None})
         except Exception:
-            __logger__.exception('An error occurred while parsing a page')
+            _log('exception', 'An error occurred while parsing a page')
             raise ParseError()
     if not data_list:
         raise ParseError('table rows not found')
@@ -528,7 +544,8 @@ def ensure_consistency(data_list):
             if keys not in first_values[x]:
                 first_values[x][keys] = values
             elif first_values[x][keys] != values:
-                warn(u'dependency {0} -> {1} violated: {2}: {3} != {4}'.format(
+                warn((u'dependency {0} -> {1} violated: {2}: {3} != {4}; '
+                      u'the latter will be removed').format(
                     x, y, keys, first_values[x][keys], values))
                 remove = True
         if not remove:
@@ -545,7 +562,7 @@ def update_measurement_data(data_list):
             maker_ids.add(maker_id)
     for maker in Maker.query.filter(~Maker.id.in_(maker_ids)):
         db.session.delete(maker)
-        __logger__.info(u'Deleted old maker: %s', maker.name)
+        _log('info', u'Deleted old maker: %s', maker.name)
 
     db.session.commit()
 
@@ -557,7 +574,7 @@ def update_maker(data_list, maker_name):
     if maker is None:
         maker = Maker(**data)
         db.session.add(maker)
-        __logger__.info(u'Added new maker: %s', maker.name)
+        _log('info', u'Added new maker: %s', maker.name)
     else:
         maker.update(**data)
 
@@ -573,7 +590,7 @@ def update_maker(data_list, maker_name):
                 Heatsink.maker_id == maker.id).filter(
                 ~Heatsink.id.in_(heatsink_ids)):
             db.session.delete(heatsink)
-            __logger__.info(u'Deleted old heatsink: %s', heatsink.name)
+            _log('info', u'Deleted old heatsink: %s', heatsink.name)
 
     return maker.id
 
@@ -587,7 +604,7 @@ def update_heatsink(data_list, maker, model_name, width, depth, height,
     if heatsink is None:
         heatsink = Heatsink(**data)
         db.session.add(heatsink)
-        __logger__.info(u'Added new heatsink: %s', heatsink.name)
+        _log('info', u'Added new heatsink: %s', heatsink.name)
     else:
         heatsink.update(**data)
 
@@ -604,7 +621,7 @@ def update_heatsink(data_list, maker, model_name, width, depth, height,
                 FanConfig.heatsink_id == heatsink.id).filter(
                 ~FanConfig.id.in_(fan_config_ids)):
             db.session.delete(fan_config)
-            __logger__.info(u'Deleted old fan config (id=%d)', fan_config.id)
+            _log('info', u'Deleted old fan config (id=%d)', fan_config.id)
 
     return heatsink.id
 
@@ -618,7 +635,7 @@ def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
     if fan_config is None:
         fan_config = FanConfig(**data)
         db.session.add(fan_config)
-        __logger__.info(u'Added new fan config')
+        _log('info', u'Added new fan config')
     else:
         fan_config.update(**data)
 
@@ -632,7 +649,7 @@ def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
                 Measurement.fan_config_id == fan_config.id).filter(
                 ~Measurement.id.in_(measurement_ids)):
             db.session.delete(measurement)
-            __logger__.info(u'Deleted old measurement (id=%d)', measurement.id)
+            _log('info', u'Deleted old measurement (id=%d)', measurement.id)
 
     return fan_config.id
 
@@ -648,7 +665,7 @@ def update_measurement(fan_config, data):
     if measurement is None:
         measurement = Measurement(**data)
         db.session.add(measurement)
-        __logger__.info(u'Added new measurement')
+        _log('info', u'Added new measurement')
     else:
         measurement.update(**data)
 
@@ -656,10 +673,11 @@ def update_measurement(fan_config, data):
 
 
 def update_danawa_data():
-    if not app.config.get('DANAWA_API_KEY_PRODUCT_INFO'):
-        __logger__.warning('DANAWA_API_KEY_PRODUCT_INFO not found')
+    if not current_app.config.get('DANAWA_API_KEY_PRODUCT_INFO'):
+        _log('warning', 'DANAWA_API_KEY_PRODUCT_INFO not found. '
+             'Price data could not be fetched.')
         return
-    api_key = app.config['DANAWA_API_KEY_PRODUCT_INFO']
+    api_key = current_app.config['DANAWA_API_KEY_PRODUCT_INFO']
     try:
         for heatsink, maker_name in heatsinks_with_maker_names():
             key = (maker_name + ' ' + heatsink.name).lower()
@@ -693,15 +711,15 @@ def update_danawa_data():
                     break
         db.session.commit()
     except Exception:
-        __logger__.exception('An error occurred while updating danawa data')
+        _log('exception', 'An error occurred while updating danawa data')
         db.session.rollback()
 
 
 def print_danawa_results():
-    if not app.config.get('DANAWA_API_KEY_SEARCH'):
-        __logger__.warning('DANAWA_API_KEY_SEARCH not found')
+    if not current_app.config.get('DANAWA_API_KEY_SEARCH'):
+        _log('warning', 'DANAWA_API_KEY_SEARCH not found')
         return
-    api_key = app.config['DANAWA_API_KEY_SEARCH']
+    api_key = current_app.config['DANAWA_API_KEY_SEARCH']
     for heatsink, maker_name in heatsinks_with_maker_names():
         if heatsink.danawa_id is not None:
             continue
@@ -737,7 +755,7 @@ def get_cached_response_text(url):
     html = f.read()
     f.close()
     # Prevent partial refreshing by setting the timeout a bit shorter.
-    cache.set(key, html, timeout=app.config['UPDATE_INTERVAL'] - 600)
+    cache.set(key, html, timeout=current_app.config['UPDATE_INTERVAL'] - 600)
     return html
 
 
@@ -748,14 +766,13 @@ def load_danawa_json(text):
         if text.startswith('<?xml'):
             try:
                 result = lxml.etree.fromstring(text)
-                __logger__.warning(u'Danawa responded with an error: %s: %s',
-                                   result.find('code').text,
-                                   result.find('message').text)
+                _log('warning', u'Danawa responded with an error: %s: %s',
+                     result.find('code').text,
+                     result.find('message').text)
             except lxml.etree.XMLSyntaxError:
-                __logger__.warning(u'Danawa responded with an invalid XML')
+                _log('warning', u'Danawa responded with an invalid XML')
         else:
-            __logger__.warning(
-                u'Danawa responded with an incomprehensible text')
+            _log('warning', u'Danawa responded with an incomprehensible text')
 
 
 def heatsinks_with_maker_names():
@@ -780,7 +797,7 @@ def subdict(d, *args):
 
 def warn(msg):
     if msg not in _warnings:
-        __logger__.warning(msg)
+        _log('warning', msg)
         _warnings.add(msg)
 _warnings = set()
 
