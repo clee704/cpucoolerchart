@@ -8,6 +8,7 @@
 from datetime import timedelta
 from functools import update_wrapper
 import logging
+import os
 
 from flask import Flask, jsonify, Response, make_response, request, app
 from flask.ext.cache import Cache
@@ -18,7 +19,7 @@ except ImportError:
     heroku = None
 
 
-app = Flask(__name__)
+app = Flask(__name__, instance_path=os.getcwd(), instance_relative_config=True)
 
 app.config.update(
     SQLALCHEMY_DATABASE_URI='sqlite://',
