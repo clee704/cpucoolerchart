@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import os
+import sys
 from setuptools.command.test import test
 try:
     from setuptools import setup
@@ -30,6 +31,19 @@ class pytest(test):
         raise SystemExit(errno)
 
 
+install_requires = [
+    'requests >= 2.2.0',
+    'lxml >= 3.2.5',
+    'prettytable >= 0.7.2',
+    'Flask >= 0.10.1',
+    'Flask-SQLAlchemy >= 1.0',
+    'Flask-Cache >= 0.12',
+    'Flask-Script >= 0.6.6',
+]
+if sys.version_info < (2, 7):
+    install_requires.append('ordereddict == 1.1')
+
+
 setup(
     name='cpucoolerchart',
     version=__version__,
@@ -40,19 +54,11 @@ setup(
     description='CPU cooler performance and price database',
     long_description=readme(),
     packages=['cpucoolerchart'],
-    install_requires=[
-        'requests>=2.2.0',
-        'lxml>=3.2.5',
-        'prettytable>=0.7.2',
-        'Flask>=0.10.1',
-        'Flask-SQLAlchemy>=1.0',
-        'Flask-Cache>=0.12',
-        'Flask-Script>=0.6.6',
-    ],
+    install_requires=install_requires,
     tests_require=[
-        'pytest>=2.5.1',
-        'mock>=1.0.1',
-        'redis>=2.9.0',
+        'pytest >= 2.5.1',
+        'mock >= 1.0.1',
+        'redis >= 2.9.0',
     ],
     cmdclass={'test': pytest},
     entry_points={

@@ -10,7 +10,6 @@
 
 from __future__ import print_function
 import base64
-from collections import OrderedDict
 from datetime import datetime, timedelta
 import itertools
 import json
@@ -24,6 +23,7 @@ import lxml.etree
 import lxml.html
 from sqlalchemy import func
 
+from ._compat import OrderedDict
 from .extensions import db, cache
 from .models import Maker, Heatsink, FanConfig, Measurement
 
