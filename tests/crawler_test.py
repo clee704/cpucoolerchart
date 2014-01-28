@@ -1,18 +1,17 @@
-import httplib
 import io
 import os.path
-import urllib2
 
 from cpucoolerchart import crawler
+from cpucoolerchart._compat import http, urllib, to_bytes
 
 
 def read_data(name):
     path = os.path.join(os.path.dirname(__file__), 'data', name)
     with open(path) as f:
-        return f.read()
+        return to_bytes(f.read(), 'utf-8')
 
 
-class MockHTTPHandler(urllib2.HTTPHandler):
+class MockHTTPHandler(urllib.request.HTTPHandler):
 
     mock_urls = {
         'http://www.coolenjoy.net/cooln_db/cpucooler_charts.php?dd=3&test=3':
@@ -24,17 +23,17 @@ class MockHTTPHandler(urllib2.HTTPHandler):
         try:
             status_code, mimetype, content = self.mock_urls[url]
         except KeyError:
-            return urllib2.HTTPHandler.http_open(self, req)
-        resp = urllib2.addinfourl(io.BytesIO(content),
-                                  {'content-type': mimetype},
-                                  url)
+            return urllib.request.HTTPHandler.http_open(self, req)
+        resp = urllib.response.addinfourl(io.BytesIO(content),
+                                          {'content-type': mimetype},
+                                          url)
         resp.code = status_code
-        resp.msg = httplib.responses[status_code]
+        resp.msg = http.client.responses[status_code]
         return resp
 
 
-mock_opener = urllib2.build_opener(MockHTTPHandler)
-urllib2.install_opener(mock_opener)
+mock_opener = urllib.request.build_opener(MockHTTPHandler)
+urllib.request.install_opener(mock_opener)
 
 
 def test_extract_data(app):

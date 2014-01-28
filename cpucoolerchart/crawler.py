@@ -15,15 +15,13 @@ import itertools
 import json
 import logging
 import re
-import urllib
-import urllib2
 
 from flask import current_app
 import lxml.etree
 import lxml.html
 from sqlalchemy import func
 
-from ._compat import OrderedDict
+from ._compat import OrderedDict, iteritems, urllib, to_bytes
 from .extensions import db, cache
 from .models import Maker, Heatsink, FanConfig, Measurement
 
@@ -539,7 +537,7 @@ def ensure_consistency(data_list):
     new_data_list = []
     for data in data_list:
         remove = False
-        for x, y in DEPENDENCIES.iteritems():
+        for x, y in iteritems(DEPENDENCIES):
             keys = tuple(data.get(k) for k in x)
             values = tuple(data.get(k) for k in y)
             if keys not in first_values[x]:
@@ -693,7 +691,7 @@ def update_danawa_data():
                 ('prodCode', heatsink.danawa_id),
             ])
             json_text = get_cached_response_text(url + '?' +
-                                                 urllib.urlencode(query))
+                                                 urllib.parse.urlencode(query))
             data = load_danawa_json(json_text)
             if data is None:
                 continue
@@ -732,7 +730,7 @@ def print_danawa_results():
             ('cate_c1', 862),
         ])
         json_text = get_cached_response_text(url + '?' +
-                                             urllib.urlencode(query))
+                                             urllib.parse.urlencode(query))
         data = load_danawa_json(json_text)
         if data is None:
             continue
@@ -748,11 +746,11 @@ def print_danawa_results():
 
 
 def get_cached_response_text(url):
-    key = base64.b64encode(url, '-_')
+    key = base64.b64encode(to_bytes(url), b'-_')
     html = cache.get(key)
     if html:
         return html
-    f = urllib2.urlopen(url)
+    f = urllib.request.urlopen(url)
     html = f.read()
     f.close()
     # Prevent partial refreshing by setting the timeout a bit shorter.

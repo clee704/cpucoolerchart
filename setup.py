@@ -10,6 +10,31 @@ except ImportError:
 from cpucoolerchart import __version__
 
 
+PY2 = sys.version_info[0] == 2
+PY26 = sys.version_info < (2, 7)
+
+
+install_requires = [
+    'requests >= 2.2.0',
+    'lxml >= 3.2.5',
+    'prettytable >= 0.7.2',
+    'Flask >= 0.10.1',
+    'Flask-SQLAlchemy >= 1.0',
+    'Flask-Cache >= 0.12',
+    'Flask-Script >= 0.6.6',
+]
+dependency_links = []
+
+if PY26:
+    install_requires.append('ordereddict == 1.1')
+if not PY2:
+    # The current last version (0.12) of Flask-Cache on PyPI doesn't work with
+    # Python 3.
+    dependency_links.append('git+https://github.com/thadeusb/flask-cache.git'
+                            '@18cd9ebdb20e4d0f8f0900b971fcb8d48e27737d'
+                            '#egg=Flask_Cache-0.12')
+
+
 def readme():
     try:
         with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
@@ -31,19 +56,6 @@ class pytest(test):
         raise SystemExit(errno)
 
 
-install_requires = [
-    'requests >= 2.2.0',
-    'lxml >= 3.2.5',
-    'prettytable >= 0.7.2',
-    'Flask >= 0.10.1',
-    'Flask-SQLAlchemy >= 1.0',
-    'Flask-Cache >= 0.12',
-    'Flask-Script >= 0.6.6',
-]
-if sys.version_info < (2, 7):
-    install_requires.append('ordereddict == 1.1')
-
-
 setup(
     name='cpucoolerchart',
     version=__version__,
@@ -55,6 +67,7 @@ setup(
     long_description=readme(),
     packages=['cpucoolerchart'],
     install_requires=install_requires,
+    dependency_links=dependency_links,
     tests_require=[
         'pytest >= 2.5.1',
         'mock >= 1.0.1',
@@ -74,7 +87,9 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Affero General Public License v3',
         'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: Implementation :: CPython',
         'Topic :: Communications',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',

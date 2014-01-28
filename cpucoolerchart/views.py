@@ -16,6 +16,7 @@ try:
 except ImportError:
     heroku = None
 
+from ._compat import text_type
 from .extensions import db, cache
 from .models import Maker, Heatsink, FanConfig, Measurement
 
@@ -129,7 +130,7 @@ def export_data(delim=','):
     def convert(x):
         if x is None:
             return ''
-        return unicode(x).replace(delim, '_' if delim != '_' else '-')
+        return text_type(x).replace(delim, '_' if delim != '_' else '-')
 
     temp = []
     temp.append(delim.join(column_names))
