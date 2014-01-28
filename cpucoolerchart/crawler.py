@@ -407,7 +407,8 @@ def extract_data(table, noise, power):
                 data,
                 cells[3 if noise != NOISE_MAX else 4].xpath('.//font'))
             fix_inconsistency(data)
-            data_list.append({k: data[k] for k in data if data[k] is not None})
+            data_list.append(dict((k, data[k]) for k in data
+                                  if data[k] is not None))
         except Exception:
             _log('exception', 'An error occurred while parsing a page')
             raise ParseError()
@@ -792,7 +793,7 @@ def dictitemgetter(*args):
 
 
 def subdict(d, *args):
-    return {k: d[k] for k in args if k in d}
+    return dict((k, d[k]) for k in args if k in d)
 
 
 def warn(msg):

@@ -27,7 +27,7 @@ class Model(db.Model):
                 setattr(self, name, new_value)
 
     def as_dict(self):
-        return {k: getattr(self, k) for k in self._column_names()}
+        return dict((k, getattr(self, k)) for k in self._column_names())
 
     def __repr__(self):
         values = ', '.join('{0}={1!r}'.format(k, getattr(self, k)) for k
