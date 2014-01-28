@@ -4,7 +4,6 @@ import os.path
 import urllib2
 
 from cpucoolerchart import crawler
-from . import app
 
 
 def read_data(name):

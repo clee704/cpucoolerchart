@@ -7,7 +7,7 @@ from cpucoolerchart.extensions import db
 from cpucoolerchart.models import Maker
 import cpucoolerchart.views
 
-from . import test_settings
+from .conftest import test_settings
 
 
 class TestViews(object):
