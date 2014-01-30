@@ -6,8 +6,21 @@
     Defines rules to compensate for inconsistencies in Coolenjoy data and
     Danawa product identifiers.
 
+    .. autodata:: MAKER_FIX
+       :annotation: = {...}
+
+    .. autodata:: MODEL_FIX
+       :annotation: = {...}
+
+    .. autodata:: INCONSISTENCY_FIX
+       :annotation: = {...}
+
+    .. autodata:: DANAWA_ID_MAPPING
+       :annotation: = {...}
+
 """
 
+#: Mapping that encodes rules to rewrite inconsistent maker names.
 MAKER_FIX = {
     u'3rsystem': u'3Rsystem',
     u'3rsystemm': u'3Rsystem',
@@ -34,6 +47,7 @@ MAKER_FIX = {
     u'gelid': u'Gelid',
 }
 
+#: Mapping that encodes rules to rewrite inconsistent heatsink model names.
 MODEL_FIX = {
     # 3Rsystem
     u'iceage 120': u'iCEAGE 120',
@@ -76,6 +90,8 @@ MODEL_FIX = {
     u'cnps9900led': u'CNPS9900 LED',
 }
 
+#: Mapping that encodes rules to fix inconsistent model data such as width and
+#: depth.
 INCONSISTENCY_FIX = {
     u'3rsystem iceage 120': {
         'width': 125.0,   # 128 -> 125
@@ -100,6 +116,8 @@ INCONSISTENCY_FIX = {
     }
 }
 
+#: Mapping that encodes rules to map each heatsink model to corresponding
+#: Danawa product identifier.
 DANAWA_ID_MAPPING = {
     u'corsair h100': 1465177,
     u'corsair h100i': 1896659,

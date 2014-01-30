@@ -10,6 +10,7 @@ import os
 
 from flask import Flask
 
+from ._compat import string_types, iteritems
 from .extensions import db, cache
 from .views import views
 
@@ -20,11 +21,13 @@ __all__ = ['DEFAULT_CONFIG', 'create_app']
 CWD = os.path.abspath(os.getcwd())
 INSTANCE_PATH = os.path.join(CWD, 'instance')
 
+#: Default configuration values for the app. Note that ``{INSTANCE_PATH}`` will
+#: be converted to the absolute path of ``instance`` directory under the
+#: current working directiry.
 DEFAULT_CONFIG = dict(
-    SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(INSTANCE_PATH,
-                                                        'development.db'),
+    SQLALCHEMY_DATABASE_URI='sqlite:///{INSTANCE_PATH}/development.db',
     CACHE_TYPE='filesystem',
-    CACHE_DIR=os.path.join(INSTANCE_PATH, 'cache'),
+    CACHE_DIR='{INSTANCE_PATH}/cache',
     CACHE_DEFAULT_TIMEOUT=3600 * 3,
     CACHE_KEY_PREFIX='cpucoolerchart:',
     ACCESS_CONTROL_ALLOW_ORIGIN='*',
@@ -37,20 +40,36 @@ DEFAULT_CONFIG = dict(
 
 
 def create_app(config=None):
-    """Returns a :class:`flask.app.Flask` app. Configuration is done in the
-    following order:
+    """Returns a CPU Cooler Chart :class:`~flask.app.Flask` app. Configuration
+    is applied in the following order:
 
-    - `cpucoolerchart.app.DEFAULT_CONFIG`
-    - *CPUCOOLERCHART_SETTINGS* envvar, if exists
-    - *config* argument
+    - :data:`DEFAULT_CONFIG`
+    - python file that the ``CPUCOOLERCHART_SETTINGS`` environment variable
+      points to, if exists
+    - *config* argument, if provided. If it is a string, the file it points to
+      (relative to the current working directory or absolute) is read,
+      otherwise it is assumed to be a mapping.
+
+    For more information, see `Configuration Handling`__.
+
+    __ http://flask.pocoo.org/docs/config/
 
     """
-    app = Flask(__name__, instance_path=CWD, instance_relative_config=True)
+    app = Flask(__name__.split('.')[0],
+                instance_path=CWD,
+                instance_relative_config=True)
 
+    for key, value in iteritems(DEFAULT_CONFIG):
+        if isinstance(value, string_types) and '{INSTANCE_PATH}' in value:
+            DEFAULT_CONFIG[key] = value.format(INSTANCE_PATH=INSTANCE_PATH)
     app.config.update(DEFAULT_CONFIG)
+
     if os.environ.get('CPUCOOLERCHART_SETTINGS'):
         app.config.from_envvar('CPUCOOLERCHART_SETTINGS')
-    if config is not None:
+
+    if isinstance(config, string_types):
+        app.config.from_pyfile(config)
+    elif config is not None:
         app.config.update(config)
 
     db.init_app(app)

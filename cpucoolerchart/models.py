@@ -14,13 +14,25 @@ from .extensions import db
 __all__ = ['Maker', 'Heatsink', 'FanConfig', 'Measurement']
 
 
-class Model(db.Model):
+class Base(db.Model):
+    """Extends :class:`db.Model`. All models inherit this base.
+
+    """
     __abstract__ = True
 
     def _column_names(self):
         return self.__table__.columns.keys()
 
     def update(self, **kwargs):
+        """Update the current instance. Example::
+
+            class Person(Base):
+                name = db.Column(db.String(100))
+            a = Person()
+            a.update(name='john')
+            print a.name  # john
+
+        """
         for name in self._column_names():
             if name not in kwargs:
                 continue
@@ -50,12 +62,16 @@ class Model(db.Model):
     query_class = Query
 
 
-class Maker(Model):
+class Maker(Base):
+    """Represents a company that makes heatsinks."""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, unique=True, index=True)
 
 
-class Heatsink(Model):
+class Heatsink(Base):
+    """Represents a heatsink."""
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, index=True)
     maker_id = db.Column(db.Integer, db.ForeignKey('maker.id'), nullable=False,
@@ -77,7 +93,9 @@ class Heatsink(Model):
     __table_args__ = (db.UniqueConstraint('name', 'maker_id'),)
 
 
-class FanConfig(Model):
+class FanConfig(Base):
+    """Represents a combination of a heatsink and one or more fans."""
+
     id = db.Column(db.Integer, primary_key=True)
     heatsink_id = db.Column(db.Integer, db.ForeignKey('heatsink.id'),
                             nullable=False, index=True)
@@ -93,7 +111,12 @@ class FanConfig(Model):
                                           'fan_thickness', 'fan_count'),)
 
 
-class Measurement(Model):
+class Measurement(Base):
+    """Represents a measurement for a specific fan config under a specific
+    fan noise and CPU power consumption target.
+
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     fan_config_id = db.Column(db.Integer, db.ForeignKey('fan_config.id'),
                               nullable=False, index=True)

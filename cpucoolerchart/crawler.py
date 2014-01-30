@@ -31,20 +31,24 @@ __all__ = ['is_update_needed', 'is_update_running', 'set_update_running',
            'unset_update_running', 'update_data', 'print_danawa_results']
 
 
-# Constant for maximum noise level. It is not actually 100 dB; for real values,
-# refer to noise_actual_min and noise_actual_max (may be absent).
+#: Constant for maximum noise level. It is not actually 100 dB; for real
+#: values, refer to noise_actual_min and noise_actual_max (may be absent).
 NOISE_MAX = 100
 
-# Noise levels and CPU power consumptions where the measurements are taken.
+#: Noise levels for which the measurements are taken
 NOISE_LEVELS = {35: 4, 40: 3, 45: 2, NOISE_MAX: 1}
+
+#: CPU power consumptions for which the measurements are taken
 CPU_POWER = {62: 1, 92: 2, 150: 3, 200: 4}
 
+#: Default sorting order for measurement data
 ORDER_BY = ('maker', 'model', 'fan_size', 'fan_thickness', 'fan_count',
             'noise', 'power', 'noise_actual_min')
 
-# Theoretical depedencies between columns to check integrity of the original
-# data. There should be, if any, very small number of violations of these deps.
-# Request corrections to the guy who makes the original data.
+#: Theoretical depedencies between properties to check integrity of the
+#: original data. There should be, if any, very small number of violations of
+#: these deps. If so, request corrections to the guys at Coolenjoy who make
+#: the original data.
 DEPENDENCIES = {
     # maker and model determines heatsink properties
     ('maker', 'model'): ('width', 'depth', 'height', 'heatsink_type',
@@ -72,6 +76,11 @@ def _log(type, message, *args, **kwargs):
 
 
 def is_update_needed():
+    """Returns ``True`` if the data is not updated recently. More specifically,
+    if it returns ``True`` it means that it is not updated for more than
+    ``UPDATE_INTERVAL`` seconds since the last update.
+
+    """
     last_updated = cache.get('last_updated')
     if not last_updated:
         return True
@@ -80,6 +89,9 @@ def is_update_needed():
 
 
 def is_update_running():
+    """Returns ``True`` if an update process or thread is running.
+
+    """
     return cache.get('update_running')
 
 
@@ -148,6 +160,8 @@ def fetch_measurement_data():
             try:
                 new_data_list = extract_data(table, noise, power)
             except ParseError:
+                _log('warning', 'An error occurred while parsing a page',
+                     exc_info=True)
                 return []  # Do not return partially fetched data list
             data_list.extend(new_data_list)
     data_list.sort(key=dictitemgetter(*ORDER_BY))

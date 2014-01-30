@@ -63,7 +63,7 @@ To see the data, first you need to run a web server:
 It will run a development server at port 5000. Open your browser and go to
 ``http://localhost:5000/makers``. It should show some heatsink makers in JSON
 format. Go to ``http://localhost:5000/all`` to download a CSV file that
-contains all data. For the complete list of HTTP APIs, see the docs (TBD).
+contains all data. For the complete list of HTTP APIs, see `the docs`__.
 Meanwhile, you can read `views.py`_ file for what's there.
 
 For production, there are `many options`_ (you should not use the development
@@ -83,6 +83,7 @@ app there:
 .. _Coolenjoy: http://www.coolenjoy.net
 .. _Danawa: http://danawa.co.kr
 .. _views.py: cpucoolerchart/views.py
+__ Documentation_
 .. _many options: http://flask.pocoo.org/docs/deploying/
 .. _Flask: http://flask.pocoo.org
 
@@ -91,6 +92,16 @@ Config
 ------
 
 TBD
+
+
+Links
+-----
+
+- `GitHub repository`_
+- Documentation_
+
+.. _GitHub repository: https://github.com/clee704/cpucoolerchart
+.. _Documentation: http://cpucoolerchart.readthedocs.org
 
 
 License

@@ -7,6 +7,26 @@
     ``cpucoolerchart [command]`` if you've installed the package, or
     ``python manage.py [command]`` if you've downloaded the source.
 
+    .. autofunction:: main
+
+    The following functions are commands that can be run from command line.
+    Normally you do not call these functions directly in Python modules, but if
+    you want here is an example::
+
+        from cpucoolerchart.app import create_app
+        from cpucoolerchart.command import update
+        app = create_app()  # or any app that you've created before
+        with app.app_context():
+            update(force=True)
+
+    .. autofunction:: export
+    .. autofunction:: update
+    .. autofunction:: danawa
+    .. autofunction:: createdb
+    .. autofunction:: dropdb
+    .. autofunction:: resetdb
+    .. autofunction:: clearcache
+
 """
 
 from __future__ import print_function
@@ -22,11 +42,12 @@ from .models import Maker, Heatsink, FanConfig, Measurement
 from .views import export_data
 
 
+#: The command manager
 manager = Manager(create_app)
 
 
 @manager.shell
-def make_shell_context():
+def _make_shell_context():
     """Returns shell context with frequently used objects."""
     return dict(app=current_app, db=db, cache=cache, Maker=Maker,
                 Heatsink=Heatsink, FanConfig=FanConfig,
@@ -52,8 +73,8 @@ def update(force=False):
     Danawa). If --force is used, always update the database even if it is done
     recently. Note that even if --force is used, the updated data might not be
     up-to-date since responses from remote sources are cached. If you really
-    want to make sure the data is fresh, run this command after running
-    ``clearcache``.
+    want to make sure the data is fresh, run ``clearcache`` before this
+    command.
 
     """
     update_data(force)
@@ -91,7 +112,10 @@ def dropdb():
 
 @manager.command
 def resetdb():
-    """drop then create"""
+    """Drops and creates all database tables. It's just a shortcut for dropdb
+    and createdb in succession.
+
+    """
     drop()
     create()
 
@@ -107,6 +131,12 @@ def clearcache():
 
 
 def main(app=None):
+    """
+    Runs the command manager that parses the command line arguments and
+    executes the given command. If *app* is not given, it will create a new
+    app using :func:`~cpucoolerchart.app.create_app`.
+
+    """
     if app is not None:
         manager.app = app
     manager.run()

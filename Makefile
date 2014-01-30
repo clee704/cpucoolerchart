@@ -1,4 +1,4 @@
-.PHONY: clean cleanbuild test dist
+.PHONY: clean cleanbuild test dist docs
 
 all: clean test
 
@@ -17,3 +17,6 @@ test:
 
 dist:
 	python setup.py sdist
+
+docs:
+	SPHINX_RUNNING=1 $(MAKE) -C docs html
