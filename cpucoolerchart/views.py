@@ -17,6 +17,8 @@ except ImportError:
     heroku = None
 
 from ._compat import text_type
+from .crawler import (is_update_needed, is_update_running, set_update_running,
+                      unset_update_running, update_data)
 from .extensions import db, cache
 from .models import Maker, Heatsink, FanConfig, Measurement
 
@@ -157,9 +159,6 @@ def update():
         return jsonify(msg='heroku is not installed. '
                        'Add heroku to your requirements.txt')
 
-    from .crawler import (is_update_needed, is_update_running,
-                          set_update_running, unset_update_running,
-                          update_data)
     if is_update_needed():
         if is_update_running():
             return jsonify(msg='already running')

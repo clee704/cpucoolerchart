@@ -42,7 +42,7 @@ class TestViews(object):
     def test_view_update(self):
         heroku = cpucoolerchart.views.heroku = mock.Mock()
         heroku.from_key = mock.MagicMock()
-        crawler.is_update_needed = mock.Mock(return_value=True)
+        cpucoolerchart.views.is_update_needed = mock.Mock(return_value=True)
 
         self.app.config['HEROKU_API_KEY'] = '12345678'
         self.app.config['HEROKU_APP_NAME'] = 'foobar'
@@ -53,7 +53,7 @@ class TestViews(object):
         assert data['msg'] == 'process started'
         heroku.from_key.assert_called_with('12345678')
         heroku.from_key.reset_mock()
-        assert crawler.is_update_running()
+        assert cpucoolerchart.views.is_update_running()
 
         r = self.client.post('/update')
         assert r.status_code == 200
@@ -62,17 +62,17 @@ class TestViews(object):
         assert heroku.from_key.call_count == 0
 
         crawler.unset_update_running()
-        crawler.is_update_needed.return_value = False
+        cpucoolerchart.views.is_update_needed.return_value = False
         r = self.client.post('/update')
         assert r.status_code == 200
         data = json.loads(to_native(r.data))
         assert data['msg'] == 'already up to date'
         assert heroku.from_key.call_count == 0
 
-        crawler.is_update_needed.return_value = True
+        cpucoolerchart.views.is_update_needed.return_value = True
         heroku.from_key.side_effect = RuntimeError
         r = self.client.post('/update')
         assert r.status_code == 500
         data = json.loads(to_native(r.data))
         assert data['msg'] == 'failed'
-        assert not crawler.is_update_running()
+        assert not cpucoolerchart.views.is_update_running()
