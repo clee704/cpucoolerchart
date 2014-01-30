@@ -561,7 +561,7 @@ def update_measurement_data(data_list):
             maker_ids.add(maker_id)
     for maker in Maker.query.filter(~Maker.id.in_(maker_ids)):
         db.session.delete(maker)
-        _log('info', u'Deleted old maker: %s', maker.name)
+        _log('debug', u'Deleted old maker: %s', maker.name)
 
     db.session.commit()
 
@@ -573,7 +573,7 @@ def update_maker(data_list, maker_name):
     if maker is None:
         maker = Maker(**data)
         db.session.add(maker)
-        _log('info', u'Added new maker: %s', maker.name)
+        _log('debug', u'Added new maker: %s', maker.name)
     else:
         maker.update(**data)
 
@@ -589,7 +589,7 @@ def update_maker(data_list, maker_name):
                 Heatsink.maker_id == maker.id).filter(
                 ~Heatsink.id.in_(heatsink_ids)):
             db.session.delete(heatsink)
-            _log('info', u'Deleted old heatsink: %s', heatsink.name)
+            _log('debug', u'Deleted old heatsink: %s', heatsink.name)
 
     return maker.id
 
@@ -603,7 +603,7 @@ def update_heatsink(data_list, maker, model_name, width, depth, height,
     if heatsink is None:
         heatsink = Heatsink(**data)
         db.session.add(heatsink)
-        _log('info', u'Added new heatsink: %s', heatsink.name)
+        _log('debug', u'Added new heatsink: %s', heatsink.name)
     else:
         heatsink.update(**data)
 
@@ -620,7 +620,7 @@ def update_heatsink(data_list, maker, model_name, width, depth, height,
                 FanConfig.heatsink_id == heatsink.id).filter(
                 ~FanConfig.id.in_(fan_config_ids)):
             db.session.delete(fan_config)
-            _log('info', u'Deleted old fan config (id=%d)', fan_config.id)
+            _log('debug', u'Deleted old fan config (id=%d)', fan_config.id)
 
     return heatsink.id
 
@@ -634,7 +634,7 @@ def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
     if fan_config is None:
         fan_config = FanConfig(**data)
         db.session.add(fan_config)
-        _log('info', u'Added new fan config')
+        _log('debug', u'Added new fan config')
     else:
         fan_config.update(**data)
 
@@ -648,7 +648,7 @@ def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
                 Measurement.fan_config_id == fan_config.id).filter(
                 ~Measurement.id.in_(measurement_ids)):
             db.session.delete(measurement)
-            _log('info', u'Deleted old measurement (id=%d)', measurement.id)
+            _log('debug', u'Deleted old measurement (id=%d)', measurement.id)
 
     return fan_config.id
 
@@ -664,7 +664,7 @@ def update_measurement(fan_config, data):
     if measurement is None:
         measurement = Measurement(**data)
         db.session.add(measurement)
-        _log('info', u'Added new measurement')
+        _log('debug', u'Added new measurement')
     else:
         measurement.update(**data)
 
