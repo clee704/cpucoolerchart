@@ -10,6 +10,9 @@ import zlib
 from werkzeug.contrib.cache import RedisCache
 
 
+__all__ = ['CompressedRedisCache', 'compressedredis']
+
+
 class CompressedRedisCache(RedisCache):
     """:class:`werkzeug.contrib.cache.RedisCache` with data compression.
     Values are transparently compressed and decompressed when storing and

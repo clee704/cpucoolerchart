@@ -9,5 +9,9 @@
 from flask.ext.cache import Cache
 from flask.ext.sqlalchemy import SQLAlchemy
 
+
+__all__ = ['db', 'cache']
+
+
 db = SQLAlchemy()
 cache = Cache()

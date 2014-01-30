@@ -11,6 +11,9 @@ from flask.ext.sqlalchemy import BaseQuery
 from .extensions import db
 
 
+__all__ = ['Maker', 'Heatsink', 'FanConfig', 'Measurement']
+
+
 class Model(db.Model):
     __abstract__ = True
 

@@ -14,6 +14,9 @@ from .extensions import db, cache
 from .views import views
 
 
+__all__ = ['DEFAULT_CONFIG', 'create_app']
+
+
 CWD = os.path.abspath(os.getcwd())
 INSTANCE_PATH = os.path.join(CWD, 'instance')
 
