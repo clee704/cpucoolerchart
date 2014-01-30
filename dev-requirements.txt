@@ -1,0 +1,24 @@
+# It contains all packages that is required or useful when developing
+# CPU Cooler Chart. If you just want to use the app, you don't have to install
+# these packages. Type `python setup.py install` and you are ready.
+#
+# Note that it assumes you are using Python 2.7. If you are on Python 3.3,
+# Remove Flask-Cache and install it from here:
+# git+https://github.com/thadeusb/flask-cache.git@18cd9ebdb20e4d0f8f0900b971fcb8d48e27737d#egg=Flask_Cache-0.12
+
+requests==2.2.0
+lxml==3.3.0
+prettytable==0.7.2
+Flask==0.10.1
+Flask-SQLAlchemy==1.0
+Flask-Script==0.6.6
+Flask-Cache==0.12
+pytest==2.5.1
+pytest-cov==1.6
+pytest-pep8==1.0.5
+redis==2.9.0
+Sphinx==1.2.1
+sphinx-rtd-theme==0.1.5
+sphinxcontrib-httpdomain==1.2.0
+tox==1.7.0
+mock==1.0.1
