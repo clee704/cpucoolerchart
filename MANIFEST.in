@@ -1,4 +1,4 @@
-include Makefile LICENSE command.py
+include Makefile LICENSE manage.py tox.ini
 recursive-include tests *
 recursive-exclude tests *.pyc
 recursive-exclude tests *.pyo
