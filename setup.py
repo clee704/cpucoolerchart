@@ -70,6 +70,8 @@ setup(
     dependency_links=dependency_links,
     tests_require=[
         'pytest >= 2.5.1',
+        'pytest-pep8 >= 1.0.5',
+        'pytest-cov >= 1.6',
         'mock >= 1.0.1',
         'redis >= 2.9.0',
     ],
