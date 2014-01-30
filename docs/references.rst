@@ -11,7 +11,6 @@ References
    :members:
 
 .. automodule:: cpucoolerchart.command
-   :members:
 
 .. automodule:: cpucoolerchart.crawler
    :members:
