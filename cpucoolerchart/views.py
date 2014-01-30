@@ -162,7 +162,7 @@ def heatsinks():
              "heatsink_type": "tower",
              "height": null,
              "id": 46,
-             "image_url": "http://img.danawa.com/prod_img/500000/177/465/img/1465177_1.jpg",
+             "image_url": "http://img.d.com/prod_img/177/465/img/145177_1.jpg",
              "maker_id": 12,
              "name": "H100",
              "price": 184760,

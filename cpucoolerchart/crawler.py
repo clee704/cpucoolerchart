@@ -479,7 +479,7 @@ def update_danawa_data():
         for heatsink, maker_name in heatsinks_with_maker_names():
             key = (maker_name + ' ' + heatsink.name).lower()
             if (key in DANAWA_ID_MAPPING and
-                DANAWA_ID_MAPPING[key] != heatsink.danawa_id):
+                    DANAWA_ID_MAPPING[key] != heatsink.danawa_id):
                 heatsink.danawa_id = DANAWA_ID_MAPPING[key]
             if heatsink.danawa_id is None:
                 continue
