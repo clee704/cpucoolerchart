@@ -62,6 +62,7 @@ def compressedredis(app, config, args, kwargs):
 
     redis_url = config.get('CACHE_REDIS_URL')
     if redis_url:
-        kwargs['host'] = redis_from_url(redis_url, db=kwargs.pop('db', None))
+        from redis import from_url
+        kwargs['host'] = from_url(redis_url, db=kwargs.pop('db', None))
 
     return CompressedRedisCache(*args, **kwargs)
