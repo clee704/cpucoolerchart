@@ -116,8 +116,8 @@ def resetdb():
     and createdb in succession.
 
     """
-    drop()
-    create()
+    dropdb()
+    createdb()
 
 
 @manager.command
