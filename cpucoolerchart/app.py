@@ -59,10 +59,13 @@ def create_app(config=None):
                 instance_path=CWD,
                 instance_relative_config=True)
 
-    for key, value in iteritems(DEFAULT_CONFIG):
-        if isinstance(value, string_types) and '{INSTANCE_PATH}' in value:
-            DEFAULT_CONFIG[key] = value.format(INSTANCE_PATH=INSTANCE_PATH)
-    app.config.update(DEFAULT_CONFIG)
+    def default_config():
+        for key, value in iteritems(DEFAULT_CONFIG):
+            if isinstance(value, string_types) and '{INSTANCE_PATH}' in value:
+                yield key, value.format(INSTANCE_PATH=INSTANCE_PATH)
+            else:
+                yield key, value
+    app.config.update(default_config)
 
     if os.environ.get('CPUCOOLERCHART_SETTINGS'):
         app.config.from_envvar('CPUCOOLERCHART_SETTINGS')
