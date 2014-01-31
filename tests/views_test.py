@@ -2,19 +2,18 @@ import json
 
 import mock
 from cpucoolerchart import crawler
-from cpucoolerchart.app import create_app
 from cpucoolerchart.extensions import db
 from cpucoolerchart.models import Maker
 import cpucoolerchart.views
 from cpucoolerchart._compat import to_native
 
-from .conftest import test_settings
+from .conftest import app
 
 
 class TestViews(object):
 
     def setup(self):
-        self.app = create_app(test_settings)
+        self.app = app()
         self.app.testing = True
         self.client = self.app.test_client()
         self.ctx = self.app.app_context()
