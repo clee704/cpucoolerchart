@@ -10,6 +10,7 @@ clean:
 cleanbuild:
 	rm -rf build
 	rm -rf dist
+	rm -rf *.egg
 	rm -rf *.egg-info
 
 test:

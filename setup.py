@@ -15,24 +15,18 @@ PY26 = sys.version_info < (2, 7)
 
 
 install_requires = [
-    'requests >= 2.2.0',
-    'lxml >= 3.2.5',
-    'prettytable >= 0.7.2',
-    'Flask >= 0.10.1',
-    'Flask-SQLAlchemy >= 1.0',
-    'Flask-Cache >= 0.12',
-    'Flask-Script >= 0.6.6',
+    'requests == 2.2.0',
+    'lxml == 3.3.0',
+    'prettytable == 0.7.2',
+    'Flask == 0.10.1',
+    'Flask-SQLAlchemy == 1.0',
+    'Flask-Cache == 0.12' if PY2 else 'Flask-Cache-Latest == 0.12',
+    'Flask-Script == 0.6.6',
 ]
 dependency_links = []
 
 if PY26:
     install_requires.append('ordereddict == 1.1')
-if not PY2:
-    # The current last version (0.12) of Flask-Cache on PyPI doesn't work with
-    # Python 3.
-    dependency_links.append('git+https://github.com/thadeusb/flask-cache.git'
-                            '@18cd9ebdb20e4d0f8f0900b971fcb8d48e27737d'
-                            '#egg=Flask_Cache-0.12')
 
 
 def readme():
@@ -69,11 +63,11 @@ setup(
     install_requires=install_requires,
     dependency_links=dependency_links,
     tests_require=[
-        'pytest >= 2.5.1',
-        'pytest-pep8 >= 1.0.5',
-        'pytest-cov >= 1.6',
-        'mock >= 1.0.1',
-        'redis >= 2.9.0',
+        'pytest == 2.5.1',
+        'pytest-pep8 == 1.0.5',
+        'pytest-cov == 1.6',
+        'mock == 1.0.1',
+        'redis == 2.9.0',
     ],
     cmdclass={'test': pytest},
     entry_points={

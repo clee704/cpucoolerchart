@@ -3,8 +3,7 @@
 # these packages. Type `python setup.py install` and you are ready.
 #
 # Note that it assumes you are using Python 2.7. If you are on Python 3.3,
-# Remove Flask-Cache and install it from here:
-# git+https://github.com/thadeusb/flask-cache.git@18cd9ebdb20e4d0f8f0900b971fcb8d48e27737d#egg=Flask_Cache-0.12
+# Remove Flask-Cache and install Flask-Cache-Latest instead.
 
 requests==2.2.0
 lxml==3.3.0
