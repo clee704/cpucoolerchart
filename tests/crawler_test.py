@@ -1,14 +1,9 @@
 import io
-import os.path
 
 from cpucoolerchart import crawler
-from cpucoolerchart._compat import http, urllib, to_bytes
+from cpucoolerchart._compat import http, urllib
 
-
-def read_data(name):
-    path = os.path.join(os.path.dirname(__file__), 'data', name)
-    with open(path) as f:
-        return to_bytes(f.read(), 'utf-8')
+from .conftest import read_data
 
 
 class MockHTTPHandler(urllib.request.HTTPHandler):

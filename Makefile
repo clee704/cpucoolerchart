@@ -14,7 +14,7 @@ cleanbuild:
 	rm -rf *.egg-info
 
 test:
-	py.test tests
+	py.test
 
 dist:
 	python setup.py sdist

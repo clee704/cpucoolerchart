@@ -17,7 +17,7 @@ try:
 except ImportError:
     heroku = None
 
-from ._compat import text_type
+from ._compat import text_type, string_types
 from .crawler import (is_update_needed, is_update_running, set_update_running,
                       unset_update_running, update_data)
 from .extensions import db, cache
@@ -30,26 +30,50 @@ views = Blueprint('views', __name__)
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=86400 * 30, attach_to_all=True,
                 automatic_options=True):
-    """Decorates a view function by attaching Access-Control-Allow-Origin and
-    related headers to the response. If *origin* is ``None``, the value of
-    ``ACCESS_CONTROL_ALLOW_ORIGIN`` in the current app's config is used.
+    """Decorater that makes a view function compatible with cross-site HTTP
+    requests by attaching ``Access-Control-*`` response headers. See
+    `HTTP access control (CORS)`__ for more information.
+
+    :param origin: allowed URIs
+                   (``Access-Control-Allow-Origin`` response header).
+                   If it is ``None``, the value of
+                   ``ACCESS_CONTROL_ALLOW_ORIGIN`` in the current app's config
+                   is used.
+    :type origin: :class:`str` or :class:`collections.Iterable`
+    :param methods: allowed HTTP methods
+                    (``Access-Control-Allow-Methods`` response header)
+    :type methods: :class:`str` or :class:`collections.Iterable`
+    :param headers: allowed HTTP headers
+                    (``Access-Control-Allow-Headers`` response header)
+    :type headers: :class:`str` or :class:`collections.Iterable`
+    :param max_age: how long the results of a preflight request can be cached
+                    (``Access-Control-Max-Age`` response header)
+    :type max_age: :class:`int` or :class:`datetime.timedelta`
+    :param attach_to_all: If ``False``, the response is unmodified unless the
+                          request method is OPTIONS.
+    :type attach_to_all: :class:`bool`
+    :param automatic_options: If ``True``, make a default response for
+                              OPTIONS requests using
+                              :meth:`Flask.make_default_options_response`.
+    :type automatic_options: :class:`bool`
+
+    __ https://developer.mozilla.org/en/docs/HTTP/Access_control_CORS
 
     """
-    if methods is not None:
-        methods = ', '.join(sorted(x.upper() for x in methods))
-    if headers is not None and not isinstance(headers, basestring):
-        headers = ', '.join(x.upper() for x in headers)
-    if origin is not None and not isinstance(origin, basestring):
+    if origin is not None and not isinstance(origin, string_types):
         origin = ', '.join(origin)
+    if methods is not None and not isinstance(methods, string_types):
+        methods = ', '.join(sorted(x.upper() for x in methods))
+    if headers is not None and not isinstance(headers, string_types):
+        headers = ', '.join(x.upper() for x in headers)
     if isinstance(max_age, timedelta):
         max_age = max_age.total_seconds()
 
     def get_methods():
         if methods is not None:
             return methods
-
         options_resp = current_app.make_default_options_response()
-        return options_resp.headers['allow']
+        return options_resp.headers['Allow']
 
     def decorator(f):
         def wrapped_function(*args, **kwargs):
@@ -61,7 +85,6 @@ def crossdomain(origin=None, methods=None, headers=None,
                 return resp
 
             h = resp.headers
-
             h['Access-Control-Allow-Origin'] = (
                 origin or
                 current_app.config['ACCESS_CONTROL_ALLOW_ORIGIN'])

@@ -1,10 +1,22 @@
 import sys
 
 import mock
-from cpucoolerchart.command import resetdb
+from cpucoolerchart._compat import to_bytes
 import cpucoolerchart.command
+from cpucoolerchart.command import export, resetdb
 from cpucoolerchart.extensions import db
 from cpucoolerchart.models import Maker
+
+from .conftest import read_data, fill_data
+
+
+def test_export(app, capsys):
+    with app.app_context():
+        db.create_all()
+        fill_data()
+        export('\t')
+        out, err = capsys.readouterr()
+        assert to_bytes(out) == read_data('mock.tsv')
 
 
 def test_resetdb(app):
