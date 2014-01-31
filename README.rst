@@ -66,8 +66,8 @@ format. Go to ``http://localhost:5000/all`` to download a CSV file that
 contains all data. For the complete list of HTTP APIs, see `the docs`__.
 Meanwhile, you can read `views.py`_ file for what's there.
 
-For production, there are `many options`_ (you should not use the development
-server in production) to run a web server. CPU Cooler Chart is built with
+For production, there are `many options`_ to run a web server (you should not
+use the development server in production). CPU Cooler Chart is built with
 Flask_, which means it's WSGI-compatible. The endpoint is
 ``cpucoolerchart.wsgi:app``. Or you can make a custom Python file and create an
 app there:
@@ -80,7 +80,7 @@ app there:
     })
 
 .. _SQLAlchemy: http://www.sqlalchemy.org
-.. _Config: http://cpucoolerchart.readthedocs.org/en/latest#config
+.. _Config: http://cpucoolerchart.readthedocs.org/en/latest/#config
 .. _Coolenjoy: http://www.coolenjoy.net
 .. _Danawa: http://danawa.co.kr
 .. _views.py: cpucoolerchart/views.py
