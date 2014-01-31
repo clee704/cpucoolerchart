@@ -17,7 +17,7 @@ Install & Running
 
 .. code-block:: console
 
-    $ pip install cpucoolerchart
+    $ pip install --pre cpucoolerchart
 
 See `the GitHub repo page`__ for more.
 

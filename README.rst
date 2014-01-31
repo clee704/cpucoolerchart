@@ -23,7 +23,10 @@ many ways to do that but using pip is recommended:
 
 .. code-block:: console
 
-    $ pip install cpucoolerchart
+    $ pip install --pre cpucoolerchart
+
+Currently ``--pre`` argument is needed but it will be unnecessary once a
+non-developmental release is out.
 
 .. _lxml: http://lxml.de
 .. _Installing lxml: http://lxml.de/installation.html
