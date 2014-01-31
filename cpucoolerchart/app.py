@@ -39,6 +39,19 @@ DEFAULT_CONFIG = dict(
 )
 
 
+def iter_default_config():
+    """Returns an iterator that iterates each pair of key and value from
+    `DEFAULT_CONFIG`. If a value is string and contains ``{INSTANCE_PATH}``,
+    it is converted according to the description of `DEFAULT_CONFIG`.
+
+    """
+    for key, value in iteritems(DEFAULT_CONFIG):
+        if isinstance(value, string_types) and '{INSTANCE_PATH}' in value:
+            yield key, value.format(INSTANCE_PATH=INSTANCE_PATH)
+        else:
+            yield key, value
+
+
 def create_app(config=None):
     """Returns a CPU Cooler Chart :class:`~flask.app.Flask` app. Configuration
     is applied in the following order:
@@ -59,13 +72,7 @@ def create_app(config=None):
                 instance_path=CWD,
                 instance_relative_config=True)
 
-    def default_config():
-        for key, value in iteritems(DEFAULT_CONFIG):
-            if isinstance(value, string_types) and '{INSTANCE_PATH}' in value:
-                yield key, value.format(INSTANCE_PATH=INSTANCE_PATH)
-            else:
-                yield key, value
-    app.config.update(default_config)
+    app.config.update(iter_default_config())
 
     if os.environ.get('CPUCOOLERCHART_SETTINGS'):
         app.config.from_envvar('CPUCOOLERCHART_SETTINGS')
