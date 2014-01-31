@@ -34,9 +34,6 @@ def crossdomain(origin=None, methods=None, headers=None,
     related headers to the response. If *origin* is ``None``, the value of
     ``ACCESS_CONTROL_ALLOW_ORIGIN`` in the current app's config is used.
 
-    When there is an asterisk at the end of a property name, it means
-    that the property may have ``null`` as its value.
-
     """
     if methods is not None:
         methods = ', '.join(sorted(x.upper() for x in methods))
@@ -83,7 +80,7 @@ def crossdomain(origin=None, methods=None, headers=None,
 @crossdomain()
 @cache.cached()
 def makers():
-    """Returns all heatsink makers.
+    """Returns all heatsink makers. CORS enabled.
 
     **Example request**:
 
@@ -134,7 +131,7 @@ def makers():
 @crossdomain()
 @cache.cached()
 def heatsinks():
-    """Returns all heatsink models.
+    """Returns all heatsink models. CORS enabled.
 
     **Example request**:
 
@@ -206,7 +203,7 @@ def heatsinks():
 @cache.cached()
 def fan_configs():
     """Returns all fan configs, combinations of a heatsink and one or more
-    fans.
+    fans. CORS enabled.
 
     **Example request**:
 
@@ -267,7 +264,7 @@ def fan_configs():
 @crossdomain()
 @cache.cached()
 def measurements():
-    """Returns all measurement data.
+    """Returns all measurement data. CORS enabled.
 
     **Example request**:
 

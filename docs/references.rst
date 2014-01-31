@@ -1,5 +1,5 @@
-References
-==========
+Modules
+=======
 
 .. automodule:: cpucoolerchart
    :members: __version__

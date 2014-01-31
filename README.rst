@@ -80,6 +80,7 @@ app there:
     })
 
 .. _SQLAlchemy: http://www.sqlalchemy.org
+.. _Config: http://cpucoolerchart.readthedocs.org/en/latest#config
 .. _Coolenjoy: http://www.coolenjoy.net
 .. _Danawa: http://danawa.co.kr
 .. _views.py: cpucoolerchart/views.py
@@ -88,20 +89,16 @@ __ Documentation_
 .. _Flask: http://flask.pocoo.org
 
 
-Config
-------
-
-TBD
-
-
 Links
 -----
 
 - `GitHub repository`_
 - Documentation_
+- `CPU Cooler Chart`_ (deployed site)
 
 .. _GitHub repository: https://github.com/clee704/cpucoolerchart
 .. _Documentation: http://cpucoolerchart.readthedocs.org
+.. _CPU Cooler Chart: http://cpucoolerchart.clee.kr
 
 
 License

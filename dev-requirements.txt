@@ -21,4 +21,5 @@ Sphinx==1.2.1
 sphinx-rtd-theme==0.1.5
 sphinxcontrib-httpdomain==1.2.0
 tox==1.7.0
+virtualenv==1.11.2
 mock==1.0.1
