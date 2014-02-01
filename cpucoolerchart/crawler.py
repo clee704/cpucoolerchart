@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import itertools
 import json
 import logging
+from operator import itemgetter
 import re
 
 from flask import current_app
@@ -25,6 +26,12 @@ from .crawler_data import (MAKER_FIX, MODEL_FIX, INCONSISTENCY_FIX,
                            DANAWA_ID_MAPPING)
 from .extensions import db, cache
 from .models import Maker, Heatsink, FanConfig, Measurement
+
+
+__all__ = ['NOISE_MAX', 'NOISE_LEVELS', 'CPU_POWER', 'ORDER_BY',
+           'DEPENDENCIES', 'is_update_needed', 'is_update_running',
+           'set_update_running', 'unset_update_running', 'update_data',
+           'print_danawa_results']
 
 
 #: Constant for maximum noise level. It does not represent an actual value.
@@ -58,6 +65,13 @@ DEPENDENCIES = {
 }
 
 
+class ParseError(Exception):
+    """Raised when a returned HTML page from Coolenjoy is not in a expected
+    format and cannot be parsed.
+
+    """
+
+
 def _log(type, message, *args, **kwargs):
     _logger = current_app.logger
     if not logging.root.handlers and _logger.level == logging.NOTSET:
@@ -68,6 +82,50 @@ def _log(type, message, *args, **kwargs):
         handler.setFormatter(formatter)
         _logger.addHandler(handler)
     getattr(_logger, type)(message, *args, **kwargs)
+
+
+_warnings = set()
+
+
+def warn(msg):
+    """Logs a warning message if it is not seen since the last time
+    :func:`reset_warnings` is called.
+
+    """
+    if msg not in _warnings:
+        _log('warning', msg)
+        _warnings.add(msg)
+
+
+def reset_warnings():
+    """Resets the warning counter used by :func:`warn`."""
+    _warnings.clear()
+
+
+def heatsinks_with_maker_names():
+    """Queries the database for heatsinks and its maker's name together and
+    returns an iterator that yields a pair of a heatsink and its maker name.
+
+    """
+    return db.session.query(Heatsink, Maker.name).join(
+        Maker, Heatsink.maker_id == Maker.id)
+
+
+def get_cached_response_text(url):
+    """Returns a response body fetched from the specified URL. The return value
+    is cached up to ``UPDATE_INTERVAL`` minus a small fixed amount of time.
+
+    """
+    key = base64.b64encode(to_bytes(url), b'-_')
+    text = cache.get(key)
+    if text is None:
+        resp = urllib.request.urlopen(url)
+        text = resp.read()
+        resp.close()
+        # Prevent partial refreshing by setting the timeout a bit shorter.
+        cache.set(key, text,
+                  timeout=current_app.config['UPDATE_INTERVAL'] - 600)
+    return text
 
 
 def is_update_needed():
@@ -113,16 +171,20 @@ def update_data(force=False):
             _log('info', 'Update is in progress in other process')
         else:
             set_update_running()
-            run_update()
+            do_update_data()
     finally:
         unset_update_running()
 
 
-def run_update():
+def do_update_data():
+    """Same as :func:`update_data` but without checking for update conditions.
+    Used internally by :func:`update_data`.
+
+    """
     fix_existing_data()
     data_list = fetch_measurement_data()
     if not data_list:
-        _log('warning', 'There was an error during updating data.')
+        _log('warning', 'There was an error during fetching measurement data.')
     else:
         update_measurement_data(data_list)
         update_danawa_data()
@@ -144,6 +206,8 @@ def fix_existing_data():
         func.lower(Heatsink.name).in_(MODEL_FIX.keys()))
     for heatsink in heatsinks:
         heatsink.name = MODEL_FIX[heatsink.name.lower()]
+    db.session.commit()
+
     for heatsink, maker_name in heatsinks_with_maker_names():
         key = (maker_name + ' ' + heatsink.name).lower()
         if key in INCONSISTENCY_FIX:
@@ -176,7 +240,7 @@ def fetch_measurement_data():
                      exc_info=True)
                 return []  # Do not return partially fetched data list
             data_list.extend(new_data_list)
-    data_list.sort(key=dictitemgetter(*ORDER_BY))
+    data_list.sort(key=itemgetter(*ORDER_BY))
     data_list = ensure_consistency(data_list)
     return data_list
 
@@ -201,19 +265,19 @@ def extract_data(table, noise, power):
         data = {}
         cells = tr.xpath('td[not(@width="1")]')
         try:
-            data['maker'] = parse_maker(cells[0].text)
-            data['model'] = parse_model(cells[0].find('br').tail)
-            parse_dimension(data, cells[1].text)
-            data['heatsink_type'] = parse_heatsink_type(
+            data['maker'] = decode_maker(cells[0].text)
+            data['model'] = decode_model(cells[0].find('br').tail)
+            decode_dimension(data, cells[1].text)
+            data['heatsink_type'] = decode_heatsink_type(
                 cells[1].find('br').tail)
-            data['weight'] = parse_weight(cells[1].find('br').tail)
-            parse_fan_info(data, cells[2].text)
-            parse_rpm(data, cells[2].find('br').tail)
+            data['weight'] = decode_weight(cells[1].find('br').tail)
+            decode_fan_info(data, cells[2].text)
+            decode_rpm(data, cells[2].find('br').tail)
             data['noise'] = noise
             if noise == NOISE_MAX:
-                parse_noise_actual(data, cells[3].text)
+                decode_noise_actual(data, cells[3].text)
             data['power'] = power
-            parse_temp_info(
+            decode_temp_info(
                 data,
                 cells[3 if noise != NOISE_MAX else 4].xpath('.//font'))
             fix_inconsistency(data)
@@ -227,55 +291,55 @@ def extract_data(table, noise, power):
     return data_list
 
 
-def parse_maker(s):
-    maker = compress_spaces(s)
+def decode_maker(text):
+    maker = re.sub(r'\s+', ' ', text).strip()
     return MAKER_FIX.get(maker.lower(), maker).replace('/', '-')
 
 
-def parse_model(s):
-    model = compress_spaces(s)
+def decode_model(text):
+    model = re.sub(r'\s+', ' ', text).strip()
     return MODEL_FIX.get(model.lower(), model)
 
 
-def parse_dimension(data, s):
-    if not s or s == '-':
+def decode_dimension(data, text):
+    if not text or text == '-':
         return
-    m = re.search(r'([0-9.]+)\s*x\s*([0-9.]+)\s*x\s*([0-9.]+)', s, re.I)
+    m = re.search(r'([0-9.]+)\s*x\s*([0-9.]+)\s*x\s*([0-9.]+)', text, re.I)
     if not m:
-        warn(u'unrecognizable dimension: {0}'.format(s))
+        warn(u'unrecognizable dimension: {0}'.format(text))
         return
     data['width'] = float(m.group(1))
     data['depth'] = float(m.group(2))
     data['height'] = float(m.group(3))
 
 
-def parse_heatsink_type(s):
-    return compress_spaces(s.split('/')[0].lower())
+def decode_heatsink_type(text):
+    return re.sub(r'\s+', ' ', text.split('/')[0].lower()).strip()
 
 
-def parse_weight(s):
-    m = re.search(r'([0-9.]+)\s*g', s)
+def decode_weight(text):
+    m = re.search(r'([0-9.]+)\s*g', text)
     if not m:
-        warn(u'unrecognizable weight: {0}'.format(s))
+        warn(u'unrecognizable weight: {0}'.format(text))
         return
     weight = float(m.group(1))
     return weight if weight > 0 else None
 
 
-def parse_fan_info(data, s):
-    m = re.search(r'([0-9]+)(?:x([0-9]+))?/([0-9]+)T', s)
+def decode_fan_info(data, text):
+    m = re.search(r'([0-9]+)(?:x([0-9]+))?/([0-9]+)T', text)
     if not m:
-        warn(u'unrecognizable fan_info: {0}'.format(s))
+        warn(u'unrecognizable fan_info: {0}'.format(text))
         return
     data['fan_size'] = int(m.group(1))
     data['fan_count'] = int(m.group(2)) if m.group(2) is not None else 1
     data['fan_thickness'] = int(m.group(3))
 
 
-def parse_rpm(data, s):
-    m = re.search(r'(?:([0-9]+)(?:\s*-\s*([0-9]+))?)?\s*rpm', s)
+def decode_rpm(data, text):
+    m = re.search(r'(?:([0-9]+)(?:\s*-\s*([0-9]+))?)?\s*rpm', text)
     if not m:
-        warn(u'unrecognizable rpm: {0}'.format(s))
+        warn(u'unrecognizable rpm: {0}'.format(text))
         return
     if m.group(1) is None:
         return
@@ -297,12 +361,12 @@ def parse_rpm(data, s):
     assert data['rpm_min'] <= data['rpm_max']
 
 
-def parse_noise_actual(data, s):
-    if not s:
+def decode_noise_actual(data, text):
+    if not text:
         return
-    m = re.search(r'([0-9.]+)(?:\s*-\s*([0-9.]+))?', s)
+    m = re.search(r'([0-9.]+)(?:\s*-\s*([0-9.]+))?', text)
     if not m:
-        warn(u'unrecognizable noise_actual: {0}'.format(s))
+        warn(u'unrecognizable noise_actual: {0}'.format(text))
         return
     base = m.group(1)
     minimum = float(base)
@@ -323,12 +387,12 @@ def parse_noise_actual(data, s):
             data['noise_actual_max'] = maximum
             return
     warn(u'interpreted unrecognizable noise_actual {0} as {1}'.format(
-        s, minimum))
+        text, minimum))
     data['noise_actual_max'] = minimum
     assert data['noise_actual_min'] <= data['noise_actual_max']
 
 
-def parse_temp_info(data, elements):
+def decode_temp_info(data, elements):
     assert len(elements) == 2
     data['cpu_temp_delta'] = float(elements[0].text_content())
     power_temp_delta = elements[1].text_content()
@@ -365,7 +429,7 @@ def ensure_consistency(data_list):
 
 
 def update_measurement_data(data_list):
-    groups = itertools.groupby(data_list, dictitemgetter('maker'))
+    groups = itertools.groupby(data_list, itemgetter('maker'))
     maker_ids = set()
     for maker_name, data_sublist in groups:
         maker_id = update_maker(data_sublist, maker_name)
@@ -389,7 +453,7 @@ def update_maker(data_list, maker_name):
     else:
         maker.update(**data)
 
-    groups = itertools.groupby(data_list, dictitemgetter(
+    groups = itertools.groupby(data_list, itemgetter(
         'model', 'width', 'depth', 'height', 'heatsink_type', 'weight'))
     heatsink_ids = set()
     for heatsink_data, data_sublist in groups:
@@ -419,7 +483,7 @@ def update_heatsink(data_list, maker, model_name, width, depth, height,
     else:
         heatsink.update(**data)
 
-    groups = itertools.groupby(data_list, dictitemgetter(
+    groups = itertools.groupby(data_list, itemgetter(
         'fan_size', 'fan_thickness', 'fan_count'))
     fan_config_ids = set()
     for fan_config_data, data_sublist in groups:
@@ -466,11 +530,12 @@ def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
 
 
 def update_measurement(fan_config, data):
-    keys = subdict(data, 'noise', 'power')
+    keys = dict((k, data[k]) for k in ('noise', 'power'))
     keys['fan_config_id'] = fan_config.id
-    data = subdict(data, 'noise', 'power', 'noise_actual_min',
-                   'noise_actual_max', 'rpm_min', 'rpm_max', 'cpu_temp_delta',
-                   'power_temp_delta')
+    data = dict((k, data[k]) for k in ('noise', 'power', 'noise_actual_min',
+                                       'noise_actual_max', 'rpm_min',
+                                       'rpm_max', 'cpu_temp_delta',
+                                       'power_temp_delta'))
     data['fan_config'] = fan_config
     measurement = Measurement.query.find(**keys)
     if measurement is None:
@@ -563,19 +628,6 @@ def print_danawa_results():
             print(f.format(**product_data))
 
 
-def get_cached_response_text(url):
-    key = base64.b64encode(to_bytes(url), b'-_')
-    html = cache.get(key)
-    if html:
-        return html
-    f = urllib.request.urlopen(url)
-    html = f.read()
-    f.close()
-    # Prevent partial refreshing by setting the timeout a bit shorter.
-    cache.set(key, html, timeout=current_app.config['UPDATE_INTERVAL'] - 600)
-    return html
-
-
 def load_danawa_json(text):
     try:
         return json.loads(text)
@@ -590,38 +642,3 @@ def load_danawa_json(text):
                 _log('warning', u'Danawa responded with an invalid XML')
         else:
             _log('warning', u'Danawa responded with an incomprehensible text')
-
-
-def heatsinks_with_maker_names():
-    return db.session.query(Heatsink, Maker.name).join(
-        Maker, Heatsink.maker_id == Maker.id)
-
-
-def compress_spaces(s):
-    return re.sub(r'\s+', ' ', s).strip()
-
-
-def dictitemgetter(*args):
-    def get(d):
-        rv = tuple(d.get(i) for i in args)
-        return rv if len(rv) > 2 else rv[0]
-    return get
-
-
-def subdict(d, *args):
-    return dict((k, d[k]) for k in args if k in d)
-
-
-def warn(msg):
-    if msg not in _warnings:
-        _log('warning', msg)
-        _warnings.add(msg)
-_warnings = set()
-
-
-def reset_warnings():
-    _warnings.clear()
-
-
-class ParseError(Exception):
-    pass
