@@ -1,8 +1,8 @@
 from cpucoolerchart.extensions import db
-from cpucoolerchart.models import Base
+from cpucoolerchart.models import BaseModel
 
 
-class Person(Base):
+class Person(BaseModel):
     name = db.Column(db.String(100), primary_key=True)
     age = db.Column(db.Integer)
 

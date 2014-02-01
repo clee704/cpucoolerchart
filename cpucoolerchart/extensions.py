@@ -10,9 +10,6 @@ from flask.ext.cache import Cache
 from flask.ext.sqlalchemy import SQLAlchemy
 
 
-__all__ = ['db', 'cache']
-
-
 #: Flask-SQLAlchemy__ instance
 #:
 #: __ http://pythonhosted.org/Flask-SQLAlchemy/

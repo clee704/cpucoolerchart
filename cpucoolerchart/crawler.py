@@ -27,18 +27,13 @@ from .extensions import db, cache
 from .models import Maker, Heatsink, FanConfig, Measurement
 
 
-__all__ = ['is_update_needed', 'is_update_running', 'set_update_running',
-           'unset_update_running', 'update_data', 'print_danawa_results']
-
-
-#: Constant for maximum noise level. It is not actually 100 dB; for real
-#: values, refer to noise_actual_min and noise_actual_max (may be absent).
+#: Constant for maximum noise level. It does not represent an actual value.
 NOISE_MAX = 100
 
-#: Noise levels for which the measurements are taken
+#: List of noise levels in dB for which the measurements are taken
 NOISE_LEVELS = [35, 40, 45, NOISE_MAX]
 
-#: CPU power consumptions for which the measurements are taken
+#: List of CPU power consumptions in watt for which the measurements are taken
 CPU_POWER = [62, 92, 150, 200]
 
 #: Default sorting order for measurement data
@@ -47,8 +42,8 @@ ORDER_BY = ('maker', 'model', 'fan_size', 'fan_thickness', 'fan_count',
 
 #: Theoretical depedencies between properties to check integrity of the
 #: original data. There should be, if any, very small number of violations of
-#: these deps. If so, request corrections to the guys at Coolenjoy who make
-#: the original data.
+#: these deps. Request corrections to Coolenjoy if you find the data
+#: too inconsistent.
 DEPENDENCIES = {
     # maker and model determines heatsink properties
     ('maker', 'model'): ('width', 'depth', 'height', 'heatsink_type',

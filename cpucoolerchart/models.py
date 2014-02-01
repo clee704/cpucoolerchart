@@ -11,10 +11,7 @@ from flask.ext.sqlalchemy import BaseQuery
 from .extensions import db
 
 
-__all__ = ['Maker', 'Heatsink', 'FanConfig', 'Measurement']
-
-
-class Base(db.Model):
+class BaseModel(db.Model):
     """Extends :class:`db.Model`. All models inherit this base.
 
     """
@@ -24,13 +21,19 @@ class Base(db.Model):
         return self.__table__.columns.keys()
 
     def update(self, **kwargs):
-        """Update the current instance. Example::
+        """Updates the current instance. Example:
 
-            class Person(Base):
-                name = db.Column(db.String(100))
-            a = Person()
-            a.update(name='john')
-            print a.name  # john
+        .. code-block:: python
+
+            class Person(BaseModel):
+                name = db.Column(db.String(100), primary_key=True)
+
+            person = Person(name='bob')
+            person.update(name='john')
+            assert person.name == 'john'
+
+        If all specified values are the same with the current values, no
+        assignment occurs so that ``db.session.dirty`` is not changed.
 
         """
         for name in self._column_names():
@@ -42,6 +45,18 @@ class Base(db.Model):
                 setattr(self, name, new_value)
 
     def as_dict(self):
+        """Returns columns as a mapping. Example:
+
+        .. code-block:: python
+
+            class Person(BaseModel):
+                name = db.Column(db.String(100), primary_key=True)
+                age = db.Column(db.Integer)
+
+            assert (Person(name='bob', age=24).as_dict() ==
+                    {'name': 'bob', 'age': 24})
+
+        """
         return dict((k, getattr(self, k)) for k in self._column_names())
 
     def __repr__(self):
@@ -62,14 +77,14 @@ class Base(db.Model):
     query_class = Query
 
 
-class Maker(Base):
+class Maker(BaseModel):
     """Represents a company that makes heatsinks."""
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, unique=True, index=True)
 
 
-class Heatsink(Base):
+class Heatsink(BaseModel):
     """Represents a heatsink."""
 
     id = db.Column(db.Integer, primary_key=True)
@@ -93,7 +108,7 @@ class Heatsink(Base):
     __table_args__ = (db.UniqueConstraint('name', 'maker_id'),)
 
 
-class FanConfig(Base):
+class FanConfig(BaseModel):
     """Represents a combination of a heatsink and one or more fans."""
 
     id = db.Column(db.Integer, primary_key=True)
@@ -111,7 +126,7 @@ class FanConfig(Base):
                                           'fan_thickness', 'fan_count'),)
 
 
-class Measurement(Base):
+class Measurement(BaseModel):
     """Represents a measurement for a specific fan config under a specific
     fan noise and CPU power consumption target.
 
