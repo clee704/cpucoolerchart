@@ -82,9 +82,9 @@ def update(force=False):
 
 @manager.command
 def danawa():
-    """
-    Prints danawa search results. Use this command to find danawa product
-    identifiers for heatsink models.
+    """Searches Danawa for heatsinks that don't have entries in
+    :data:`~cpucoolerchart.crawler_data.DANAWA_ID_MAPPING` and prints results.
+    It is useful to find missing Danawa identifiers for heatsinks.
 
     """
     print_danawa_results()

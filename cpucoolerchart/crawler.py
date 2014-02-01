@@ -71,9 +71,9 @@ def _log(type, message, *args, **kwargs):
 
 
 def is_update_needed():
-    """Returns ``True`` if the data is not updated recently. More specifically,
-    if it returns ``True`` it means that it is not updated for more than
-    ``UPDATE_INTERVAL`` seconds since the last update.
+    """Returns ``True`` if the data is not updated recently, which means that
+    it is not updated for more than ``UPDATE_INTERVAL`` seconds since the last
+    update.
 
     """
     last_updated = cache.get('last_updated')
@@ -99,6 +99,13 @@ def unset_update_running():
 
 
 def update_data(force=False):
+    """
+    Updates the database with data fetched from remote sources (Coolenjoy and
+    Danawa). If *force* is ``True``, always update the database even if it is
+    done recently. Note that even if *force* is used, the updated data might
+    not be up-to-date since responses from remote sources are cached.
+
+    """
     try:
         if not is_update_needed() and not force:
             _log('info', 'Recently updated; nothing to do')
@@ -125,6 +132,11 @@ def run_update():
 
 
 def fix_existing_data():
+    """Fixes inconsistencies in the current database. This includes correcting
+    typos in names and ensuring properties such as height and weight are the
+    same for the same heatsinks.
+
+    """
     makers = Maker.query.filter(func.lower(Maker.name).in_(MAKER_FIX.keys()))
     for maker in makers:
         maker.name = MAKER_FIX[maker.name.lower()]
@@ -140,6 +152,11 @@ def fix_existing_data():
 
 
 def fetch_measurement_data():
+    """Fetches measurement data from Coolenjoy and returns a inconsistency-free
+    data list. It contains information about makers, heatsinks, fan configs,
+    and measurements.
+
+    """
     reset_warnings()
     data_list = []
     for noise in NOISE_LEVELS:
@@ -511,6 +528,11 @@ def update_danawa_data():
 
 
 def print_danawa_results():
+    """Searches Danawa for heatsinks that don't have entries in
+    :data:`~cpucoolerchart.crawler_data.DANAWA_ID_MAPPING` and prints results.
+    It is useful to find missing Danawa identifiers for heatsinks.
+
+    """
     if not current_app.config.get('DANAWA_API_KEY_SEARCH'):
         _log('warning', 'DANAWA_API_KEY_SEARCH not found')
         return

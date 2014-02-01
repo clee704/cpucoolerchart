@@ -25,12 +25,13 @@ class BaseModel(db.Model):
 
         .. code-block:: python
 
-            class Person(BaseModel):
-                name = db.Column(db.String(100), primary_key=True)
-
-            person = Person(name='bob')
-            person.update(name='john')
-            assert person.name == 'john'
+            >>> class Person(BaseModel):
+            ...    name = db.Column(db.String(100), primary_key=True)
+            ...
+            >>> person = Person(name='bob')
+            >>> person.update(name='john')
+            >>> person.name
+            'john'
 
         If all specified values are the same with the current values, no
         assignment occurs so that ``db.session.dirty`` is not changed.
@@ -49,12 +50,12 @@ class BaseModel(db.Model):
 
         .. code-block:: python
 
-            class Person(BaseModel):
-                name = db.Column(db.String(100), primary_key=True)
-                age = db.Column(db.Integer)
-
-            assert (Person(name='bob', age=24).as_dict() ==
-                    {'name': 'bob', 'age': 24})
+            >>> class Person(BaseModel):
+            ...    name = db.Column(db.String(100), primary_key=True)
+            ...    age = db.Column(db.Integer)
+            ...
+            >>> Person(name='bob', age=24).as_dict()
+            {'name': 'bob', 'age': 24}
 
         """
         return dict((k, getattr(self, k)) for k in self._column_names())
