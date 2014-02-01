@@ -67,6 +67,12 @@ class BaseModel(db.Model):
             model_name=self.__mapper__.class_.__name__,
             values=values)
 
+    def __eq__(self, other):
+        if self.__class__ != other.__class__:
+            return False
+        return all(getattr(self, name) == getattr(other, name)
+                   for name in self._column_names())
+
     class Query(BaseQuery):
 
         def find(self, **kwargs):

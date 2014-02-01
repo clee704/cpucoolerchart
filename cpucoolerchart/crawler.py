@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 import itertools
 import json
 import logging
-from operator import itemgetter
 import re
 
 from flask import current_app
@@ -100,6 +99,22 @@ def warn(msg):
 def reset_warnings():
     """Resets the warning counter used by :func:`warn`."""
     _warnings.clear()
+
+
+def dictitemgetter(*args):
+    """Similar to :func:`operator.itemgetter` but non-existent items are set
+    to ``None``. Example:
+
+    .. code-block:: python
+
+        >>> dictitemgetter('a', 'b', 'c')({'a': 1, 'b': 2, 'd': 3})
+        (1, 2, None)
+
+    """
+    def getter(mapping):
+        rv = tuple(mapping.get(key) for key in args)
+        return rv if len(rv) > 1 else rv[0]
+    return getter
 
 
 def heatsinks_with_maker_names():
@@ -240,7 +255,7 @@ def fetch_measurement_data():
                      exc_info=True)
                 return []  # Do not return partially fetched data list
             data_list.extend(new_data_list)
-    data_list.sort(key=itemgetter(*ORDER_BY))
+    data_list.sort(key=dictitemgetter(*ORDER_BY))
     data_list = ensure_consistency(data_list)
     return data_list
 
@@ -429,7 +444,7 @@ def ensure_consistency(data_list):
 
 
 def update_measurement_data(data_list):
-    groups = itertools.groupby(data_list, itemgetter('maker'))
+    groups = itertools.groupby(data_list, dictitemgetter('maker'))
     maker_ids = set()
     for maker_name, data_sublist in groups:
         maker_id = update_maker(data_sublist, maker_name)
@@ -453,7 +468,7 @@ def update_maker(data_list, maker_name):
     else:
         maker.update(**data)
 
-    groups = itertools.groupby(data_list, itemgetter(
+    groups = itertools.groupby(data_list, dictitemgetter(
         'model', 'width', 'depth', 'height', 'heatsink_type', 'weight'))
     heatsink_ids = set()
     for heatsink_data, data_sublist in groups:
@@ -483,7 +498,7 @@ def update_heatsink(data_list, maker, model_name, width, depth, height,
     else:
         heatsink.update(**data)
 
-    groups = itertools.groupby(data_list, itemgetter(
+    groups = itertools.groupby(data_list, dictitemgetter(
         'fan_size', 'fan_thickness', 'fan_count'))
     fan_config_ids = set()
     for fan_config_data, data_sublist in groups:
@@ -530,12 +545,12 @@ def update_fan_config(data_list, heatsink, fan_size, fan_thickness, fan_count):
 
 
 def update_measurement(fan_config, data):
-    keys = dict((k, data[k]) for k in ('noise', 'power'))
+    keys = dict((k, data[k]) for k in ('noise', 'power') if k in data)
     keys['fan_config_id'] = fan_config.id
     data = dict((k, data[k]) for k in ('noise', 'power', 'noise_actual_min',
                                        'noise_actual_max', 'rpm_min',
                                        'rpm_max', 'cpu_temp_delta',
-                                       'power_temp_delta'))
+                                       'power_temp_delta') if k in data)
     data['fan_config'] = fan_config
     measurement = Measurement.query.find(**keys)
     if measurement is None:
