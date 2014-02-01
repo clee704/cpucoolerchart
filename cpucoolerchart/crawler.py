@@ -36,10 +36,10 @@ __all__ = ['is_update_needed', 'is_update_running', 'set_update_running',
 NOISE_MAX = 100
 
 #: Noise levels for which the measurements are taken
-NOISE_LEVELS = {35: 4, 40: 3, 45: 2, NOISE_MAX: 1}
+NOISE_LEVELS = [35, 40, 45, NOISE_MAX]
 
 #: CPU power consumptions for which the measurements are taken
-CPU_POWER = {62: 1, 92: 2, 150: 3, 200: 4}
+CPU_POWER = [62, 92, 150, 200]
 
 #: Default sorting order for measurement data
 ORDER_BY = ('maker', 'model', 'fan_size', 'fan_thickness', 'fan_count',
@@ -172,8 +172,10 @@ def fetch_measurement_data():
 def get_html_table(noise, power):
     URL_FMT = ('http://www.coolenjoy.net/cooln_db/cpucooler_charts.php?'
                'dd={noise}&test={power}')
-    html = get_cached_response_text(URL_FMT.format(noise=NOISE_LEVELS[noise],
-                                                   power=CPU_POWER[power]))
+    noise_mapping = {35: 4, 40: 3, 45: 2, NOISE_MAX: 1}
+    cpu_mapping = {62: 1, 92: 2, 150: 3, 200: 4}
+    html = get_cached_response_text(URL_FMT.format(noise=noise_mapping[noise],
+                                                   power=cpu_mapping[power]))
     doc = lxml.html.fromstring(html)
     table_xpath = doc.xpath('//table[@width="680"][@bordercolorlight="black"]')
     if not table_xpath:
