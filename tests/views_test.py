@@ -65,7 +65,7 @@ class TestViews(object):
                 ['GET', 'HEAD', 'OPTIONS', 'PUT'])
 
         resp = client.options('/foo')
-        assert resp.data == '.'
+        assert resp.data == b'.'
         assert resp.headers['Allow'] == 'GET, OPTIONS, HEAD'
         assert (resp.headers['Access-Control-Allow-Origin'] ==
                 'http://foo.bar, http://foo2.bar')
@@ -74,7 +74,7 @@ class TestViews(object):
         assert resp.headers['Access-Control-Max-Age'] == '36000'
 
         resp = client.get('/foo')
-        assert resp.data == 'foo'
+        assert resp.data == b'foo'
         assert 'Access-Control-Allow-Origin' not in resp.headers
 
     def test_view_cache(self):
