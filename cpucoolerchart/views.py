@@ -379,7 +379,7 @@ def export_data(delim=','):
         Maker, Maker.id == Heatsink.maker_id).order_by(
         Maker.name, Heatsink.name, FanConfig.fan_size,
         FanConfig.fan_thickness, FanConfig.fan_count, Measurement.noise,
-        Measurement.power, Measurement.noise_actual_min).all()
+        Measurement.power, Measurement.noise_actual_min)
 
     def convert(x):
         if x is None:
