@@ -8,7 +8,7 @@ from cpucoolerchart._compat import to_native
 from cpucoolerchart.extensions import db, cache
 import cpucoolerchart.views
 
-from .conftest import app, read_data, fill_data
+from .conftest import app, read_file, fill_data
 
 
 class TestViews(object):
@@ -166,7 +166,7 @@ class TestViews(object):
         fill_data()
         r = self.client.get('/all')
         assert r.status_code == 200
-        assert r.data + b'\n' == read_data('mock.csv')
+        assert r.data + b'\n' == read_file('mock.csv')
 
     def test_view_func_update(self):
         cpucoolerchart.views.is_update_needed = mock.Mock(return_value=True)

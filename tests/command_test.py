@@ -7,7 +7,7 @@ from cpucoolerchart.command import export, resetdb
 from cpucoolerchart.extensions import db
 from cpucoolerchart.models import Maker
 
-from .conftest import read_data, fill_data
+from .conftest import read_file, fill_data
 
 
 def test_export(app, capsys):
@@ -16,7 +16,7 @@ def test_export(app, capsys):
         fill_data()
         export('\t')
         out, err = capsys.readouterr()
-        assert to_bytes(out) == read_data('mock.tsv')
+        assert to_bytes(out) == read_file('mock.tsv')
 
 
 def test_resetdb(app):

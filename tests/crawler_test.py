@@ -3,14 +3,14 @@ import io
 from cpucoolerchart import crawler
 from cpucoolerchart._compat import http, urllib
 
-from .conftest import read_data
+from .conftest import read_file
 
 
 class MockHTTPHandler(urllib.request.HTTPHandler):
 
     mock_urls = {
         'http://www.coolenjoy.net/cooln_db/cpucooler_charts.php?dd=3&test=3':
-        (200, 'text/html', read_data('coolenjoy_dd=3_test=3.html')),
+        (200, 'text/html', read_file('coolenjoy_dd=3_test=3.html')),
     }
 
     def http_open(self, req):

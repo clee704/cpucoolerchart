@@ -13,7 +13,7 @@ test_settings = {
 }
 
 
-def read_data(name):
+def read_file(name):
     path = os.path.join(os.path.dirname(__file__), 'data', name)
     with open(path) as f:
         return to_bytes(f.read(), 'utf-8')
