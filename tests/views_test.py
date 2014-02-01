@@ -1,6 +1,7 @@
+from datetime import timedelta
 import json
 
-from flask import Flask
+from flask import Flask, request, make_response
 import mock
 from cpucoolerchart import crawler
 from cpucoolerchart._compat import to_native
@@ -39,6 +40,21 @@ class TestViews(object):
         def index():
             return 'Hello, world!'
 
+        @app.route('/foo', methods=('GET', 'OPTIONS'))
+        @cpucoolerchart.views.crossdomain(
+            origin=('http://foo.bar', 'http://foo2.bar'),
+            methods=('GET',),
+            headers=('X-FOO', 'X-BAR'),
+            max_age=timedelta(hours=10),
+            automatic_options=False,
+            attach_to_all=False,
+        )
+        def foo():
+            if request.method == 'OPTIONS':
+                return make_response('.', 200, {'Allow': 'GET, OPTIONS, HEAD'})
+            else:
+                return 'foo'
+
         resp = client.get('/')
         assert resp.headers['Access-Control-Allow-Origin'] == 'http://foo.bar'
 
@@ -47,6 +63,19 @@ class TestViews(object):
         assert (sorted(resp.headers['Access-Control-Allow-Methods']
                            .split(', ')) ==
                 ['GET', 'HEAD', 'OPTIONS', 'PUT'])
+
+        resp = client.options('/foo')
+        assert resp.data == '.'
+        assert resp.headers['Allow'] == 'GET, OPTIONS, HEAD'
+        assert (resp.headers['Access-Control-Allow-Origin'] ==
+                'http://foo.bar, http://foo2.bar')
+        assert resp.headers['Access-Control-Allow-Methods'] == 'GET'
+        assert resp.headers['Access-Control-Allow-Headers'] == 'X-FOO, X-BAR'
+        assert resp.headers['Access-Control-Max-Age'] == '36000'
+
+        resp = client.get('/foo')
+        assert resp.data == 'foo'
+        assert 'Access-Control-Allow-Origin' not in resp.headers
 
     def test_view_cache(self):
         r = self.client.get('/makers')
@@ -140,39 +169,49 @@ class TestViews(object):
         assert r.data + b'\n' == read_data('mock.csv')
 
     def test_view_func_update(self):
-        heroku = cpucoolerchart.views.heroku = mock.Mock()
-        heroku.from_key = mock.MagicMock()
         cpucoolerchart.views.is_update_needed = mock.Mock(return_value=True)
 
-        self.app.config['HEROKU_API_KEY'] = '12345678'
-        self.app.config['HEROKU_APP_NAME'] = 'foobar'
+        r = self.client.post('/update')
+        assert r.status_code == 503
+        assert (json.loads(to_native(r.data))['msg'] ==
+                'Heroku API key is not set')
 
+        self.app.config['HEROKU_API_KEY'] = '12345678'
+        r = self.client.post('/update')
+        assert r.status_code == 503
+        assert (json.loads(to_native(r.data))['msg'] ==
+                'Heroku app name is not set')
+
+        self.app.config['HEROKU_APP_NAME'] = 'foobar'
+        r = self.client.post('/update')
+        assert r.status_code == 503
+        assert json.loads(to_native(r.data))['msg'].startswith(
+            'heroku is not installed.')
+
+        heroku = cpucoolerchart.views.heroku = mock.Mock()
+        heroku.from_key = mock.MagicMock()
         r = self.client.post('/update')
         assert r.status_code == 202
-        data = json.loads(to_native(r.data))
-        assert data['msg'] == 'process started'
+        assert json.loads(to_native(r.data))['msg'] == 'process started'
         heroku.from_key.assert_called_with('12345678')
         heroku.from_key.reset_mock()
         assert cpucoolerchart.views.is_update_running()
 
         r = self.client.post('/update')
         assert r.status_code == 202
-        data = json.loads(to_native(r.data))
-        assert data['msg'] == 'already running'
+        assert json.loads(to_native(r.data))['msg'] == 'already running'
         assert heroku.from_key.call_count == 0
 
         crawler.unset_update_running()
         cpucoolerchart.views.is_update_needed.return_value = False
         r = self.client.post('/update')
         assert r.status_code == 202
-        data = json.loads(to_native(r.data))
-        assert data['msg'] == 'already up to date'
+        assert json.loads(to_native(r.data))['msg'] == 'already up to date'
         assert heroku.from_key.call_count == 0
 
         cpucoolerchart.views.is_update_needed.return_value = True
         heroku.from_key.side_effect = RuntimeError
         r = self.client.post('/update')
         assert r.status_code == 500
-        data = json.loads(to_native(r.data))
-        assert data['msg'] == 'failed'
+        assert json.loads(to_native(r.data))['msg'] == 'failed'
         assert not cpucoolerchart.views.is_update_running()
