@@ -22,6 +22,7 @@ install_requires = [
     'Flask-SQLAlchemy == 1.0',
     'Flask-Cache == 0.12' if PY2 else 'Flask-Cache-Latest == 0.12',
     'Flask-Script == 0.6.6',
+    'celery == 3.1.8',
 ]
 dependency_links = []
 

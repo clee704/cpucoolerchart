@@ -15,8 +15,13 @@ and the web client part. You can find the web part at
 Install
 -------
 
-CPU Cooler Chart depends on lxml_. You need to install liblxml2
-and libxslt to install lxml. For more information, see `Installing lxml`_.
+CPU Cooler Chart depends on lxml_, which in turn depends on liblxml2
+and libxslt. You can install these with following commands.
+
+- Debian/Ubuntu: ``sudo apt-get install libxml2-dev libxslt1-dev``
+- Mac OS X (with Homebrew_): ``brew install libxml2 libxslt``
+
+For more information, see `Installing lxml`_.
 
 If you are ready to install lxml, you can install CPU Cooler Chart. There are
 many ways to do that but using pip is recommended:
@@ -29,6 +34,7 @@ Currently ``--pre`` argument is needed but it will be unnecessary once a
 non-developmental release is out.
 
 .. _lxml: http://lxml.de
+.. _Homebrew: http://brew.sh
 .. _Installing lxml: http://lxml.de/installation.html
 
 
