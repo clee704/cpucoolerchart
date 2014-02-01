@@ -1,3 +1,4 @@
+from __future__ import division
 import sys
 
 
@@ -73,5 +74,12 @@ else:
 
 if PY26:
     from ordereddict import OrderedDict
+
+    def total_seconds(td):
+        return (td.microseconds + (td.seconds + td.days * 24 * 3600) *
+            10 ** 6) / 10 ** 6
 else:
     from collections import OrderedDict
+
+    def total_seconds(td):
+        return td.total_seconds()

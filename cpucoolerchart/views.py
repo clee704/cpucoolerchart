@@ -17,7 +17,7 @@ try:
 except ImportError:
     heroku = None
 
-from ._compat import text_type, string_types
+from ._compat import text_type, string_types, total_seconds
 from .crawler import (is_update_needed, is_update_running, set_update_running,
                       unset_update_running, update_data)
 from .extensions import db, cache
@@ -67,7 +67,7 @@ def crossdomain(origin=None, methods=None, headers=None,
     if headers is not None and not isinstance(headers, string_types):
         headers = ', '.join(x.upper() for x in headers)
     if isinstance(max_age, timedelta):
-        max_age = int(max_age.total_seconds())
+        max_age = int(total_seconds(max_age))
 
     def get_methods():
         if methods is not None:
