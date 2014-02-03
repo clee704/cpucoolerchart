@@ -49,8 +49,8 @@ Before running the web server, you must initialize a database:
 
 It will make a SQLite database at ``instance/development.db`` under the current
 directory. Although not tested, there is no restrictions on the choice of
-the database to use as long as SQLAlchemy_ supports it. See Config_ for how to
-change database options.
+the database to use as long as SQLAlchemy_ supports it. See Configuration_ for
+how to change database options.
 
 Now the database is ready and empty. Run the following command to fill it with
 data:
@@ -89,7 +89,7 @@ app there:
     })
 
 .. _SQLAlchemy: http://www.sqlalchemy.org
-.. _Config: http://cpucoolerchart.readthedocs.org/en/latest/#config
+.. _Configuration: http://cpucoolerchart.readthedocs.org/en/latest/#configuration
 .. _Coolenjoy: http://www.coolenjoy.net
 .. _Danawa: http://danawa.co.kr
 .. _views.py: cpucoolerchart/views.py

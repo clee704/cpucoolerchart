@@ -18,9 +18,8 @@ except ImportError:
     heroku = None
 
 from ._compat import text_type, string_types, total_seconds
-from .crawler import (is_update_needed, is_update_running, set_update_running,
-                      unset_update_running, update_data)
-from .extensions import db, cache
+from .crawler import is_update_needed, update_data
+from .extensions import db, cache, update_queue
 from .models import Maker, Heatsink, FanConfig, Measurement
 
 
@@ -404,8 +403,17 @@ def all():
 
 @views.route('/update', methods=['POST'])
 def update():
-    """Requests the server to update data. Currently it is supported only when
-    the server is deployed on Heroku.
+    """Enqueues an update job so that a worker process update the database.
+    This feature is enabled when ``USE_QUEUE`` is ``True``. To process enqueued
+    jobs, run a worker process (``cpucoolerchart runworker``).
+
+    There is a special feature that starts a worker process to reduce the
+    server cost. Only Heroku is supported for now. Set ``START_WORKER_NODE``
+    to ``'heroku'`` and ``HEROKU_API_KEY`` and ``HEROKU_APP_NAME`` to your
+    Heroku API key and app name respectively.
+
+    To prevent DDoS attacks, it cannot be requested more frequently than once
+    per 5 minutes, when ``app.debug`` is ``False``.
 
     **Example request**:
 
@@ -433,11 +441,14 @@ def update():
     +------------------------+------------------------------------------------+
     | message                | description                                    |
     +========================+================================================+
-    | process started        | an update worker has started by the request    |
+    | process started        | An update job is enqueued and a worker process |
+    |                        | has started                                    |
     +------------------------+------------------------------------------------+
-    | already running        | an update worker is already running            |
+    | too many requests      | There was a request within the last 5 minutes  |
     +------------------------+------------------------------------------------+
     | already up to date     | data is already up to date                     |
+    +------------------------+------------------------------------------------+
+    | invalid worker type    | worker type is other than ``"heroku"``         |
     +------------------------+------------------------------------------------+
     | Heroku API key is not  | ``HEROKU_API_KEY`` is not set in config        |
     | set                    |                                                |
@@ -445,20 +456,50 @@ def update():
     | Heroku app name is not | ``HEROKU_APP_NAME`` is not set in config       |
     | set                    |                                                |
     +------------------------+------------------------------------------------+
-    | heroku is not          | :mod:`heroku` is not installed on your dyno.   |
-    | installed. Add heroku  |                                                |
+    | heroku is not          | :mod:`heroku` Python module is not installed   |
+    | installed. Add heroku  | on your dyno.                                  |
     | to your                |                                                |
     | requirements.txt       |                                                |
     +------------------------+------------------------------------------------+
-    | failed                 | an error occurred during starting an update    |
-    |                        | worker                                         |
+    | failed to enqueue a    | an error occurred during enqueuing a job       |
+    | job                    |                                                |
+    +------------------------+------------------------------------------------+
+    | failed to start a      | an error occurred during starting a worker     |
+    | worker                 |                                                |
     +------------------------+------------------------------------------------+
 
-    :status 202: update is started or already running or already up to date
-    :status 500: an error occurred during starting an update worker
-    :status 503: server is not configured to update data via HTTP
+    :status 202: an update job is enqueued and a worker process has started
+    :status 404: the app is not configured to update data via HTTP
+    :status 429: there was a request within the last 5 minutes
+    :status 500: an error occurred during enqueuing a job or starting a worker
+    :status 503: worker settings are not valid
 
     """
+    if not current_app.config.get('USE_QUEUE'):
+        return jsonify(
+            msg='the app is not configured to update data via HTTP'), 404
+
+    if not current_app.debug:
+        if cache.get('update_last_requested'):
+            return jsonify(msg='too many requests'), 429
+        cache.set('update_last_requested', True, timeout=300)
+
+    if not is_update_needed():
+        return jsonify(msg='already up to date'), 202
+
+    try:
+        update_queue.enqueue_call(update_data, result_ttl=0)
+    except Exception:
+        current_app.logger.exception('An error occurred during enqueuing')
+        return jsonify(msg='failed to enqueue a job'), 500
+
+    worker_type = current_app.config.get('START_WORKER_NODE')
+    if not worker_type:
+        return jsonify(msg='process started'), 202
+
+    if worker_type != 'heroku':
+        return jsonify(msg='invalid worker type'), 503
+
     if not current_app.config.get('HEROKU_API_KEY'):
         return jsonify(msg='Heroku API key is not set'), 503
     elif not current_app.config.get('HEROKU_APP_NAME'):
@@ -467,19 +508,11 @@ def update():
         return jsonify(msg='heroku is not installed. '
                        'Add heroku to your requirements.txt'), 503
 
-    if is_update_needed():
-        if is_update_running():
-            return jsonify(msg='already running'), 202
-        else:
-            set_update_running()
-            try:
-                client = heroku.from_key(current_app.config['HEROKU_API_KEY'])
-                herokuapp = client.apps[current_app.config['HEROKU_APP_NAME']]
-                herokuapp.processes.add('update')
-                return jsonify(msg='process started'), 202
-            except Exception:
-                current_app.logger.exception("Couldn't start heroku process")
-                unset_update_running()
-                return jsonify(msg='failed'), 500
-    else:
-        return jsonify(msg='already up to date'), 202
+    try:
+        client = heroku.from_key(current_app.config['HEROKU_API_KEY'])
+        herokuapp = client.apps[current_app.config['HEROKU_APP_NAME']]
+        herokuapp.processes.add(current_app.config['HEROKU_WORKER_NAME'])
+        return jsonify(msg='process started'), 202
+    except Exception:
+        current_app.logger.exception("Couldn't start heroku process")
+        return jsonify(msg='failed to start a worker'), 500

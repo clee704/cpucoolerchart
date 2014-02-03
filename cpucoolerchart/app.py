@@ -11,7 +11,7 @@ import os
 from flask import Flask
 
 from ._compat import string_types, iteritems
-from .extensions import db, cache
+from .extensions import db, cache, redis
 from .views import views
 
 
@@ -32,8 +32,12 @@ DEFAULT_CONFIG = dict(
     CACHE_KEY_PREFIX='cpucoolerchart:',
     ACCESS_CONTROL_ALLOW_ORIGIN='*',
     UPDATE_INTERVAL=86400,
-    DANAWA_API_KEY_SEARCH=None,
     DANAWA_API_KEY_PRODUCT_INFO=None,
+    DANAWA_API_KEY_SEARCH=None,
+    USE_QUEUE=False,
+    RQ_URL=None,
+    START_WORKER_NODE=None,
+    HEROKU_WORKER_NAME='worker',
     HEROKU_API_KEY=None,
     HEROKU_APP_NAME=None,
 )
@@ -84,6 +88,9 @@ def create_app(config=None):
 
     db.init_app(app)
     cache.init_app(app)
+    if app.config.get('USE_QUEUE'):
+        redis.init_app(app)
+
     app.register_blueprint(views)
 
     return app

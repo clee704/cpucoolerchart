@@ -57,9 +57,11 @@ else:
     import types
     import urllib as urllib_old
     import urllib2
+    import urlparse
     urllib = types.ModuleType('urllib')
     urllib.parse = types.ModuleType('urllib.parse')
     urllib.parse.urlencode = urllib_old.urlencode
+    urllib.parse.urlparse = urlparse.urlparse
     urllib.request = types.ModuleType('urllib.request')
     urllib.request.urlopen = urllib2.urlopen
     urllib.request.install_opener = urllib2.install_opener

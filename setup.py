@@ -21,11 +21,14 @@ install_requires = [
     'Flask-SQLAlchemy == 1.0',
     'Flask-Cache == 0.12' if PY2 else 'Flask-Cache-Latest == 0.12',
     'Flask-Script == 0.6.6',
+    'redis == 2.9.0',
+    'rq == 0.3.13',
 ]
 dependency_links = []
 
 if PY26:
     install_requires.append('ordereddict == 1.1')
+    install_requires.append('importlib == 1.0.3')  # required by rq
 
 
 def readme():
@@ -66,7 +69,6 @@ setup(
         'pytest-pep8 == 1.0.5',
         'pytest-cov == 1.6',
         'mock == 1.0.1',
-        'redis == 2.9.0',
     ],
     cmdclass={'test': pytest},
     entry_points={

@@ -5,6 +5,7 @@ from flask import Flask, request, make_response
 import mock
 from cpucoolerchart import crawler
 from cpucoolerchart._compat import to_native
+from cpucoolerchart.crawler import update_data
 from cpucoolerchart.extensions import db, cache
 import cpucoolerchart.views
 
@@ -170,18 +171,29 @@ class TestViews(object):
 
     def test_view_func_update(self):
         cpucoolerchart.views.is_update_needed = mock.Mock(return_value=True)
+        cpucoolerchart.views.update_queue = mock.Mock()
 
         r = self.client.post('/update')
-        assert r.status_code == 503
+        assert r.status_code == 404
         assert (json.loads(to_native(r.data))['msg'] ==
-                'Heroku API key is not set')
+                'the app is not configured to update data via HTTP')
 
+        self.app.debug = False
+        self.app.config['USE_QUEUE'] = True
+        r = self.client.post('/update')
+        assert r.status_code == 202
+        assert json.loads(to_native(r.data))['msg'] == 'process started'
+        cpucoolerchart.views.update_queue.enqueue_call.assert_called_with(
+            update_data, result_ttl=0)
+        cpucoolerchart.views.update_queue.enqueue_call.reset_mock()
+
+        r = self.client.post('/update')
+        assert r.status_code == 429
+        assert json.loads(to_native(r.data))['msg'] == 'too many requests'
+
+        self.app.debug = True
+        self.app.config['START_WORKER_NODE'] = 'heroku'
         self.app.config['HEROKU_API_KEY'] = '12345678'
-        r = self.client.post('/update')
-        assert r.status_code == 503
-        assert (json.loads(to_native(r.data))['msg'] ==
-                'Heroku app name is not set')
-
         self.app.config['HEROKU_APP_NAME'] = 'foobar'
         r = self.client.post('/update')
         assert r.status_code == 503
@@ -193,25 +205,15 @@ class TestViews(object):
         r = self.client.post('/update')
         assert r.status_code == 202
         assert json.loads(to_native(r.data))['msg'] == 'process started'
+        cpucoolerchart.views.update_queue.enqueue_call.assert_called_with(
+            update_data, result_ttl=0)
+        cpucoolerchart.views.update_queue.enqueue_call.reset_mock()
         heroku.from_key.assert_called_with('12345678')
         heroku.from_key.reset_mock()
-        assert cpucoolerchart.views.is_update_running()
 
-        r = self.client.post('/update')
-        assert r.status_code == 202
-        assert json.loads(to_native(r.data))['msg'] == 'already running'
-        assert heroku.from_key.call_count == 0
-
-        crawler.unset_update_running()
         cpucoolerchart.views.is_update_needed.return_value = False
         r = self.client.post('/update')
         assert r.status_code == 202
         assert json.loads(to_native(r.data))['msg'] == 'already up to date'
+        assert cpucoolerchart.views.update_queue.enqueue_call.call_count == 0
         assert heroku.from_key.call_count == 0
-
-        cpucoolerchart.views.is_update_needed.return_value = True
-        heroku.from_key.side_effect = RuntimeError
-        r = self.client.post('/update')
-        assert r.status_code == 500
-        assert json.loads(to_native(r.data))['msg'] == 'failed'
-        assert not cpucoolerchart.views.is_update_running()

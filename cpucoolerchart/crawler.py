@@ -28,8 +28,7 @@ from .models import Maker, Heatsink, FanConfig, Measurement
 
 
 __all__ = ['NOISE_MAX', 'NOISE_LEVELS', 'CPU_POWER', 'ORDER_BY',
-           'DEPENDENCIES', 'is_update_needed', 'is_update_running',
-           'set_update_running', 'unset_update_running', 'update_data',
+           'DEPENDENCIES', 'is_update_needed', 'update_data',
            'print_danawa_results']
 
 
@@ -187,6 +186,8 @@ def update_data(force=False):
         else:
             set_update_running()
             do_update_data()
+    except Exception:
+        _log('exception', 'There was an error during updating data.')
     finally:
         unset_update_running()
 
