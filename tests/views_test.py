@@ -9,6 +9,7 @@ from cpucoolerchart._compat import to_native
 from cpucoolerchart.crawler import update_data
 from cpucoolerchart.extensions import db, cache
 from cpucoolerchart.views import crossdomain
+import cpucoolerchart.views
 
 from .conftest import app, read_file, fill_data
 
@@ -170,11 +171,12 @@ class TestViews(object):
         assert r.status_code == 200
         assert r.data + b'\n' == read_file('mock.csv')
 
-    @patch('heroku.from_key', autospec=True)
     @patch('cpucoolerchart.views.update_queue')
     @patch('cpucoolerchart.views.is_update_needed', autospec=True)
-    def test_view_func_update(self, is_update_needed, update_queue, from_key):
+    def test_view_func_update(self, is_update_needed, update_queue):
         is_update_needed.return_value = True
+        cpucoolerchart.views.heroku = MagicMock()
+        from_key = cpucoolerchart.views.heroku.from_key
 
         self.app.config['USE_QUEUE'] = False
         r = self.client.post('/update')

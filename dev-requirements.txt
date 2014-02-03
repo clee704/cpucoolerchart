@@ -20,7 +20,6 @@ pytest-cov == 1.6
 pytest-pep8 == 1.0.5
 mock == 1.0.1
 fakeredis-fix == 0.4.1
-heroku == 0.1.4
 
 tox == 1.7.0
 virtualenv == 1.11.2

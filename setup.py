@@ -73,7 +73,6 @@ setup(
         'pytest-pep8 == 1.0.5',
         'mock == 1.0.1',
         'fakeredis-fix == 0.4.1',
-        'heroku == 0.1.4',
     ],
     cmdclass={'test': pytest},
     entry_points={
