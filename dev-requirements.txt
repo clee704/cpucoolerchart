@@ -5,14 +5,12 @@
 # Note that it assumes you are using Python 2.7. If you are on Python 3.3,
 # Remove Flask-Cache and install Flask-Cache-Latest instead.
 
-requests==2.2.0
 lxml==3.3.0
 prettytable==0.7.2
 Flask==0.10.1
 Flask-SQLAlchemy==1.0
 Flask-Script==0.6.6
 Flask-Cache==0.12
-celery==3.1.8
 pytest==2.5.1
 pytest-cov==1.6
 pytest-pep8==1.0.5
