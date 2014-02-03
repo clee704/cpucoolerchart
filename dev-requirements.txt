@@ -5,20 +5,26 @@
 # Note that it assumes you are using Python 2.7. If you are on Python 3.3,
 # Remove Flask-Cache and install Flask-Cache-Latest instead.
 
-lxml==3.3.0
-prettytable==0.7.2
-Flask==0.10.1
-Flask-SQLAlchemy==1.0
-Flask-Script==0.6.6
-Flask-Cache==0.12
-pytest==2.5.1
-pytest-cov==1.6
-pytest-pep8==1.0.5
-redis==2.9.0
-rq==0.3.13
-Sphinx==1.2.1
-sphinx-rtd-theme==0.1.5
-sphinxcontrib-httpdomain==1.2.0
-tox==1.7.0
-virtualenv==1.11.2
-mock==1.0.1
+lxml == 3.3.0
+prettytable == 0.7.2
+Flask == 0.10.1
+Flask-SQLAlchemy == 1.0
+Flask-Cache == 0.12
+Flask-Script == 0.6.6
+redis == 2.9.0
+rq == 0.3.13
+python-dateutil == 2.2
+
+pytest == 2.5.1
+pytest-cov == 1.6
+pytest-pep8 == 1.0.5
+mock == 1.0.1
+fakeredis-fix == 0.4.1
+heroku == 0.1.4
+
+tox == 1.7.0
+virtualenv == 1.11.2
+
+Sphinx == 1.2.1
+sphinx-rtd-theme == 0.1.5
+sphinxcontrib-httpdomain == 1.2.0

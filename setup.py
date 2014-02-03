@@ -23,6 +23,9 @@ install_requires = [
     'Flask-Script == 0.6.6',
     'redis == 2.9.0',
     'rq == 0.3.13',
+
+    # Used by rq; latest version is required to support Python 3.3.
+    'python-dateutil == 2.2',
 ]
 dependency_links = []
 
@@ -66,9 +69,11 @@ setup(
     dependency_links=dependency_links,
     tests_require=[
         'pytest == 2.5.1',
-        'pytest-pep8 == 1.0.5',
         'pytest-cov == 1.6',
+        'pytest-pep8 == 1.0.5',
         'mock == 1.0.1',
+        'fakeredis-fix == 0.4.1',
+        'heroku == 0.1.4',
     ],
     cmdclass={'test': pytest},
     entry_points={

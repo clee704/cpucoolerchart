@@ -9,7 +9,6 @@ PY26 = sys.version_info < (2, 7)
 if not PY2:
     text_type = str
     string_types = (str,)
-    unichr = chr
 
     def to_bytes(x, charset=sys.getdefaultencoding(), errors='strict'):
         if x is None:
@@ -18,7 +17,7 @@ if not PY2:
             return bytes(x)
         if isinstance(x, str):
             return x.encode(charset, errors)
-        raise TypeError('expected bytes, not ' + type(x).__name__)
+        raise TypeError('expected bytes or str, not ' + type(x).__name__)
 
     def to_native(x, charset=sys.getdefaultencoding(), errors='strict'):
         if x is None or isinstance(x, str):
@@ -34,7 +33,6 @@ if not PY2:
 else:
     text_type = unicode
     string_types = (str, unicode)
-    unichr = unichr
 
     def to_bytes(x, charset=sys.getdefaultencoding(), errors='strict'):
         if x is None:
@@ -43,7 +41,7 @@ else:
             return bytes(x)
         if isinstance(x, unicode):
             return x.encode(charset, errors)
-        raise TypeError('expected bytes, not ' + type(x).__name__)
+        raise TypeError('expected bytes or unicode, not ' + type(x).__name__)
 
     def to_native(x, charset=sys.getdefaultencoding(), errors='strict'):
         if x is None or isinstance(x, str):
@@ -79,7 +77,7 @@ if PY26:
 
     def total_seconds(td):
         return (td.microseconds + (td.seconds + td.days * 24 * 3600) *
-            10 ** 6) / 10 ** 6
+                10 ** 6) / 10 ** 6
 else:
     from collections import OrderedDict
 

@@ -480,9 +480,9 @@ def update():
             msg='the app is not configured to update data via HTTP'), 404
 
     if not current_app.debug:
-        if cache.get('update_last_requested'):
+        if cache.get('prevent_further_requests'):
             return jsonify(msg='too many requests'), 429
-        cache.set('update_last_requested', True, timeout=300)
+        cache.set('prevent_further_requests', True, timeout=300)
 
     if not is_update_needed():
         return jsonify(msg='already up to date'), 202

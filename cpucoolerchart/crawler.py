@@ -9,7 +9,7 @@
 
 from __future__ import print_function
 import base64
-from datetime import datetime, timedelta
+from datetime import datetime
 import itertools
 import json
 import logging
@@ -148,18 +148,14 @@ def is_update_needed():
     update.
 
     """
-    last_updated = cache.get('last_updated')
-    if not last_updated:
-        return True
-    interval = current_app.config['UPDATE_INTERVAL']
-    return last_updated <= datetime.now() - timedelta(seconds=interval)
+    return not cache.get('up_to_date')
 
 
 def is_update_running():
     """Returns ``True`` if an update process or thread is running.
 
     """
-    return cache.get('update_running')
+    return bool(cache.get('update_running'))
 
 
 def set_update_running():
@@ -186,6 +182,8 @@ def update_data(force=False):
         else:
             set_update_running()
             do_update_data()
+            cache.set('up_to_date', True,
+                      timeout=current_app.config['UPDATE_INTERVAL'])
     except Exception:
         _log('exception', 'There was an error during updating data.')
     finally:
@@ -204,8 +202,6 @@ def do_update_data():
     else:
         update_measurement_data(data_list)
         update_danawa_data()
-        cache.set('last_updated', datetime.now(),
-                  timeout=current_app.config['UPDATE_INTERVAL'])
         _log('info', 'Successfully updated data from remote sources')
 
 

@@ -2,12 +2,13 @@ from datetime import timedelta
 import json
 
 from flask import Flask, request, make_response
-import mock
+from mock import patch, MagicMock
+
 from cpucoolerchart import crawler
 from cpucoolerchart._compat import to_native
 from cpucoolerchart.crawler import update_data
 from cpucoolerchart.extensions import db, cache
-import cpucoolerchart.views
+from cpucoolerchart.views import crossdomain
 
 from .conftest import app, read_file, fill_data
 
@@ -37,12 +38,12 @@ class TestViews(object):
         client = app.test_client()
 
         @app.route('/', methods=('GET', 'PUT', 'OPTIONS'))
-        @cpucoolerchart.views.crossdomain()
+        @crossdomain()
         def index():
             return 'Hello, world!'
 
         @app.route('/foo', methods=('GET', 'OPTIONS'))
-        @cpucoolerchart.views.crossdomain(
+        @crossdomain(
             origin=('http://foo.bar', 'http://foo2.bar'),
             methods=('GET',),
             headers=('X-FOO', 'X-BAR'),
@@ -169,51 +170,45 @@ class TestViews(object):
         assert r.status_code == 200
         assert r.data + b'\n' == read_file('mock.csv')
 
-    def test_view_func_update(self):
-        cpucoolerchart.views.is_update_needed = mock.Mock(return_value=True)
-        cpucoolerchart.views.update_queue = mock.Mock()
+    @patch('heroku.from_key', autospec=True)
+    @patch('cpucoolerchart.views.update_queue')
+    @patch('cpucoolerchart.views.is_update_needed', autospec=True)
+    def test_view_func_update(self, is_update_needed, update_queue, from_key):
+        is_update_needed.return_value = True
 
+        self.app.config['USE_QUEUE'] = False
         r = self.client.post('/update')
-        assert r.status_code == 404
         assert (json.loads(to_native(r.data))['msg'] ==
                 'the app is not configured to update data via HTTP')
+        assert r.status_code == 404
 
         self.app.debug = False
         self.app.config['USE_QUEUE'] = True
         r = self.client.post('/update')
-        assert r.status_code == 202
         assert json.loads(to_native(r.data))['msg'] == 'process started'
-        cpucoolerchart.views.update_queue.enqueue_call.assert_called_with(
-            update_data, result_ttl=0)
-        cpucoolerchart.views.update_queue.enqueue_call.reset_mock()
+        assert r.status_code == 202
+        update_queue.enqueue_call.assert_called_with(update_data, result_ttl=0)
+        update_queue.enqueue_call.reset_mock()
 
         r = self.client.post('/update')
-        assert r.status_code == 429
         assert json.loads(to_native(r.data))['msg'] == 'too many requests'
+        assert r.status_code == 429
 
         self.app.debug = True
         self.app.config['START_WORKER_NODE'] = 'heroku'
         self.app.config['HEROKU_API_KEY'] = '12345678'
         self.app.config['HEROKU_APP_NAME'] = 'foobar'
         r = self.client.post('/update')
-        assert r.status_code == 503
-        assert json.loads(to_native(r.data))['msg'].startswith(
-            'heroku is not installed.')
-
-        heroku = cpucoolerchart.views.heroku = mock.Mock()
-        heroku.from_key = mock.MagicMock()
-        r = self.client.post('/update')
-        assert r.status_code == 202
         assert json.loads(to_native(r.data))['msg'] == 'process started'
-        cpucoolerchart.views.update_queue.enqueue_call.assert_called_with(
-            update_data, result_ttl=0)
-        cpucoolerchart.views.update_queue.enqueue_call.reset_mock()
-        heroku.from_key.assert_called_with('12345678')
-        heroku.from_key.reset_mock()
-
-        cpucoolerchart.views.is_update_needed.return_value = False
-        r = self.client.post('/update')
         assert r.status_code == 202
+        update_queue.enqueue_call.assert_called_with(update_data, result_ttl=0)
+        update_queue.enqueue_call.reset_mock()
+        from_key.assert_called_with('12345678')
+        from_key.reset_mock()
+
+        is_update_needed.return_value = False
+        r = self.client.post('/update')
         assert json.loads(to_native(r.data))['msg'] == 'already up to date'
-        assert cpucoolerchart.views.update_queue.enqueue_call.call_count == 0
-        assert heroku.from_key.call_count == 0
+        assert r.status_code == 202
+        assert update_queue.enqueue_call.call_count == 0
+        assert from_key.call_count == 0

@@ -1,4 +1,5 @@
-import mock
+from mock import patch
+
 import cpucoolerchart.cache
 
 
@@ -11,12 +12,11 @@ def test_CompressedRedisCache():
     assert cache.load_object(cache.dump_object({'a': 1})) == {'a': 1}
 
 
-def test_compressedredis():
-    import redis
-    redis.from_url = mock.Mock()
+@patch('redis.from_url', autospec=True)
+def test_compressedredis(from_url):
     config = {
         'CACHE_REDIS_URL': 'redis://user:pass@koi.redistogo.com:9977/'
     }
     cache = cpucoolerchart.cache.compressedredis(None, config, [], {})
-    redis.from_url.assert_called_with(
+    from_url.assert_called_with(
         'redis://user:pass@koi.redistogo.com:9977/', db=None)

@@ -7,6 +7,8 @@
 """
 
 import zlib
+
+import redis
 from werkzeug.contrib.cache import RedisCache
 
 
@@ -59,7 +61,6 @@ def compressedredis(app, config, args, kwargs):
 
     redis_url = config.get('CACHE_REDIS_URL')
     if redis_url:
-        from redis import from_url
-        kwargs['host'] = from_url(redis_url, db=kwargs.pop('db', None))
+        kwargs['host'] = redis.from_url(redis_url, db=kwargs.pop('db', None))
 
     return CompressedRedisCache(*args, **kwargs)
