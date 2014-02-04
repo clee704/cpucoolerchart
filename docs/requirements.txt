@@ -1,1 +1,4 @@
 sphinxcontrib-httpdomain
+
+# Strangely, redis is not installed without the following line.
+redis == 2.9.0
