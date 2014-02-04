@@ -21,6 +21,8 @@ cpucoolerchart.extensions.update_queue = Queue('update', connection=redis,
 tempfile_path = mkstemp()[1]
 
 test_settings = {
+    # Couldn't use in-memory databases since rq.Worker forks child processes
+    # to run enqueued jobs.
     'SQLALCHEMY_DATABASE_URI': 'sqlite:///' + tempfile_path,
     'CACHE_TYPE': 'simple',
     'USE_QUEUE': True,
