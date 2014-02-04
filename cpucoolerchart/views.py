@@ -117,7 +117,6 @@ def makers():
     .. sourcecode:: http
 
        HTTP/1.1 200 OK
-       Vary: Accept
        Content-Type: application/json
 
        {
@@ -168,7 +167,6 @@ def heatsinks():
     .. sourcecode:: http
 
        HTTP/1.1 200 OK
-       Vary: Accept
        Content-Type: application/json
 
        {
@@ -240,7 +238,6 @@ def fan_configs():
     .. sourcecode:: http
 
        HTTP/1.1 200 OK
-       Vary: Accept
        Content-Type: application/json
 
        {
@@ -272,7 +269,7 @@ def fan_configs():
     id               number  Internal identifier for a fan config
     heatsink_id      number  *id* of the corresponding heatsink
     fan_count        number  Number of fans. Note that all fans in a single fan
-                             config are homogeneous.
+                             have the same fan size and thickness.
     fan_size         number  The diameter of a fan in mm
     fan_thickness    number  The thickness of a fan in mm
     ===============  ======  ==================================================
@@ -301,7 +298,6 @@ def measurements():
     .. sourcecode:: http
 
        HTTP/1.1 200 OK
-       Vary: Accept
        Content-Type: application/json
 
        {
@@ -395,7 +391,29 @@ def export_data(delim=','):
 @views.route('/all')
 @cache.cached()
 def all():
-    """Returns all data in CSV format."""
+    """Returns all data in CSV format.
+
+    **Example request**:
+
+    .. sourcecode:: http
+
+       GET /all HTTP/1.1
+       Host: example.com
+       Accept: */*
+
+    **Example response**:
+
+    .. sourcecode:: http
+
+       HTTP/1.1 200 OK
+       Content-Disposition: filename="cooler.csv"
+       Content-Type: text/csv; charset=utf-8
+
+       maker,model,width,depth,height,heatsink_type,weight,price,shop_count,first_seen,fan_size,fan_thickness,fan_count,noise,noise_actual_min,noise_actual_max,rpm_min,rpm_max,power,cpu_temp_delta,power_temp_delta
+       3Rsystem,iCEAGE 120,125.0,100.0,154.0,tower,590.0,,,2007-04-04 16:18:55,120,25,1,35,,,1002,1010,62,50.7,
+       Zalman,ZM-LQ320,,,,tower,195.0,91000,244,2013-01-31 16:57:18,120,25,2,100,58,58,2042,2068,200,60.8,64.5
+
+    """
     resp = Response(export_data(), mimetype='text/csv')
     resp.headers['Content-Disposition'] = 'filename="cooler.csv"'
     return resp
@@ -409,11 +427,11 @@ def update():
 
     There is a special feature that starts a worker process to reduce the
     server cost. Only Heroku is supported for now. Set ``START_WORKER_NODE``
-    to ``'heroku'`` and ``HEROKU_API_KEY`` and ``HEROKU_APP_NAME`` to your
+    to ``"heroku"`` and ``HEROKU_API_KEY`` and ``HEROKU_APP_NAME`` to your
     Heroku API key and app name respectively.
 
     To prevent DDoS attacks, it cannot be requested more frequently than once
-    per 5 minutes, when ``app.debug`` is ``False``.
+    per 5 minutes when ``app.debug`` is ``False``.
 
     **Example request**:
 
@@ -428,7 +446,6 @@ def update():
     .. sourcecode:: http
 
        HTTP/1.1 202 OK
-       Vary: Accept
        Content-Type: application/json
 
        {

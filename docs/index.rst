@@ -134,9 +134,8 @@ HTTP APIs
 All endpoints returning a list of items in JSON format returns an object
 containing two properties *count* and *items*. *count* is the number of
 items in the *items* array. The order of items is undefined and may not in the
-same order for each request. Properties of an item is described in a table.
-When there is an asterisk at the end of a property name, it means
-that the property may have ``null`` as its value.
+same order for each request. Each item has properties described in following
+tables. Properties with an asterisk at the end of its name can be ``null``.
 
 Most of the endpoints are CORS enabled using
 the :func:`~cpucoolerchart.views.crossdomain` decorator.
