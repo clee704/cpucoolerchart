@@ -6,4 +6,4 @@
 """
 
 #: The version number (follows :pep:`440`)
-__version__ = '0.1.dev2'
+__version__ = '0.1rc1'
