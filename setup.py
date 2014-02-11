@@ -27,7 +27,6 @@ install_requires = [
     # Used by rq; latest version is required to support Python 3.3.
     'python-dateutil == 2.2',
 ]
-dependency_links = []
 
 if PY26:
     install_requires.append('ordereddict == 1.1')
@@ -55,18 +54,27 @@ class pytest(test):
         raise SystemExit(errno)
 
 
+# Hack to prevent stupid TypeError: 'NoneType' object is not callable error on
+# exit of python setup.py test # in multiprocessing/util.py _exit_function when
+# running python setup.py test (see
+# http://www.eby-sarna.com/pipermail/peak/2010-May/003357.html)
+try:
+    import multiprocessing
+except ImportError:
+    pass
+
+
 setup(
     name='cpucoolerchart',
     version=__version__,
     url='https://github.com/clee704/cpucoolerchart',
-    license='GNU AGPL v3',
+    license='MIT',
     author='Choongmin Lee',
     author_email='choongmin@me.com',
     description='CPU cooler performance and price database',
     long_description=readme(),
     packages=['cpucoolerchart'],
     install_requires=install_requires,
-    dependency_links=dependency_links,
     tests_require=[
         'pytest == 2.5.1',
         'pytest-cov == 1.6',
