@@ -17,7 +17,7 @@ PY26 = sys.version_info < (2, 7)
 install_requires = [
     'lxml == 3.3.0',
     'prettytable == 0.7.2',
-    'Flask == 0.10.1',
+    'Flask == 1.0',
     'Flask-SQLAlchemy == 1.0',
     'Flask-Cache == 0.12' if PY2 else 'Flask-Cache-Latest == 0.12',
     'Flask-Script == 0.6.6',
