@@ -5,7 +5,7 @@
 # Note that it assumes you are using Python 2.7. If you are on Python 3.3,
 # Remove Flask-Cache and install Flask-Cache-Latest instead.
 
-lxml == 3.3.0
+lxml == 4.6.2
 prettytable == 0.7.2
 Flask == 0.10.1
 Flask-SQLAlchemy == 1.0
